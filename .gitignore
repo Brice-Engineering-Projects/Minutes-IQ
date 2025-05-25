@@ -1,0 +1,41 @@
+# Conda environment
+/env/
+/venv/
+*.pyc
+__pycache__/
+
+# JetBrains IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.idea_modules/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+*.egg
+
+# Compiled Python files
+*.py[cod]
+*$py.class
+
+# Local development settings
+.env
+.env.local
+*.log
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Conda specific
+conda-env/
+conda-bld/
+.conda/
+.condarc
