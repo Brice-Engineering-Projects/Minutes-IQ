@@ -1,10 +1,12 @@
 # src/JEA_minutes_scraper.py
 
 """
-JEA Meeting Minutes Scraper (Filename-Safe Version with Logging)
+JEA Meeting Minutes Scraper (Enhanced Version)
 - Streams PDFs from JEA board meeting archive
-- Parses first N pages for keyword matches
+- Parses N or all pages for keyword matches
 - Downloads full PDF only if keywords are found
+- Filters documents based on date range (e.g., June 2024 to May 2025)
+- Supports scanning both meeting minutes and full packages
 - Saves matches with context in a timestamped CSV in data/processed
 - Logs activity to ../scraper.log and prints summary statistics
 """
@@ -27,7 +29,8 @@ PDF_DIR = os.path.join("..", "data", "raw_pdfs")
 RESULT_DIR = os.path.join("..", "data", "processed")
 KEYWORDS_FILE = os.path.join("..", "keywords.txt")
 LOG_FILE = os.path.join("..", "scraper.log")
-MAX_SCAN_PAGES = 3
+MAX_SCAN_PAGES = 15  # Set to None to scan all pages, or an integer like 5
+DATE_RANGE = ("2024-06", "2025-05")  # YYYY-MM format strings
 
 # Timestamped output file
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -46,7 +49,7 @@ def load_keywords(filepath):
 keywords = load_keywords(KEYWORDS_FILE)
 
 # === SCRAPE PDF LINKS ===
-def get_pdf_links(include_minutes=True, include_packages=False):
+def get_pdf_links(include_minutes=True, include_packages=True):
     res = requests.get(BASE_URL)
     soup = BeautifulSoup(res.content, 'html.parser')
     pdf_links = []
@@ -56,7 +59,14 @@ def get_pdf_links(include_minutes=True, include_packages=False):
             href = a_tag["href"]
             if ("minutes" in text and include_minutes) or ("package" in text and include_packages):
                 full_link = href if href.startswith("http") else f"https://www.jea.com{href}"
-                pdf_links.append(full_link)
+                filename = get_safe_filename(full_link)
+                # Date filter logic
+                date_match = re.search(r'(20\d{2})[\-_](\d{2})', filename)
+                if date_match:
+                    y, m = date_match.groups()
+                    ym_str = f"{y}-{m}"
+                    if DATE_RANGE[0] <= ym_str <= DATE_RANGE[1]:
+                        pdf_links.append(full_link)
     return pdf_links
 
 # === FILENAME HELPER ===
@@ -76,7 +86,8 @@ def stream_and_scan_pdf(url, max_pages=MAX_SCAN_PAGES):
         pdf_bytes = BytesIO(response.content)
         with pdfplumber.open(pdf_bytes) as pdf:
             matches = []
-            for i, page in enumerate(pdf.pages[:max_pages]):
+            pages_to_scan = pdf.pages if max_pages is None else pdf.pages[:max_pages]
+            for i, page in enumerate(pages_to_scan):
                 text = page.extract_text() or ""
                 for keyword in keywords:
                     if keyword.lower() in text.lower():
@@ -96,7 +107,7 @@ def stream_and_scan_pdf(url, max_pages=MAX_SCAN_PAGES):
 if __name__ == "__main__":
     print("🔍 Fetching PDF links...")
     logging.info("Started scraping JEA PDFs")
-    pdf_links = get_pdf_links(include_minutes=True, include_packages=False)
+    pdf_links = get_pdf_links(include_minutes=True, include_packages=True)
 
     all_mentions = []
     keyword_counts = defaultdict(int)
@@ -116,7 +127,7 @@ if __name__ == "__main__":
             for m in matches:
                 keyword_counts[m['keyword']] += 1
         else:
-            print(f"⏩ No match in first {MAX_SCAN_PAGES} pages of {filename}, skipping...")
+            print(f"⏩ No match in first {len(pdf.pages) if MAX_SCAN_PAGES is None else MAX_SCAN_PAGES} pages of {filename}, skipping...")
             logging.info(f"No match in {filename}, skipped.")
 
     print(f"💾 Saving {len(all_mentions)} matches to CSV: {RESULT_CSV}")

@@ -1,56 +1,113 @@
-# 📄 JEA Meeting Minutes Scraper (PRIVATE REPO)
+# 🕵️‍♂️ JEA Meeting Minutes Scraper & Dashboard
 
-## 🚧 Status: In Development | ⚖️ Intended for Internal Use Only
-
----
-
-## 📌 Overview
-
-This project scrapes public meeting minutes from the **JEA Board of Directors** website to identify potential **upcoming infrastructure projects** for business development use.
-
-⚠️ **This repository is private and not intended for public disclosure.**  
-Data is collected ethically from publicly available records but is used exclusively for internal pre-positioning purposes. No personally identifiable or sensitive data is being disclosed or distributed.
+This project scrapes and analyzes **JEA commission meeting PDFs** to detect early signs of potential civil engineering projects. It includes a keyword-based PDF scanner and a Streamlit dashboard for visualizing results.
 
 ---
 
-## 🎯 Objectives
+## 📁 Project Structure
 
-- Automatically collect all available PDF meeting minutes from [JEA.com](https://www.jea.com/About/Leadership/Board_Meetings/)
-- Parse PDF content for engineering-related keywords (e.g., *“stormwater,” “lift station,” “RFP”*)
-- Capture and store snippets around those keywords to enable manual review
-- Organize results into a CSV for internal use
-
----
-
-## 🧱 Folder Structure
-
-jea_scraper/
+```
+project_root/
 ├── data/
-│ ├── raw_pdfs/ # Downloaded PDF meeting minutes
-│ └── extracted_mentions.csv # Final output: date, keyword, snippet
-├── notebooks/
-│ └── 01_extract_and_parse.ipynb
+│   ├── raw_pdfs/              # Downloaded PDFs with matches
+│   └── processed/             # Extracted keyword match CSVs
 ├── src/
-│ ├── fetch_pdfs.py # Scrape & download PDFs
-│ ├── parse_pdfs.py # Extract text & match keywords
-│ └── utils.py # Helper functions
-├── keywords.txt # Editable keyword list
-├── README.md # You're here
-└── requirements.txt # Python environment
-
+│   ├── dashboard/             # Streamlit dashboard app
+│   │   └── dashboard.py
+│   └── JEA_minutes_scraper.py  # Main scraper logic
+├── keywords.txt              # List of keywords to scan for
+├── scraper.log               # Logging output
+└── README.md
+```
 
 ---
 
-## 🛠️ Stack / Dependencies
+## ⚙️ Requirements
 
-- `requests`
-- `beautifulsoup4`
-- `pdfplumber`
-- `pandas`
-- *(Optional NLP)*: `spaCy`, `scikit-learn`, `nltk`
-
-Install with:
+Use a **Conda environment**. Install dependencies via:
 
 ```bash
-pip install -r requirements.txt
+conda install -c conda-forge streamlit beautifulsoup4 requests pandas pdfplumber
+```
 
+---
+
+## 🚀 How to Use
+
+### 1. 📥 Scrape the PDFs
+
+Edit the `DATE_RANGE` and `MAX_SCAN_PAGES` values in `src/JEA_minutes_scraper.py` to suit your target window.
+
+Then run:
+
+```bash
+cd src
+python JEA_minutes_scraper.py
+```
+
+This will:
+- Download PDFs with keyword hits
+- Save snippets and matches in `/data/processed/`
+- Log activity in `scraper.log`
+
+---
+
+### 2. 📊 Launch the Dashboard
+
+After scraping, you can visualize the results:
+
+```bash
+streamlit run src/dashboard/dashboard.py
+```
+
+This launches a local web app showing:
+- Keyword frequency charts
+- Searchable mentions
+- Filters by keyword and meeting date
+
+---
+
+## 📝 Keywords
+
+The `keywords.txt` file controls what you’re looking for in PDFs. Format:
+
+```
+rehab
+stormwater
+consent agenda
+...
+```
+Lines beginning with `#` are ignored.
+
+---
+
+## ⏰ (Optional) Automation with Cron
+
+You can automate scraping with a cron job. Example:
+
+```cron
+0 6 * * 1 /path/to/env/bin/python /full/path/to/src/JEA_minutes_scraper.py >> /full/path/to/scraper_cron.log 2>&1
+```
+
+This runs the scraper **every Monday at 6 AM**.
+
+---
+
+## 🧠 Author Notes
+
+Built as a civil-engineering-focused business intelligence tool. The dashboard is designed for internal use to identify upcoming infrastructure projects.
+
+⚠️ PDF matches and results are not publicly shared due to ethical considerations.
+
+---
+
+## ✅ Future Ideas
+
+- 🧠 NLP summary extraction
+- 📧 Email alerts for high-interest hits
+- 🗂️ Tagging PDFs by committee/topic
+- 📅 Dashboard time series charts
+
+---
+
+Let me know if you'd like to turn this into a deployable Streamlit Cloud app or wire up nightly scrapes with caching!
