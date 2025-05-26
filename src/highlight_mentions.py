@@ -5,6 +5,7 @@ Highlight Matched Keywords in PDFs
 - Loads the latest extracted_mentions CSV
 - Reopens the original PDF
 - Highlights matched keywords on the indicated page
+- Adds a 'Highlights' section to PDF outline/bookmarks
 - Saves a new copy in data/annotated_pdfs/
 """
 
@@ -36,6 +37,7 @@ def highlight_pdf(file_path, mentions):
         return
 
     doc = fitz.open(pdf_path)
+    highlight_pages = set()
 
     for _, row in mentions.iterrows():
         page_num = int(row['page']) - 1
@@ -46,8 +48,14 @@ def highlight_pdf(file_path, mentions):
             for inst in text_instances:
                 annot = page.add_highlight_annot(inst)
                 annot.update()
+                highlight_pages.add(page_num)
         except Exception as e:
             print(f"❌ Could not highlight '{keyword}' on page {page_num+1} in {file_path}: {e}")
+
+    # Add bookmarks for highlight pages
+    for idx, pnum in enumerate(sorted(highlight_pages)):
+        title = f"Highlight {idx+1} (Page {pnum+1})"
+        doc.set_toc(doc.get_toc() + [[2, title, pnum]])
 
     doc.save(annotated_path)
     doc.close()
