@@ -15,9 +15,10 @@ This project scrapes, analyzes, and visualizes public JEA board meeting minutes 
   - Matching PDFs to `/data/raw_pdfs/`
   - Match metadata to `/data/processed/*.csv`
 
-### 🔎 PDF Highlighter: `highlight_mentions.py`
+### ✨ PDF Highlighter: `highlight_mentions.py`
 - Reopens saved PDFs
 - Highlights matched keywords (and optionally named entities)
+- Adds bookmarks to matched pages ("Jump to Highlights")
 - Saves annotated PDFs to `/data/annotated_pdfs/`
 
 ### 📊 Dashboard: `dashboard.py`
@@ -45,12 +46,12 @@ python -m spacy download en_core_web_sm
 ```
 📂 data/
 ├── raw_pdfs/              # PDFs saved when a keyword match is found
-├── annotated_pdfs/        # Highlighted PDFs for easy reading
+├── annotated_pdfs/        # Highlighted PDFs with bookmarks for fast reading
 └── processed/             # CSV files with extracted match + NLP metadata
 
 📂 src/
 ├── JEA_minutes_scraper.py   # Main scraper with NLP integration
-├── highlight_mentions.py    # Highlights keywords in PDFs
+├── highlight_mentions.py    # Highlights keywords in PDFs + jump bookmarks
 └── dashboard/
     └── dashboard.py         # Streamlit-based insights dashboard
 
@@ -69,12 +70,13 @@ python src/JEA_minutes_scraper.py
 - Extracts relevant context and NLP entities
 - Saves results to CSV
 
-### 2. Highlight PDFs
+### 2. Highlight PDFs + Add Bookmarks
 ```bash
 python src/highlight_mentions.py
 ```
 - Highlights matches in the original PDFs
-- Saves new annotated PDFs
+- Adds PDF outline bookmarks for each match
+- Saves new annotated PDFs for fast navigation
 
 ### 3. Launch Dashboard
 ```bash
@@ -100,9 +102,9 @@ streamlit run src/dashboard/dashboard.py
 ---
 
 ## 📬 Next Steps
-- Add color-coded highlights for different entities
-- Explore integrations with chat-based querying or alerting
-- Build a summary generator for long packages
+- Highlight named entities with different colors
+- Add summary previews or exports for clients
+- Build a query-based report generator using chat-style input
 
 ---
 
