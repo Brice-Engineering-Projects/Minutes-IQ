@@ -4,7 +4,7 @@
 Streamlit Dashboard for JEA Meeting Minutes Keyword Matches
 - Select any extracted CSV from dropdown
 - Displays keyword match summary
-- Filters results by keyword or date
+- Filters results by keyword, date, and named entities
 - Allows quick insight into what topics are surfacing in JEA meetings
 """
 
@@ -45,15 +45,33 @@ df = pd.read_csv(csv_file)
 df['file'] = df['file'].astype(str)
 df['keyword'] = df['keyword'].astype(str)
 df['snippet'] = df['snippet'].astype(str)
+df['entities'] = df.get('entities', pd.Series([''] * len(df))).astype(str)
 df['date'] = df['file'].str.extract(r'(20\d{2}[\-_]\d{2})')[0]
+
+# === Entity Parsing ===
+def extract_unique_entities(entities_series):
+    flat_list = []
+    for row in entities_series.dropna():
+        flat_list.extend([e.strip() for e in row.split(',') if e.strip()])
+    return sorted(set(flat_list))
+
+unique_entities = extract_unique_entities(df['entities'])
 
 # === Sidebar Filters ===
 st.sidebar.header("🔍 Filters")
 keyword_filter = st.sidebar.multiselect("Keyword(s)", sorted(df['keyword'].unique()), default=df['keyword'].unique())
 date_filter = st.sidebar.multiselect("Date (YYYY-MM)", sorted(df['date'].dropna().unique()), default=df['date'].dropna().unique())
+entity_filter = st.sidebar.multiselect("Named Entities (optional)", unique_entities, default=unique_entities)
 
 # === Filtered Data ===
-filtered_df = df[df['keyword'].isin(keyword_filter) & df['date'].isin(date_filter)]
+def row_matches_entities(row):
+    return any(ent in row['entities'] for ent in entity_filter)
+
+filtered_df = df[
+    df['keyword'].isin(keyword_filter) &
+    df['date'].isin(date_filter) &
+    df.apply(row_matches_entities, axis=1)
+]
 
 # === Main Panel ===
 st.title("📊 JEA Meeting Minutes Intelligence Dashboard")
@@ -67,6 +85,6 @@ st.bar_chart(keyword_counts)
 
 st.markdown("---")
 st.subheader("📄 Matched Mentions")
-st.dataframe(filtered_df[['file', 'page', 'keyword', 'snippet']], use_container_width=True)
+st.dataframe(filtered_df[['file', 'page', 'keyword', 'snippet', 'entities']], use_container_width=True)
 
 st.caption("📁 Source file: " + selected_csv)

@@ -1,113 +1,114 @@
-# 🕵️‍♂️ JEA Meeting Minutes Scraper & Dashboard
+# 🏛️ JEA Meeting Minutes Scraper & Intelligence Dashboard
 
-This project scrapes and analyzes **JEA commission meeting PDFs** to detect early signs of potential civil engineering projects. It includes a keyword-based PDF scanner and a Streamlit dashboard for visualizing results.
+This project scrapes, analyzes, and visualizes public JEA board meeting minutes for strategic business development insights.
+
+---
+
+## 🚀 Features
+
+### 🧠 Scraper: `JEA_minutes_scraper.py`
+- Streams and scans JEA board meeting PDFs
+- Filters by date and keyword
+- Extracts text and detects keywords
+- Uses **spaCy NLP** to extract named entities (e.g., organizations, locations, money, dates)
+- Saves:
+  - Matching PDFs to `/data/raw_pdfs/`
+  - Match metadata to `/data/processed/*.csv`
+
+### 🔎 PDF Highlighter: `highlight_mentions.py`
+- Reopens saved PDFs
+- Highlights matched keywords (and optionally named entities)
+- Saves annotated PDFs to `/data/annotated_pdfs/`
+
+### 📊 Dashboard: `dashboard.py`
+- Filters by keyword, named entity, or date
+- Displays:
+  - Keyword frequency chart
+  - Data table with matches and extracted context
+  - Entity-level filtering (GPE, ORG, MONEY, etc.)
+
+---
+
+## 🛠️ Setup
+
+```bash
+conda create -n jea_scraper python=3.11
+conda activate jea_scraper
+conda install -c conda-forge pdfplumber pymupdf beautifulsoup4 spacy pandas
+python -m spacy download en_core_web_sm
+```
 
 ---
 
 ## 📁 Project Structure
 
 ```
-project_root/
-├── data/
-│   ├── raw_pdfs/              # Downloaded PDFs with matches
-│   └── processed/             # Extracted keyword match CSVs
-├── src/
-│   ├── dashboard/             # Streamlit dashboard app
-│   │   └── dashboard.py
-│   └── JEA_minutes_scraper.py  # Main scraper logic
-├── keywords.txt              # List of keywords to scan for
-├── scraper.log               # Logging output
-└── README.md
+📂 data/
+├── raw_pdfs/              # PDFs saved when a keyword match is found
+├── annotated_pdfs/        # Highlighted PDFs for easy reading
+└── processed/             # CSV files with extracted match + NLP metadata
+
+📂 src/
+├── JEA_minutes_scraper.py   # Main scraper with NLP integration
+├── highlight_mentions.py    # Highlights keywords in PDFs
+└── dashboard/
+    └── dashboard.py         # Streamlit-based insights dashboard
+
+📄 keywords.txt              # One keyword per line to match against PDFs
 ```
 
 ---
 
-## ⚙️ Requirements
+## 🧪 How to Use
 
-Use a **Conda environment**. Install dependencies via:
-
+### 1. Scrape & Analyze
 ```bash
-conda install -c conda-forge streamlit beautifulsoup4 requests pandas pdfplumber
+python src/JEA_minutes_scraper.py
 ```
+- Finds matching PDFs based on keywords
+- Extracts relevant context and NLP entities
+- Saves results to CSV
 
----
-
-## 🚀 How to Use
-
-### 1. 📥 Scrape the PDFs
-
-Edit the `DATE_RANGE` and `MAX_SCAN_PAGES` values in `src/JEA_minutes_scraper.py` to suit your target window.
-
-Then run:
-
+### 2. Highlight PDFs
 ```bash
-cd src
-python JEA_minutes_scraper.py
+python src/highlight_mentions.py
 ```
+- Highlights matches in the original PDFs
+- Saves new annotated PDFs
 
-This will:
-- Download PDFs with keyword hits
-- Save snippets and matches in `/data/processed/`
-- Log activity in `scraper.log`
-
----
-
-### 2. 📊 Launch the Dashboard
-
-After scraping, you can visualize the results:
-
+### 3. Launch Dashboard
 ```bash
 streamlit run src/dashboard/dashboard.py
 ```
-
-This launches a local web app showing:
-- Keyword frequency charts
-- Searchable mentions
-- Filters by keyword and meeting date
+- Filter and explore all matches interactively
 
 ---
 
-## 📝 Keywords
+## 🗂️ Example Output (CSV)
 
-The `keywords.txt` file controls what you’re looking for in PDFs. Format:
-
-```
-rehab
-stormwater
-consent agenda
-...
-```
-Lines beginning with `#` are ignored.
+| file                           | page | keyword   | snippet                              | entities                       |
+|--------------------------------|------|-----------|--------------------------------------|--------------------------------|
+| 2024_06_25_Board_Meeting.pdf  | 3    | stormwater | "...stormwater improvements in..."  | Jacksonville (GPE), $2M (MONEY) |
 
 ---
 
-## ⏰ (Optional) Automation with Cron
-
-You can automate scraping with a cron job. Example:
-
-```cron
-0 6 * * 1 /path/to/env/bin/python /full/path/to/src/JEA_minutes_scraper.py >> /full/path/to/scraper_cron.log 2>&1
-```
-
-This runs the scraper **every Monday at 6 AM**.
+## 📌 Notes
+- You control scanning depth with `MAX_SCAN_PAGES` in the scraper
+- Set date range via `DATE_RANGE` (e.g., `("2024-06", "2025-05")`)
+- Add or remove keywords in `keywords.txt`
 
 ---
 
-## 🧠 Author Notes
-
-Built as a civil-engineering-focused business intelligence tool. The dashboard is designed for internal use to identify upcoming infrastructure projects.
-
-⚠️ PDF matches and results are not publicly shared due to ethical considerations.
-
----
-
-## ✅ Future Ideas
-
-- 🧠 NLP summary extraction
-- 📧 Email alerts for high-interest hits
-- 🗂️ Tagging PDFs by committee/topic
-- 📅 Dashboard time series charts
+## 📬 Next Steps
+- Add color-coded highlights for different entities
+- Explore integrations with chat-based querying or alerting
+- Build a summary generator for long packages
 
 ---
 
-Let me know if you'd like to turn this into a deployable Streamlit Cloud app or wire up nightly scrapes with caching!
+## 👋 About
+This project is used for internal business development exploration. Scraped data is not shared publicly to respect ethical boundaries.
+
+---
+
+Made with 💼, 🧠, and Python.

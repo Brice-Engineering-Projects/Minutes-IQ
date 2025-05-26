@@ -1,14 +1,13 @@
 # src/JEA_minutes_scraper.py
 
 """
-JEA Meeting Minutes Scraper (Enhanced Version)
+JEA Meeting Minutes Scraper with NLP Entity Extraction
 - Streams PDFs from JEA board meeting archive
 - Parses N or all pages for keyword matches
-- Downloads full PDF only if keywords are found
-- Filters documents based on date range (e.g., June 2024 to May 2025)
-- Supports scanning both meeting minutes and full packages
-- Saves matches with context in a timestamped CSV in data/processed
-- Logs activity to ../scraper.log and prints summary statistics
+- Downloads full PDF if keywords are found
+- Filters documents by date range
+- Extracts named entities from matched content using spaCy
+- Saves structured match data with NLP entities
 """
 
 import os
@@ -22,6 +21,10 @@ from io import BytesIO
 from datetime import datetime
 import logging
 from collections import defaultdict
+import spacy
+
+# === NLP SETUP ===
+nlp = spacy.load("en_core_web_sm")
 
 # === CONFIG ===
 BASE_URL = "https://www.jea.com/About/Board_and_Management/Board_Meetings_Archive/"
@@ -32,7 +35,6 @@ LOG_FILE = os.path.join("..", "scraper.log")
 MAX_SCAN_PAGES = 15  # Set to None to scan all pages, or an integer like 5
 DATE_RANGE = ("2024-06", "2025-05")  # YYYY-MM format strings
 
-# Timestamped output file
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 RESULT_CSV = os.path.join(RESULT_DIR, f"extracted_mentions_{timestamp}.csv")
 
@@ -60,7 +62,6 @@ def get_pdf_links(include_minutes=True, include_packages=True):
             if ("minutes" in text and include_minutes) or ("package" in text and include_packages):
                 full_link = href if href.startswith("http") else f"https://www.jea.com{href}"
                 filename = get_safe_filename(full_link)
-                # Date filter logic
                 date_match = re.search(r'(20\d{2})[\-_](\d{2})', filename)
                 if date_match:
                     y, m = date_match.groups()
@@ -79,7 +80,7 @@ def get_safe_filename(url):
         tail = re.sub(r'[^a-zA-Z0-9_-]', '_', tail)
         return f"{tail}.pdf" if not tail.endswith('.pdf') else tail
 
-# === STREAM & SCAN PDF ===
+# === STREAM & SCAN PDF WITH NLP ===
 def stream_and_scan_pdf(url, max_pages=MAX_SCAN_PAGES):
     try:
         response = requests.get(url)
@@ -92,16 +93,19 @@ def stream_and_scan_pdf(url, max_pages=MAX_SCAN_PAGES):
                 for keyword in keywords:
                     if keyword.lower() in text.lower():
                         context_snippet = text[text.lower().find(keyword.lower()):][:300]
+                        doc = nlp(context_snippet)
+                        entities = ", ".join(f"{ent.text} ({ent.label_})" for ent in doc.ents)
                         matches.append({
                             "file": get_safe_filename(url),
                             "page": i + 1,
                             "keyword": keyword,
-                            "snippet": context_snippet.strip()
+                            "snippet": context_snippet.strip(),
+                            "entities": entities
                         })
-            return matches, response.content if matches else None
+            return matches, response.content if matches else None, len(pages_to_scan)
     except Exception as e:
         logging.error(f"Error processing {url}: {e}")
-        return [], None
+        return [], None, 0
 
 # === MAIN ===
 if __name__ == "__main__":
@@ -117,7 +121,7 @@ if __name__ == "__main__":
         filename = get_safe_filename(url)
         filepath = os.path.join(PDF_DIR, filename)
 
-        matches, pdf_content = stream_and_scan_pdf(url)
+        matches, pdf_content, num_pages_scanned = stream_and_scan_pdf(url)
         if matches:
             print(f"✅ Match found in {filename}, saving PDF...")
             logging.info(f"Match found in {filename}, saved to disk.")
@@ -127,7 +131,7 @@ if __name__ == "__main__":
             for m in matches:
                 keyword_counts[m['keyword']] += 1
         else:
-            print(f"⏩ No match in first {len(pdf.pages) if MAX_SCAN_PAGES is None else MAX_SCAN_PAGES} pages of {filename}, skipping...")
+            print(f"⏩ No match in first {num_pages_scanned} pages of {filename}, skipping...")
             logging.info(f"No match in {filename}, skipped.")
 
     print(f"💾 Saving {len(all_mentions)} matches to CSV: {RESULT_CSV}")
@@ -140,3 +144,4 @@ if __name__ == "__main__":
         print(f"{keyword}: {count}")
     print("\n✅ Done.")
     logging.info("Scraper finished successfully.")
+
