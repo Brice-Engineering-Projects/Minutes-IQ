@@ -36,7 +36,7 @@ def highlight_pdf(file_path, mentions):
         print(f"⚠️ PDF not found: {pdf_path}")
         return
 
-    doc = fitz.open(pdf_path)
+    doc: fitz.Document = fitz.open(pdf_path)
     highlight_pages = set()
 
     for _, row in mentions.iterrows():
@@ -44,7 +44,7 @@ def highlight_pdf(file_path, mentions):
         keyword = row['keyword']
         try:
             page = doc[page_num]
-            text_instances = page.search_for(keyword, quads=True)
+            text_instances = page.search_for(keyword, quads=True)  # type: ignore
             for inst in text_instances:
                 annot = page.add_highlight_annot(inst)
                 annot.update()
@@ -53,9 +53,18 @@ def highlight_pdf(file_path, mentions):
             print(f"❌ Could not highlight '{keyword}' on page {page_num+1} in {file_path}: {e}")
 
     # Add bookmarks for highlight pages
-    for idx, pnum in enumerate(sorted(highlight_pages)):
-        title = f"Highlight {idx+1} (Page {pnum+1})"
-        doc.set_toc(doc.get_toc() + [[2, title, pnum]])
+    if highlight_pages:
+        toc = doc.get_toc()  # type: ignore
+        
+        # If TOC is empty, start with level 1; otherwise use level 2
+        if not toc:
+            new_entries = [[1, f"Highlight {idx+1} (Page {pnum+1})", pnum] 
+                          for idx, pnum in enumerate(sorted(highlight_pages))]
+        else:
+            new_entries = [[2, f"Highlight {idx+1} (Page {pnum+1})", pnum] 
+                          for idx, pnum in enumerate(sorted(highlight_pages))]
+        
+        doc.set_toc(toc + new_entries)  # type: ignore
 
     doc.save(annotated_path)
     doc.close()
@@ -69,7 +78,18 @@ def main():
         return
 
     print(f"📄 Using mentions from: {csv_path.relative_to(BASE_DIR)}")
-    df = pd.read_csv(csv_path)
+    
+    try:
+        df = pd.read_csv(csv_path)
+    except pd.errors.EmptyDataError:
+        print("⚠️ CSV file is empty - no matches were found by the scraper.")
+        print("   Try adjusting the DATE_RANGE or keywords, or increasing MAX_SCAN_PAGES in the scraper.")
+        return
+    
+    if df.empty:
+        print("⚠️ No mentions found in CSV file.")
+        return
+    
     df['file'] = df['file'].astype(str)
 
     for pdf_name in df['file'].unique():

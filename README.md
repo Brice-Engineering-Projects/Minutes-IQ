@@ -7,6 +7,7 @@ This project scrapes, analyzes, and visualizes public JEA board meeting minutes 
 ## 🚀 Features
 
 ### 🧠 Scraper: `JEA_minutes_scraper.py`
+
 - Streams and scans JEA board meeting PDFs
 - Filters by date and keyword
 - Extracts text and detects keywords
@@ -16,12 +17,14 @@ This project scrapes, analyzes, and visualizes public JEA board meeting minutes 
   - Match metadata to `/data/processed/*.csv`
 
 ### ✨ PDF Highlighter: `highlight_mentions.py`
+
 - Reopens saved PDFs
 - Highlights matched keywords (and optionally named entities)
 - Adds bookmarks to matched pages ("Jump to Highlights")
 - Saves annotated PDFs to `/data/annotated_pdfs/`
 
 ### 📊 Dashboard: `dashboard.py`
+
 - Filters by keyword, named entity, or date
 - Displays:
   - Keyword frequency chart
@@ -43,7 +46,7 @@ python -m spacy download en_core_web_sm
 
 ## 📁 Project Structure
 
-```
+```plaintext
 📂 data/
 ├── raw_pdfs/              # PDFs saved when a keyword match is found
 ├── annotated_pdfs/        # Highlighted PDFs with bookmarks for fast reading
@@ -63,25 +66,31 @@ python -m spacy download en_core_web_sm
 ## 🧪 How to Use
 
 ### 1. Scrape & Analyze
+
 ```bash
 python src/JEA_minutes_scraper.py
 ```
+
 - Finds matching PDFs based on keywords
 - Extracts relevant context and NLP entities
 - Saves results to CSV
 
 ### 2. Highlight PDFs + Add Bookmarks
+
 ```bash
 python src/highlight_mentions.py
 ```
+
 - Highlights matches in the original PDFs
 - Adds PDF outline bookmarks for each match
 - Saves new annotated PDFs for fast navigation
 
 ### 3. Launch Dashboard
+
 ```bash
 streamlit run src/dashboard/dashboard.py
 ```
+
 - Filter and explore all matches interactively
 
 ---
@@ -95,6 +104,7 @@ streamlit run src/dashboard/dashboard.py
 ---
 
 ## 📌 Notes
+
 - You control scanning depth with `MAX_SCAN_PAGES` in the scraper
 - Set date range via `DATE_RANGE` (e.g., `("2024-06", "2025-05")`)
 - Add or remove keywords in `keywords.txt`
@@ -102,6 +112,7 @@ streamlit run src/dashboard/dashboard.py
 ---
 
 ## 📬 Next Steps
+
 - Highlight named entities with different colors
 - Add summary previews or exports for clients
 - Build a query-based report generator using chat-style input
@@ -109,6 +120,7 @@ streamlit run src/dashboard/dashboard.py
 ---
 
 ## 👋 About
+
 This project is used for internal business development exploration. Scraped data is not shared publicly to respect ethical boundaries.
 
 ---

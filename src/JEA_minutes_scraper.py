@@ -27,13 +27,17 @@ import spacy
 nlp = spacy.load("en_core_web_sm")
 
 # === CONFIG ===
-BASE_URL = "https://www.jea.com/About/Board_and_Management/Board_Meetings_Archive/"
-PDF_DIR = os.path.join("..", "data", "raw_pdfs")
-RESULT_DIR = os.path.join("..", "data", "processed")
-KEYWORDS_FILE = os.path.join("..", "keywords.txt")
-LOG_FILE = os.path.join("..", "scraper.log")
-MAX_SCAN_PAGES = 15  # Set to None to scan all pages, or an integer like 5
-DATE_RANGE = ("2024-06", "2025-05")  # YYYY-MM format strings
+ARCHIVE_URL = "https://www.jea.com/About/Board_and_Management/Board_Meetings_Archive/"
+CURRENT_MEETINGS_URL = "https://www.jea.com/about/board_and_management/jea_board_meetings/"
+# Get absolute paths relative to this script's location
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
+PDF_DIR = os.path.join(PROJECT_ROOT, "data", "raw_pdfs")
+RESULT_DIR = os.path.join(PROJECT_ROOT, "data", "processed")
+KEYWORDS_FILE = os.path.join(PROJECT_ROOT, "keywords.txt")
+LOG_FILE = os.path.join(PROJECT_ROOT, "scraper.log")
+MAX_SCAN_PAGES = None  # Set to None to scan all pages, or an integer like 5
+DATE_RANGE = ("2024-01", "2025-12")  # YYYY-MM format strings
 
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 RESULT_CSV = os.path.join(RESULT_DIR, f"extracted_mentions_{timestamp}.csv")
@@ -51,24 +55,61 @@ def load_keywords(filepath):
 keywords = load_keywords(KEYWORDS_FILE)
 
 # === SCRAPE PDF LINKS ===
-def get_pdf_links(include_minutes=True, include_packages=True):
-    res = requests.get(BASE_URL)
-    soup = BeautifulSoup(res.content, 'html.parser')
+def get_pdf_links_from_url(url, include_minutes=True, include_packages=True, debug=False):
+    """Scrape PDF links from a single URL"""
+    res = requests.get(url)
+    soup = BeautifulSoup(res.text, 'html.parser')
     pdf_links = []
+    all_pdfs_found = []
+    
     for row in soup.find_all("tr"):
         for a_tag in row.find_all("a", href=True):
             text = a_tag.get_text(strip=True).lower()
-            href = a_tag["href"]
+            href = str(a_tag["href"])
             if ("minutes" in text and include_minutes) or ("package" in text and include_packages):
                 full_link = href if href.startswith("http") else f"https://www.jea.com{href}"
                 filename = get_safe_filename(full_link)
-                date_match = re.search(r'(20\d{2})[\-_](\d{2})', filename)
+                
+                # Try multiple date patterns
+                date_match = re.search(r'(20\d{2})[\-_](\d{2})[\-_](\d{2})', filename)  # YYYY-MM-DD or YYYY_MM_DD
+                
+                if debug:
+                    all_pdfs_found.append((filename, full_link, date_match))
+                
                 if date_match:
-                    y, m = date_match.groups()
+                    y, m = date_match.groups()[0], date_match.groups()[1]
                     ym_str = f"{y}-{m}"
                     if DATE_RANGE[0] <= ym_str <= DATE_RANGE[1]:
                         pdf_links.append(full_link)
-    return pdf_links
+    
+    return pdf_links, all_pdfs_found
+
+def get_pdf_links(include_minutes=True, include_packages=True, debug=False):
+    """Scrape PDF links from both archive and current meetings pages"""
+    all_links = []
+    all_pdfs = []
+    
+    print("  → Scraping archive page...")
+    archive_links, archive_pdfs = get_pdf_links_from_url(ARCHIVE_URL, include_minutes, include_packages, debug)
+    all_links.extend(archive_links)
+    all_pdfs.extend(archive_pdfs)
+    
+    print("  → Scraping current meetings page...")
+    current_links, current_pdfs = get_pdf_links_from_url(CURRENT_MEETINGS_URL, include_minutes, include_packages, debug)
+    all_links.extend(current_links)
+    all_pdfs.extend(current_pdfs)
+    
+    # Remove duplicates while preserving order
+    seen = set()
+    unique_links = []
+    for link in all_links:
+        if link not in seen:
+            seen.add(link)
+            unique_links.append(link)
+    
+    if debug:
+        return unique_links, all_pdfs
+    return unique_links
 
 # === FILENAME HELPER ===
 def get_safe_filename(url):
@@ -111,7 +152,26 @@ def stream_and_scan_pdf(url, max_pages=MAX_SCAN_PAGES):
 if __name__ == "__main__":
     print("🔍 Fetching PDF links...")
     logging.info("Started scraping JEA PDFs")
-    pdf_links = get_pdf_links(include_minutes=True, include_packages=True)
+    pdf_links, all_pdfs = get_pdf_links(include_minutes=True, include_packages=True, debug=True)
+    
+    print(f"📋 Found {len(pdf_links)} PDFs in date range {DATE_RANGE[0]} to {DATE_RANGE[1]}")
+    print(f"📊 Total PDFs on website: {len(all_pdfs)}")
+    
+    if len(all_pdfs) > 0:
+        print("\n🔍 Sample of ALL available PDFs with full URLs:")
+        for filename, url, date_match in all_pdfs[:20]:  # Show first 20
+            if date_match:
+                y, m = date_match.groups()[0], date_match.groups()[1]
+                print(f"  - {filename} → {y}-{m}")
+            else:
+                print(f"  - {filename} → [no date parsed]")
+                print(f"    URL: {url[:80]}...")
+    
+    if len(pdf_links) == 0:
+        print("⚠️ No PDFs found in the specified date range. Check the JEA website or adjust DATE_RANGE.")
+        logging.warning("No PDFs found in date range.")
+    
+    print(f"🔑 Loaded {len(keywords)} keywords from {KEYWORDS_FILE}")
 
     all_mentions = []
     keyword_counts = defaultdict(int)
@@ -122,7 +182,7 @@ if __name__ == "__main__":
         filepath = os.path.join(PDF_DIR, filename)
 
         matches, pdf_content, num_pages_scanned = stream_and_scan_pdf(url)
-        if matches:
+        if matches and pdf_content is not None:
             print(f"✅ Match found in {filename}, saving PDF...")
             logging.info(f"Match found in {filename}, saved to disk.")
             with open(filepath, 'wb') as f:
@@ -131,7 +191,7 @@ if __name__ == "__main__":
             for m in matches:
                 keyword_counts[m['keyword']] += 1
         else:
-            print(f"⏩ No match in first {num_pages_scanned} pages of {filename}, skipping...")
+            print(f"⏩ No match in {num_pages_scanned} pages of {filename}, skipping...")
             logging.info(f"No match in {filename}, skipped.")
 
     print(f"💾 Saving {len(all_mentions)} matches to CSV: {RESULT_CSV}")
