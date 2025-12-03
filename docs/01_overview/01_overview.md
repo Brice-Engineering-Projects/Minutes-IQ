@@ -24,6 +24,7 @@ Data is collected ethically from publicly available records but is used exclusiv
 
 ## 🧱 Folder Structure
 
+```plaintext
 jea_scraper/
 ├── data/
 │ ├── raw_pdfs/ # Downloaded PDF meeting minutes
@@ -37,7 +38,7 @@ jea_scraper/
 ├── keywords.txt # Editable keyword list
 ├── README.md # You're here
 └── requirements.txt # Python environment
-
+```
 
 ---
 
