@@ -13,20 +13,19 @@ dependencies = [
     "lxml",
     "nltk",
     "tqdm",
-
     # spaCy + NLP dependencies
     "spacy",
     "catalogue",
     "cymem",
     "preshed",
     "thinc",
-
     # PDF handling
     "cryptography",
     "pdfminer-six",
     "pdfplumber",
     "pillow",
     "pypdfium2",
+    "fastapi>=0.123.10",
 ]
 
 [tool.uv]
