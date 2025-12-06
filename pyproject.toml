@@ -26,6 +26,7 @@ dependencies = [
     "pillow",
     "pypdfium2",
     "fastapi>=0.123.10",
+    "httpx>=0.28.1",
 ]
 
 [tool.uv]
