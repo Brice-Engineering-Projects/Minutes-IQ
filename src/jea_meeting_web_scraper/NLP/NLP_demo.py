@@ -1,4 +1,4 @@
-"""src/nlp/NLP_test.py"""
+"""src/nlp/NLP_demo.py"""
 
 import spacy
 
