@@ -131,7 +131,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]) -> Use
     )
     try:
         assert SECRET_KEY is not None  # Already validated at module level
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, str(SECRET_KEY), algorithms=[ALGORITHM])
         username: str | None = payload.get("sub")
         if username is None:
             raise credentials_exception
