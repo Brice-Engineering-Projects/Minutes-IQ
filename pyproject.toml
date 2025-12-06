@@ -35,14 +35,15 @@ dependencies = [
     "python-jose[cryptography]>=3.5.0",
 ]
 
-[tool.uv]
-dev-dependencies = [
-    "pytest",
-    "ruff",
-    "black",
+[dependency-groups]
+dev = [
+    "black>=0.0.0",
+    "ruff>=0.0.0",
+    "pytest>=0.0.0",
     "isort>=7.0.0",
     "pre-commit>=4.5.0",
 ]
+
 
 [build-system]
 requires = ["hatchling"]

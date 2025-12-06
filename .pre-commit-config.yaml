@@ -15,3 +15,9 @@ repos:
     rev: 5.13.2
     hooks:
       - id: isort
+
+# .pre-commit-config.yaml
+  - repo: https://github.com/psf/black
+    rev: 24.8.0
+    hooks:
+      - id: black

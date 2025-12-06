@@ -16,6 +16,7 @@ from pydantic import BaseModel, BaseSettings, Field, field_validator
 # Nested Configuration Models
 # ------------------------------------------------------------
 
+
 class AppSettings(BaseModel):
     name: str = "jea-meeting-web-scraper"
     debug: bool = False
@@ -29,9 +30,7 @@ class ScraperSettings(BaseModel):
     processed_directory: Optional[str] = "./data/processed"
     concurrency: int = 2
     timeout: int = 30
-    user_agent: str = (
-        "Mozilla/5.0 (compatible; JEAScraper/1.0; +https://internal-app)"
-    )
+    user_agent: str = "Mozilla/5.0 (compatible; JEAScraper/1.0; +https://internal-app)"
 
 
 class CookieSettings(BaseModel):
@@ -44,9 +43,11 @@ class TaskSettings(BaseModel):
     allow_background_tasks: bool = True
     workers: int = 2
 
+
 # ------------------------------------------------------------
 # Database Settings
 # ------------------------------------------------------------
+
 
 class DatabaseSettings(BaseSettings):
     db_host: str
@@ -73,6 +74,7 @@ class DatabaseSettings(BaseSettings):
 # ------------------------------------------------------------
 # Root Settings (environment + YAML merge)
 # ------------------------------------------------------------
+
 
 class Settings(BaseSettings):
     # Secrets
@@ -105,6 +107,7 @@ class Settings(BaseSettings):
 # Loader
 # ------------------------------------------------------------
 
+
 def load_settings() -> Settings:
     yaml_path = Path(__file__).parent / "config.yaml"
 
@@ -119,4 +122,3 @@ def load_settings() -> Settings:
 
 
 settings = load_settings()
-
