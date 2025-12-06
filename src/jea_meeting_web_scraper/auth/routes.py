@@ -11,13 +11,18 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
+from jea_meeting_web_scraper.config import settings
 
 # Configuration
-SECRET_KEY = (
-    "your-secret-key-change-this-in-production"  # TODO: Move to environment variable
-)
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+ACCESS_TOKEN_EXPIRE_MINUTES = getattr(settings, 'ACCESS_TOKEN_EXPIRE_MINUTES', 30)
+if not ACCESS_TOKEN_EXPIRE_MINUTES:
+    raise ValueError("ACCESS_TOKEN_EXPIRE_MINUTES must be set in configuration")
+
+SECRET_KEY = getattr(settings, 'SECRET_KEY', None)
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY must be set in configuration")
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -105,6 +110,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
     else:
         expire = datetime.now(timezone.utc) + timedelta(minutes=15)
     to_encode.update({"exp": expire})
+    assert SECRET_KEY is not None  # Already validated at module level
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
@@ -117,12 +123,15 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]) -> Use
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
+        assert SECRET_KEY is not None  # Already validated at module level
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
+        username: str | None = payload.get("sub")
         if username is None:
             raise credentials_exception
         token_data = TokenData(username=username)
     except JWTError:
+        raise credentials_exception
+    if token_data.username is None:
         raise credentials_exception
     user = get_user(fake_users_db, username=token_data.username)
     if user is None:
@@ -144,7 +153,7 @@ async def get_current_active_user(
 async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
     """Login endpoint to get an access token."""
     user = authenticate_user(fake_users_db, form_data.username, form_data.password)
-    if not user:
+    if not user or not isinstance(user, UserInDB):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
