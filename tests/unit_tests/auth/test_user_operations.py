@@ -1,6 +1,6 @@
 """Unit tests for user database operations."""
 
-import pytest
+
 from jea_meeting_web_scraper.auth.routes import (
     authenticate_user,
     get_password_hash,
