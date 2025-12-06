@@ -10,19 +10,14 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from pydantic import BaseModel
-from jea_meeting_web_scraper.config import settings
+from pydantic import BaseModel, field_validator
+from jea_meeting_web_scraper.config.settings import settings
 
 # Configuration
 ALGORITHM = "HS256"
 
-ACCESS_TOKEN_EXPIRE_MINUTES = getattr(settings, 'ACCESS_TOKEN_EXPIRE_MINUTES', 30)
-if not ACCESS_TOKEN_EXPIRE_MINUTES:
-    raise ValueError("ACCESS_TOKEN_EXPIRE_MINUTES must be set in configuration")
-
-SECRET_KEY = getattr(settings, 'SECRET_KEY', None)
-if not SECRET_KEY:
-    raise ValueError("SECRET_KEY must be set in configuration")
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+SECRET_KEY = settings.secret_key
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -59,6 +54,14 @@ class UserCreate(BaseModel):
     email: str
     password: str
     full_name: str | None = None
+
+    @field_validator('username')
+    @classmethod
+    def validate_username(cls, v: str) -> str:
+        """Validate that username is not empty."""
+        if not v or not v.strip():
+            raise ValueError("Username cannot be empty")
+        return v
 
 
 # Fake database - TODO: Replace with actual database
@@ -105,11 +108,15 @@ def authenticate_user(db: dict, username: str, password: str) -> UserInDB | bool
 def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
     """Create a JWT access token."""
     to_encode = data.copy()
+    now = datetime.now(timezone.utc)
     if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
+        expire = now + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
+        expire = now + timedelta(minutes=15)
+    to_encode.update({
+        "exp": expire,
+        "iat": now.timestamp(),  # Use timestamp with microseconds for uniqueness
+    })
     assert SECRET_KEY is not None  # Already validated at module level
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt

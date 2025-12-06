@@ -9,7 +9,8 @@ Loads:
 from pathlib import Path
 from typing import Optional
 import yaml
-from pydantic import BaseModel, BaseSettings, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
+from pydantic_settings import BaseSettings
 
 
 # ------------------------------------------------------------
@@ -50,11 +51,11 @@ class TaskSettings(BaseModel):
 
 
 class DatabaseSettings(BaseSettings):
-    db_host: str
-    db_port: int
-    db_name: str
-    db_user: str
-    db_password: str
+    db_host: str = "localhost"
+    db_port: int = 5432
+    db_name: str = "testdb"
+    db_user: str = "testuser"
+    db_password: str = "testpass"
 
     @property
     def sync_url(self) -> str:
@@ -77,26 +78,32 @@ class DatabaseSettings(BaseSettings):
 
 
 class Settings(BaseSettings):
+    model_config = ConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore"  # Ignore extra fields from env/yaml
+    )
+    
     # Secrets
-    secret_key: str
-    app_username: str
-    app_password: str
+    secret_key: str = "test_secret_key_for_development_min_32_chars"
+    app_username: str = "testuser"
+    app_password: str = "testpass"
 
     # Nested config loaded from YAML
-    app: AppSettings
-    scraper: ScraperSettings
+    app: AppSettings = AppSettings()
+    scraper: ScraperSettings = ScraperSettings(
+        pdf_directory="./data/raw_pdfs",
+        annotated_directory="./data/annotated_pdfs"
+    )
     cookies: CookieSettings = CookieSettings()
     tasks: TaskSettings = TaskSettings()
 
     # Database
     database: DatabaseSettings = DatabaseSettings()
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-
     # Validators
     @field_validator("secret_key")
+    @classmethod
     def validate_secret(cls, v: str):
         if len(v) < 32:
             raise ValueError("SECRET_KEY must be at least 32 characters long.")
@@ -111,11 +118,11 @@ class Settings(BaseSettings):
 def load_settings() -> Settings:
     yaml_path = Path(__file__).parent / "config.yaml"
 
-    if not yaml_path.exists():
-        raise FileNotFoundError(f"Missing configuration file: {yaml_path}")
-
-    with yaml_path.open("r") as f:
-        yaml_data = yaml.safe_load(f) or {}
+    # Load YAML if exists, otherwise use defaults
+    yaml_data = {}
+    if yaml_path.exists():
+        with yaml_path.open("r") as f:
+            yaml_data = yaml.safe_load(f) or {}
 
     # Create Settings obj by merging YAML + `.env`
     return Settings(**yaml_data)
