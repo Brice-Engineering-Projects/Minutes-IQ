@@ -11,26 +11,102 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # ----------------------------------------------------------------------
+      # 1. Checkout Repository
+      # ----------------------------------------------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1  # shallow clone for faster CI runs
 
-      - name: Set up UV
-        uses: astral-sh/setup-uv@v1
+      # ----------------------------------------------------------------------
+      # 2. Set Up Python Runtime
+      #    - Ensures consistent interpreter version across local + CI
+      #    - Enables use of pip caching and deterministic virtualenv behavior
+      # ----------------------------------------------------------------------
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
-      - name: Cache UV installation
+      # ----------------------------------------------------------------------
+      # 3. Cache Pip Downloads
+      #    - Dramatically reduces execution time for repeated runs
+      #    - Cache key includes requirements hash to ensure validity
+      #    - If cache is invalidated, pip will rebuild cleanly
+      # ----------------------------------------------------------------------
+      - name: Cache pip packages
         uses: actions/cache@v4
         with:
-          path: ~/.cache/uv
-          key: uv-${{ hashFiles('pyproject.toml', 'uv.lock') }}
+          path: ~/.cache/pip
+          key: >
+            pip-${{ runner.os }}-
+            ${{ hashFiles('pyproject.toml') }}-
+            ${{ hashFiles('**/*.txt') }}
+          restore-keys: |
+            pip-${{ runner.os }}-
 
-      - name: Install dependencies
-        run: uv sync --group dev
+      # ----------------------------------------------------------------------
+      # 4. Create Virtual Environment
+      #    - Keeps CI isolated
+      #    - Allows reproducible tool installs
+      # ----------------------------------------------------------------------
+      - name: Create virtual environment
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          python -m pip install --upgrade pip wheel
 
+      # ----------------------------------------------------------------------
+      # 5. Install Development Tooling
+      #    - Installs linters, formatters, test framework
+      #    - Using pip ensures compatibility with GitHub Actions runners
+      # ----------------------------------------------------------------------
+      - name: Install dev dependencies
+        run: |
+          source .venv/bin/activate
+          pip install \
+            ruff \
+            black \
+            pytest \
+            isort \
+            pre-commit
+
+      # ----------------------------------------------------------------------
+      # 6. Run Ruff Linter
+      #    - Enforces static analysis and code health
+      #    - Fastest Python linter available; great for CI
+      # ----------------------------------------------------------------------
       - name: Lint with Ruff
-        run: uv run ruff check .
+        run: |
+          source .venv/bin/activate
+          ruff check .
 
+      # ----------------------------------------------------------------------
+      # 7. Enforce Black Code Formatting
+      #    - Ensures consistent style across the codebase
+      #    - --check mode prevents silent auto-updates in CI
+      # ----------------------------------------------------------------------
       - name: Black formatting check
-        run: uv run black --check .
+        run: |
+          source .venv/bin/activate
+          black --check .
 
+      # ----------------------------------------------------------------------
+      # 8. Sort Imports (isort)
+      #    - Prevents import drift and maintains structure hygiene
+      # ----------------------------------------------------------------------
+      - name: Import sorting check (isort)
+        run: |
+          source .venv/bin/activate
+          isort . --check-only
+
+      # ----------------------------------------------------------------------
+      # 9. Run Test Suite
+      #    - Pytest in quiet mode for clean CI logs
+      #    - Ensures all modules are validated before merge
+      # ----------------------------------------------------------------------
       - name: Run tests
-        run: uv run pytest -q
+        run: |
+          source .venv/bin/activate
+          pytest -q
