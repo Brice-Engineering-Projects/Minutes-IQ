@@ -1,0 +1,24 @@
+# jea_meeting_web_scraper/config/config.yaml
+
+app:
+  name: jea-meeting-web-scraper
+  debug: false
+  env: development       # development | staging | production
+  log_level: info
+
+scraper:
+  pdf_directory: "./data/raw_pdfs"
+  annotated_directory: "./data/annotated_pdfs"
+  processed_directory: "./data/processed"
+  concurrency: 4
+  timeout: 30
+  user_agent: "Mozilla/5.0 (compatible; JEAScraper/1.0)"
+
+cookies:
+  secure: true
+  samesite: strict
+  max_age_minutes: 30
+
+tasks:
+  allow_background_tasks: true
+  workers: 2
