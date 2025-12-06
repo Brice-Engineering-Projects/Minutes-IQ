@@ -40,7 +40,8 @@ class TestCreateAccessToken:
         now = datetime.now(timezone.utc)
         
         # Should expire approximately 5 minutes from now
-        time_diff = (exp_time - now).total_seconds()
+        # Verify the time difference is reasonable
+        assert 240 <= (exp_time - now).total_seconds() <= 310
 
     def test_create_token_with_expiration(self):
         """Token should expire in approximately 5 minutes when expiration is passed."""
@@ -91,11 +92,11 @@ class TestCreateAccessToken:
         data = {"sub": "testuser"}
         token = create_access_token(data)
         assert SECRET_KEY is not None
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        # Verify token can be decoded with correct secret
+        jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
 
     def test_expired_token_raises_error(self):
         """Expired tokens should raise an exception."""
-        data = {"sub": "testuser"}
         expired = datetime.utcnow() - timedelta(minutes=10)
     
         assert SECRET_KEY is not None

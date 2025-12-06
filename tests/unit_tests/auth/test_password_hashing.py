@@ -1,6 +1,5 @@
 """Unit tests for password hashing functionality."""
 
-import pytest
 from jea_meeting_web_scraper.auth.routes import (
     get_password_hash,
     verify_password,
