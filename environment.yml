@@ -1,4 +1,4 @@
-name: jea_web_scraping
+name: jea_meeting_web_scraper
 channels:
   - conda-forge
   - defaults

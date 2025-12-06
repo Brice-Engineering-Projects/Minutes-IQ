@@ -1,0 +1,41 @@
+[project]
+name = "jea-meeting-web-scraper"
+version = "0.1.0"
+description = "A backend-ready scraper and NLP pipeline for extracting signals from JEA and municipal agency meeting minutes."
+requires-python = ">=3.12"
+
+dependencies = [
+    # Core utilities
+    "numpy",
+    "pandas",
+    "requests",
+    "beautifulsoup4",
+    "lxml",
+    "nltk",
+    "tqdm",
+
+    # spaCy + NLP dependencies
+    "spacy",
+    "catalogue",
+    "cymem",
+    "preshed",
+    "thinc",
+
+    # PDF handling
+    "cryptography",
+    "pdfminer-six",
+    "pdfplumber",
+    "pillow",
+    "pypdfium2",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest",
+    "ruff",
+    "black",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

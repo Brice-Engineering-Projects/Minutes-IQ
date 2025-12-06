@@ -41,3 +41,5 @@ conda-bld/
 .condarc
 
 data/
+
+.python-version
