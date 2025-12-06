@@ -34,6 +34,8 @@ dev-dependencies = [
     "pytest",
     "ruff",
     "black",
+    "isort>=7.0.0",
+    "pre-commit>=4.5.0",
 ]
 
 [build-system]
