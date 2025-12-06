@@ -672,7 +672,6 @@ dependencies = [
     { name = "fastapi" },
     { name = "fitz" },
     { name = "httpx" },
-    { name = "jose" },
     { name = "lxml" },
     { name = "nltk" },
     { name = "numpy" },
@@ -710,7 +709,6 @@ requires-dist = [
     { name = "fastapi", specifier = ">=0.123.10" },
     { name = "fitz", specifier = ">=0.0.1.dev2" },
     { name = "httpx", specifier = ">=0.28.1" },
-    { name = "jose", specifier = ">=1.0.0" },
     { name = "lxml" },
     { name = "nltk" },
     { name = "numpy" },
@@ -759,12 +757,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/e8/5d/447af5ea094b9e4c4
 wheels = [
     { url = "https://files.pythonhosted.org/packages/1e/e8/685f47e0d754320684db4425a0967f7d3fa70126bffd76110b7009a0090f/joblib-1.5.2-py3-none-any.whl", hash = "sha256:4e1f0bdbb987e6d843c70cf43714cb276623def372df3c22fe5266b2670bc241", size = 308396, upload-time = "2025-08-27T12:15:45.188Z" },
 ]
-
-[[package]]
-name = "jose"
-version = "1.0.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/01/3d/832caa69cd0d3be2d608d8290be2221072669aa88e87690837f6b31c480f/jose-1.0.0.tar.gz", hash = "sha256:8436c3617cd94e1ba97828fbb1ce27c129f66c78fb855b4bb47e122b5f345fba", size = 9153, upload-time = "2015-11-13T10:52:21.506Z" }
 
 [[package]]
 name = "jsonschema"
