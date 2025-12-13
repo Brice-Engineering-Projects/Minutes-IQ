@@ -7,11 +7,10 @@ Loads:
 """
 
 from pathlib import Path
-from typing import Optional
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, field_validator
-from pydantic_settings import BaseSettings
+from pydantic import BaseModel, Field, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # ------------------------------------------------------------
 # Nested Configuration Models
@@ -30,7 +29,7 @@ class AppSettings(BaseModel):
 class ScraperSettings(BaseModel):
     pdf_directory: str
     annotated_directory: str
-    processed_directory: Optional[str] = "./data/processed"
+    processed_directory: str | None = "./data/processed"
     concurrency: int = 2
     timeout: int = 30
     user_agent: str = "Mozilla/5.0 (compatible; JEAScraper/1.0; +https://internal-app)"
@@ -78,12 +77,26 @@ class FeatureSettings(BaseModel):
 
 
 class DatabaseSettings(BaseSettings):
-    model_config = ConfigDict(env_file=".env", extra="ignore")
+    provider: str = "turso"  # future-proofing: could be sqlite or postgres later
+    model_config = SettingsConfigDict(
+        env_prefix="",
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
 
     provider: str = "turso"  # future-proofing: could be sqlite or postgres later
-    db_url: Optional[str] = None  # TURSO_DATABASE_URL (env)
-    auth_token: Optional[str] = None  # TURSO_AUTH_TOKEN (env)
-    replica_url: Optional[str] = None  # TURSO_REPLICA_URL (optional)
+    db_url: str | None = Field(
+        default=None, validation_alias="TURSO_DATABASE_URL"
+    )  # TURSO_DATABASE_URL (env)
+
+    auth_token: str | None = Field(  # TURSO_AUTH_TOKEN (env)
+        default=None, validation_alias="TURSO_AUTH_TOKEN"
+    )
+
+    replica_url: str | None = Field(  # TURSO_REPLICA_URL (optional)
+        default=None, validation_alias="TURSO_REPLICA_URL"
+    )
 
     @field_validator("db_url")
     @classmethod
@@ -99,8 +112,11 @@ class DatabaseSettings(BaseSettings):
 
 
 class Settings(BaseSettings):
-    model_config = ConfigDict(
-        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+    model_config = SettingsConfigDict(
+        env_prefix="",
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
     )
 
     # Secrets

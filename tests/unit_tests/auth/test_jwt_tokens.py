@@ -1,12 +1,14 @@
 """Unit tests for JWT token operations."""
 
-from datetime import timedelta, datetime, timezone
+from datetime import UTC, datetime, timedelta
+
 import pytest
-from jose import jwt, JWTError
-from jea_meeting_web_scraper.auth.routes import (
-    create_access_token,
+from jose import JWTError, jwt
+
+from jea_meeting_web_scraper.auth.auth_routes import (
     ALGORITHM,
     SECRET_KEY,
+    create_access_token,
 )
 
 
@@ -26,6 +28,7 @@ class TestCreateAccessToken:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         assert payload["sub"] == "testuser"
         assert "exp" in payload
+
     def test_create_token_with_custom_expiration(self):
         """Test creating a token with custom expiration time."""
         data = {"sub": "testuser"}
@@ -35,10 +38,10 @@ class TestCreateAccessToken:
 
         assert SECRET_KEY is not None
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        exp_time = datetime.fromtimestamp(payload["exp"], tz=timezone.utc)
-        exp_time = datetime.fromtimestamp(payload["exp"], tz=timezone.utc)
-        now = datetime.now(timezone.utc)
-        
+        exp_time = datetime.fromtimestamp(payload["exp"], tz=UTC)
+        exp_time = datetime.fromtimestamp(payload["exp"], tz=UTC)
+        now = datetime.now(UTC)
+
         # Should expire approximately 5 minutes from now
         # Verify the time difference is reasonable
         assert 240 <= (exp_time - now).total_seconds() <= 310
@@ -52,27 +55,27 @@ class TestCreateAccessToken:
         assert SECRET_KEY is not None
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
 
-        exp_time = datetime.fromtimestamp(payload["exp"], tz=timezone.utc)
-        now = datetime.now(timezone.utc)
+        exp_time = datetime.fromtimestamp(payload["exp"], tz=UTC)
+        now = datetime.now(UTC)
 
         # Assert expiration is within 30 seconds of expected (accounting for execution time)
         assert 240 <= (exp_time - now).total_seconds() <= 310
 
-        
     def test_create_token_default_expiration(self):
         """Token should expire in approximately 15 minutes by default."""
         data = {"sub": "testuser"}
-    
+
         token = create_access_token(data)
         assert SECRET_KEY is not None
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    
-        exp_time = datetime.fromtimestamp(payload["exp"], tz=timezone.utc)
-        now = datetime.now(timezone.utc)
+
+        exp_time = datetime.fromtimestamp(payload["exp"], tz=UTC)
+        now = datetime.now(UTC)
 
         assert 840 <= (exp_time - now).total_seconds() <= 960
 
         # Should expire approximately 15 minutes from now (default)
+
     def test_create_token_preserves_custom_claims(self):
         """Test that additional custom claims are preserved in token."""
         data = {"sub": "testuser", "role": "admin", "permissions": ["read", "write"]}
@@ -98,13 +101,13 @@ class TestCreateAccessToken:
     def test_expired_token_raises_error(self):
         """Expired tokens should raise an exception."""
         expired = datetime.utcnow() - timedelta(minutes=10)
-    
+
         assert SECRET_KEY is not None
         expired_token = jwt.encode(
             {"sub": "testuser", "exp": expired},
             SECRET_KEY,
             algorithm=ALGORITHM,
         )
-    
+
         with pytest.raises(JWTError):
             jwt.decode(expired_token, SECRET_KEY, algorithms=[ALGORITHM])

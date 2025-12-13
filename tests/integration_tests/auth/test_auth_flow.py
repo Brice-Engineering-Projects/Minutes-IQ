@@ -1,9 +1,14 @@
 """Integration tests for complete authentication flow."""
 
 import pytest
-from fastapi.testclient import TestClient
 from fastapi import FastAPI
-from jea_meeting_web_scraper.auth.routes import router, fake_users_db, get_password_hash
+from fastapi.testclient import TestClient
+
+from jea_meeting_web_scraper.auth.auth_routes import (
+    fake_users_db,
+    get_password_hash,
+    router,
+)
 
 
 @pytest.fixture
@@ -148,9 +153,7 @@ class TestProtectedEndpoints:
         token = login_response.json()["access_token"]
 
         # Access protected endpoint
-        response = client.get(
-            "/auth/me", headers={"Authorization": f"Bearer {token}"}
-        )
+        response = client.get("/auth/me", headers={"Authorization": f"Bearer {token}"})
 
         assert response.status_code == 200
         data = response.json()

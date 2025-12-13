@@ -1,8 +1,15 @@
 """Main module for the JEA Meeting Web Scraper."""
 
-from fastapi import FastAPI
+from fastapi import APIRouter, FastAPI
+
+from jea_meeting_web_scraper.auth import auth_routes
 
 app = FastAPI()
+router = APIRouter()
+
+# Register and mountrouters from other modules (e.g., auth, meetings, nlp)
+app.include_router(auth_routes.router, prefix="/auth")
+# nlp = router.include_router(APIRouter(), prefix="/nlp")
 
 
 @app.get("/health")

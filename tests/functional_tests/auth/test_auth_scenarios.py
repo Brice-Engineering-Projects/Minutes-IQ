@@ -1,14 +1,16 @@
 """Functional tests for end-to-end authentication scenarios."""
 
-import pytest
 from datetime import timedelta
-from fastapi.testclient import TestClient
+
+import pytest
 from fastapi import FastAPI
-from jea_meeting_web_scraper.auth.routes import (
-    router,
+from fastapi.testclient import TestClient
+
+from jea_meeting_web_scraper.auth.auth_routes import (
+    create_access_token,
     fake_users_db,
     get_password_hash,
-    create_access_token,
+    router,
 )
 
 
@@ -183,9 +185,7 @@ class TestSecurityScenarios:
         assert login1.status_code == 200
 
         # Simulate password change by updating the database
-        fake_users_db["changeme"]["hashed_password"] = get_password_hash(
-            "new_password"
-        )
+        fake_users_db["changeme"]["hashed_password"] = get_password_hash("new_password")
 
         # Old password should no longer work
         login2 = client.post(

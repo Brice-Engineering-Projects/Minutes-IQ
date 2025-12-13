@@ -3,7 +3,7 @@
 This module contains routes for handling authentication-related functionality.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -11,6 +11,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel, field_validator
+
 from jea_meeting_web_scraper.config.settings import settings
 
 # Configuration
@@ -55,7 +56,7 @@ class UserCreate(BaseModel):
     password: str
     full_name: str | None = None
 
-    @field_validator('username')
+    @field_validator("username")
     @classmethod
     def validate_username(cls, v: str) -> str:
         """Validate that username is not empty."""
@@ -108,15 +109,17 @@ def authenticate_user(db: dict, username: str, password: str) -> UserInDB | bool
 def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
     """Create a JWT access token."""
     to_encode = data.copy()
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     if expires_delta:
         expire = now + expires_delta
     else:
         expire = now + timedelta(minutes=15)
-    to_encode.update({
-        "exp": expire,
-        "iat": now.timestamp(),  # Use timestamp with microseconds for uniqueness
-    })
+    to_encode.update(
+        {
+            "exp": expire,
+            "iat": now.timestamp(),  # Use timestamp with microseconds for uniqueness
+        }
+    )
     assert SECRET_KEY is not None  # Already validated at module level
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
@@ -137,7 +140,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]) -> Use
             raise credentials_exception
         token_data = TokenData(username=username)
     except JWTError:
-        raise credentials_exception
+        raise credentials_exception from None
     if token_data.username is None:
         raise credentials_exception
     user = get_user(fake_users_db, username=token_data.username)
