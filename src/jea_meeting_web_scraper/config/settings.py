@@ -8,10 +8,10 @@ Loads:
 
 from pathlib import Path
 from typing import Optional
-import yaml
-from pydantic import BaseModel, Field, field_validator, ConfigDict
-from pydantic_settings import BaseSettings
 
+import yaml
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic_settings import BaseSettings
 
 # ------------------------------------------------------------
 # Nested Configuration Models
@@ -21,8 +21,10 @@ from pydantic_settings import BaseSettings
 class AppSettings(BaseModel):
     name: str = "jea-meeting-web-scraper"
     debug: bool = False
-    env: str = Field(default="development", description="dev, testing, production")
-    log_level: str = Field(default="info")
+    env: str = Field(
+        default="development", description="development | staging | production"
+    )
+    log_level: str = "info"
 
 
 class ScraperSettings(BaseModel):
@@ -46,65 +48,80 @@ class TaskSettings(BaseModel):
 
 
 # ------------------------------------------------------------
-# Database Settings
+# Download / Export Settings
+# ------------------------------------------------------------
+
+
+class DownloadSettings(BaseModel):
+    export_directory: str = "./data/exports"
+    zip_directory: str = "./data/zipped"
+    zip_filename_pattern: str = "jea_results_{date}.zip"
+    include_raw_pdfs: bool = True
+    include_annotated_pdfs: bool = True
+
+
+# ------------------------------------------------------------
+# Feature Flags
+# ------------------------------------------------------------
+
+
+class FeatureSettings(BaseModel):
+    enable_zip_downloads: bool = True
+    enable_keyword_management: bool = True
+    enable_client_selection: bool = True
+    enable_profile_customization: bool = True
+
+
+# ------------------------------------------------------------
+# Turso Database Settings
 # ------------------------------------------------------------
 
 
 class DatabaseSettings(BaseSettings):
-    db_host: str = "localhost"
-    db_port: int = 5432
-    db_name: str = "testdb"
-    db_user: str = "testuser"
-    db_password: str = "testpass"
+    model_config = ConfigDict(env_file=".env", extra="ignore")
 
-    @property
-    def sync_url(self) -> str:
-        return (
-            f"postgresql+psycopg2://{self.db_user}:{self.db_password}"
-            f"@{self.db_host}:{self.db_port}/{self.db_name}"
-        )
+    provider: str = "turso"  # future-proofing: could be sqlite or postgres later
+    db_url: Optional[str] = None  # TURSO_DATABASE_URL (env)
+    auth_token: Optional[str] = None  # TURSO_AUTH_TOKEN (env)
+    replica_url: Optional[str] = None  # TURSO_REPLICA_URL (optional)
 
-    @property
-    def async_url(self) -> str:
-        return (
-            f"postgresql+asyncpg://{self.db_user}:{self.db_password}"
-            f"@{self.db_host}:{self.db_port}/{self.db_name}"
-        )
+    @field_validator("db_url")
+    @classmethod
+    def validate_db_url(cls, v):
+        if v is None:
+            raise ValueError("TURSO_DATABASE_URL must be set in .env")
+        return v
 
 
 # ------------------------------------------------------------
-# Root Settings (environment + YAML merge)
+# Root Settings (YAML + ENV merged)
 # ------------------------------------------------------------
 
 
 class Settings(BaseSettings):
     model_config = ConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        extra="ignore"  # Ignore extra fields from env/yaml
+        env_file=".env", env_file_encoding="utf-8", extra="ignore"
     )
-    
+
     # Secrets
     secret_key: str = "test_secret_key_for_development_min_32_chars"
     app_username: str = "testuser"
     app_password: str = "testpass"
 
-    # Nested config loaded from YAML
+    # Nested config (YAML-loaded)
     app: AppSettings = AppSettings()
-    scraper: ScraperSettings = ScraperSettings(
-        pdf_directory="./data/raw_pdfs",
-        annotated_directory="./data/annotated_pdfs"
-    )
+    scraper: ScraperSettings
     cookies: CookieSettings = CookieSettings()
     tasks: TaskSettings = TaskSettings()
+    downloads: DownloadSettings = DownloadSettings()
+    features: FeatureSettings = FeatureSettings()
 
-    # Database
+    # Database (env-loaded overrides YAML if present)
     database: DatabaseSettings = DatabaseSettings()
 
-    # Validators
     @field_validator("secret_key")
     @classmethod
-    def validate_secret(cls, v: str):
+    def validate_secret(cls, v):
         if len(v) < 32:
             raise ValueError("SECRET_KEY must be at least 32 characters long.")
         return v
@@ -118,13 +135,11 @@ class Settings(BaseSettings):
 def load_settings() -> Settings:
     yaml_path = Path(__file__).parent / "config.yaml"
 
-    # Load YAML if exists, otherwise use defaults
     yaml_data = {}
     if yaml_path.exists():
         with yaml_path.open("r") as f:
             yaml_data = yaml.safe_load(f) or {}
 
-    # Create Settings obj by merging YAML + `.env`
     return Settings(**yaml_data)
 
 
