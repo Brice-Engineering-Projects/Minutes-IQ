@@ -11,14 +11,35 @@ JEA_WEB_SCRAPING/
 ├── docs/
 │   ├── 01_overview/
 │   ├── 02_architecture/
-│   └── 03_medium_blog/
+│   ├── 03_deployment/
+│   ├── 04_security/
+│   ├── 05_future_plans/
+│   ├── 06_medium_blog/
+│   └── 07_project_diary_notes/
 │
-├── src/
+├── src/jea_meeting_web_scraper/
+│   ├── __init__.py
+│   │
+│   ├── main.py                   # FastAPI app entry point
+│   │
+│   ├── config/
+│   │   ├── __init__.py
+│   │   ├── config.yaml           # Application configuration file
+│   │   └── settings.py            # Pydantic settings management
+│   │
+│   ├── auth/
+│   │   ├── __init__.py
+│   │   ├── routes.py              # Auth route handlers
+│   │   ├── schemas.py              # Pydantic models for auth
+│   │   ├── security.py            # JWT and password hashing
+│   │   ├── storage.py             # User data storage logic or db access
+│   │   └── dependencies.py        # Auth dependencies
+│   │
 │   ├── dashboard/
 │   │   ├── __init__.py
 │   │   └── dashboard.py          # can be converted into a route handler
 │   │
-│   ├── NLP/
+│   ├── nlp/
 │   │   ├── __init__.py
 │   │   ├── JEA_minutes_scraper.py
 │   │   ├── highlight_mentions.py
@@ -28,15 +49,14 @@ JEA_WEB_SCRAPING/
 │   │   ├── scraper_service.py    # will wrap your existing scripts
 │   │   └── pdf_service.py
 │   │
-│   └── webapp/
-│       ├── main.py               # FASTAPI ENTRYPOINT
-│       ├── auth.py               # login logic
-│       ├── routes.py             # dashboard routes
-│       ├── dependencies.py
-│       │
-│       ├── templates/
+│   └── templates/
+│       ├── layouts/
 │       │   ├── base.html
+│       │   └── home.html
+│       ├── auth/
 │       │   ├── login.html
+│       │   └── register.html
+│       ├── dashboard/
 │       │   ├── dashboard.html
 │       │   └── downloads.html
 │       │

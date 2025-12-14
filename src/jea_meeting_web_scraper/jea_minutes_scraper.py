@@ -55,7 +55,7 @@ logging.basicConfig(
 
 # === LOAD KEYWORDS ===
 def load_keywords(filepath):
-    with open(filepath, "r") as f:
+    with open(filepath) as f:
         return [line.strip() for line in f if line.strip() and not line.startswith("#")]
 
 
