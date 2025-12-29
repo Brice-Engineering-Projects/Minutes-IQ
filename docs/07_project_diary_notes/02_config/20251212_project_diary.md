@@ -20,15 +20,15 @@ This enables consistent behavior across development, staging, and production env
 
 Key configuration domains now implemented:
 
-| Domain     | Description |
-|------------|-------------|
-| `app`      | Application metadata, environment mode, logging level |
-| `scraper`  | File paths, timeouts, concurrency, user agent, processing directories |
-| `cookies`  | Secure cookie defaults for auth/session management |
-| `tasks`    | Background worker settings |
-| `downloads`| ZIP export directories, filename conventions, and PDF export preferences |
-| `features` | Toggleable feature flags for modular system activation |
-| `database` | Turso/libSQL provider structure with `.env` token override support |
+| Domain      | Description                                                                  |
+|-------------|------------------------------------------------------------------------------|
+| `app`       | Application metadata, environment mode, logging level                        |
+| `scraper`   | File paths, timeouts, concurrency, user agent, processing directories        |
+| `cookies`   | Secure cookie defaults for auth/session management                           |
+| `tasks`     | Background worker settings                                                   |
+| `downloads` | ZIP export directories, filename conventions, and PDF export preferences     |
+| `features`  | Toggleable feature flags for modular system activation                       |
+| `database`  | Turso/libSQL provider structure with `.env` token override support           |
 
 This configuration structure provides long-term flexibility and allows the application to scale while maintaining clear separation between static config and secrets.
 
