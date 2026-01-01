@@ -6,12 +6,9 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from jea_meeting_web_scraper.auth.auth_routes import (
-    create_access_token,
-    fake_users_db,
-    get_password_hash,
-    router,
-)
+from jea_meeting_web_scraper.auth.routes import router
+from jea_meeting_web_scraper.auth.schemas import fake_users_db
+from jea_meeting_web_scraper.auth.security import create_access_token, get_password_hash
 
 
 @pytest.fixture

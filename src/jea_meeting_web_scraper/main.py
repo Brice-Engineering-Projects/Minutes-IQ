@@ -2,13 +2,13 @@
 
 from fastapi import APIRouter, FastAPI
 
-from jea_meeting_web_scraper.auth import auth_routes
+from jea_meeting_web_scraper.auth import routes
 
 app = FastAPI()
 router = APIRouter()
 
 # Register and mountrouters from other modules (e.g., auth, meetings, nlp)
-app.include_router(auth_routes.router, prefix="/auth")
+app.include_router(routes.router, prefix="/auth")
 # nlp = router.include_router(APIRouter(), prefix="/nlp")
 
 
