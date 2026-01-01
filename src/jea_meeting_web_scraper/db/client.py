@@ -1,4 +1,5 @@
 # src/jea_meeting_web_scraper/db/client.py
+"""Database client module for interacting with the database."""
 
 from libsql_experimental import connect
 

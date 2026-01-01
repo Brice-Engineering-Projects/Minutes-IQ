@@ -14,8 +14,10 @@ JEA_WEB_SCRAPING/
 │   ├── 03_deployment/
 │   ├── 04_security/
 │   ├── 05_future_plans/
-│   ├── 06_medium_blog/
-│   └── 07_project_diary_notes/
+│   ├── 06_operations/
+│   ├── 07_project_diary_notes/
+│   ├── 08_database/
+│   └── 09_medium_blog/
 │
 ├── src/jea_meeting_web_scraper/
 │   ├── __init__.py
@@ -30,14 +32,19 @@ JEA_WEB_SCRAPING/
 │   ├── auth/
 │   │   ├── __init__.py
 │   │   ├── routes.py              # Auth route handlers
-│   │   ├── schemas.py              # Pydantic models for auth
+│   │   ├── schemas.py             # Pydantic models for auth
 │   │   ├── security.py            # JWT and password hashing
 │   │   ├── storage.py             # User data storage logic or db access
+│   │   ├── service.py             # user auth orchestration (DB-facing)
 │   │   └── dependencies.py        # Auth dependencies
 │   │
 │   ├── dashboard/
 │   │   ├── __init__.py
 │   │   └── dashboard.py          # can be converted into a route handler
+│   │
+│   ├── db/
+│   │   ├── __init__.py
+│   │   └── client.py            # Database client module for interacting with the database
 │   │
 │   ├── nlp/
 │   │   ├── __init__.py
@@ -66,6 +73,15 @@ JEA_WEB_SCRAPING/
 │           └── images/
 │
 ├── environment.yml
+├── pyproject.toml
+├── pyproject_orginal.toml
+├── pytest.ini
+├── .pre-commit-config.yaml
+├── .env
+├── .env.example
+├── .gitignore
+├── keywords.txt
+├── uv.lock
 ├── README.md
 └── scraper.log
 ```
