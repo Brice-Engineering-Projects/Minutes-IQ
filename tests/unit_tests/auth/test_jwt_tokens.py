@@ -5,7 +5,7 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from jose import JWTError, jwt
 
-from jea_meeting_web_scraper.auth.auth_routes import (
+from jea_meeting_web_scraper.auth.security import (
     ALGORITHM,
     SECRET_KEY,
     create_access_token,

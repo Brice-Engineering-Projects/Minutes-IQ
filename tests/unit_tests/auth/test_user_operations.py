@@ -1,9 +1,9 @@
 """Unit tests for user database operations."""
 
-from jea_meeting_web_scraper.auth.auth_routes import (
-    UserInDB,
+from jea_meeting_web_scraper.auth.schemas import UserInDB
+from jea_meeting_web_scraper.auth.security import get_password_hash
+from jea_meeting_web_scraper.auth.service import (
     authenticate_user,
-    get_password_hash,
     get_user,
 )
 
