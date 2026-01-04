@@ -154,10 +154,10 @@ This avoids compounding refactor risk.
 
 This phase is complete when:
 
-- [ ] All tests reference new auth modules
-- [ ] `auth_routes.py` is deleted
-- [ ] Tests pass cleanly
-- [ ] No lint violations remain
+- [x] All tests reference new auth modules
+- [x] `auth_routes.py` is deleted
+- [x] Tests pass cleanly
+- [x] No lint violations remain
 - [ ] Auth behavior remains unchanged
 
 Only then should new auth features be implemented.
