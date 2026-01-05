@@ -17,8 +17,8 @@ It is designed to minimize rework, refactors, and operational risk.
 - [x] Documentation-first approach adopted
 - [x] Architecture Decision Record (ADR) written
 - [x] Build checklist defined
-- [ ] Database schema finalized (auth, profiles, clients)
-- [ ] Security model defined
+- [x] Database schema finalized (auth, profiles, clients)
+- [x] Security model defined
 - [ ] Admin governance policy defined
 - [ ] Operational runbook created
 - [ ] Sequence diagrams completed
