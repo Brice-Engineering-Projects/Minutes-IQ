@@ -51,7 +51,7 @@ Auth structure is stable, test-covered, and extensible.
 
 **Goal:** Replace in-memory auth storage with Turso-backed persistence.
 
-- [ ] Define DB connection module
+- [x] Define DB connection module
 - [ ] Implement user repository (CRUD)
 - [ ] Migrate auth service to DB-backed users
 - [ ] Update tests to use DB fixtures or fakes

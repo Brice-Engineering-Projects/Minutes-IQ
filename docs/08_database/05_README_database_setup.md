@@ -52,7 +52,7 @@ turso db list
 Open an interactive SQLite shell:
 
 ```bash
-turso db shell jea-web-scraper
+turso db shell jea-scraper
 ```
 
 Ensure foreign key enforcement is enabled:
@@ -103,8 +103,8 @@ Before seeding authentication providers, create **at least one admin user**.
 Example (adjust values as needed):
 
 ```sql
-INSERT INTO user (username, email, phone, role_id, provider_id)
-VALUES ('admin', 'admin@example.com', NULL, NULL, NULL);
+INSERT INTO users (username, email, phone, role_id, provider_id)
+VALUES ('admin', 'admin@example.com', '555-555-5555', NULL, NULL);
 ```
 
 > 🔐 Passwords are **not** stored here.  
@@ -137,6 +137,16 @@ Example for local auth:
 ```sql
 INSERT INTO auth_credentials (provider_id, user_id, hashed_password)
 VALUES (1, 1, '<bcrypt_hash>');
+```
+
+Example of how to hash a password:
+
+```python
+import bcrypt
+
+password = b"YourStrongAdminPasswordHere"
+hashed = bcrypt.hashpw(password, bcrypt.gensalt())
+print(hashed.decode())
 ```
 
 > ⚠️ Passwords must already be hashed (bcrypt).

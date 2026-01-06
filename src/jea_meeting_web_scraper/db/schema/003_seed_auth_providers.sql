@@ -7,17 +7,26 @@
 PRAGMA foreign_keys = ON;
 
 -- -----------------------------------------------------
--- Seed auth provider types
+-- Attach LOCAL auth provider to admin user
 -- -----------------------------------------------------
--- NOTE:
--- This assumes auth_provider is currently user-scoped.
--- Providers should be inserted after at least one
--- system/admin user exists.
+-- Assumptions:
+-- 1. users table already exists
+-- 2. admin user has already been seeded
+-- 3. auth_provider is user-scoped
+--
+-- This script is idempotent and safe to re-run.
 -- -----------------------------------------------------
 
--- Example seed (replace user_id with real admin user)
--- INSERT INTO auth_provider (user_id, provider_type)
--- VALUES (1, 'local');
+INSERT INTO auth_provider (user_id, provider_type)
+SELECT u.user_id, 'local'
+FROM users u
+WHERE u.username = 'admin'
+  AND NOT EXISTS (
+    SELECT 1
+    FROM auth_provider ap
+    WHERE ap.user_id = u.user_id
+      AND ap.provider_type = 'local'
+  );
 
 -- =====================================================
 -- End of 003_seed_auth_providers.sql

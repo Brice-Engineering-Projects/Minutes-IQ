@@ -56,26 +56,28 @@ CREATE TABLE auth_provider (
     user_id INTEGER NOT NULL,
     provider_type TEXT NOT NULL,
     UNIQUE (user_id, provider_type),
-    FOREIGN KEY (user_id) REFERENCES user(user_id)
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
         ON DELETE RESTRICT ON UPDATE RESTRICT
 );
 
 -- -----------------------------------------------------
 -- Profiles
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS profile;
 CREATE TABLE profile (
     profile_id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL UNIQUE,
     first_name TEXT,
     last_name TEXT,
     title TEXT,
-    FOREIGN KEY (user_id) REFERENCES user(user_id)
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
         ON DELETE RESTRICT ON UPDATE RESTRICT
 );
 
 -- -----------------------------------------------------
 -- Auth Credentials
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS auth_credentials;
 CREATE TABLE auth_credentials (
     auth_id INTEGER PRIMARY KEY AUTOINCREMENT,
     provider_id INTEGER NOT NULL,
@@ -86,7 +88,7 @@ CREATE TABLE auth_credentials (
     UNIQUE (provider_id, user_id),
     FOREIGN KEY (provider_id) REFERENCES auth_provider(provider_id)
         ON DELETE RESTRICT ON UPDATE RESTRICT,
-    FOREIGN KEY (user_id) REFERENCES user(user_id)
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
         ON DELETE RESTRICT ON UPDATE RESTRICT
 );
 
@@ -123,11 +125,12 @@ CREATE TABLE client_sources (
 -- -----------------------------------------------------
 -- User Client Favorites
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS user_client_favorites;
 CREATE TABLE user_client_favorites (
     user_id INTEGER NOT NULL,
     client_id INTEGER NOT NULL,
     PRIMARY KEY (user_id, client_id),
-    FOREIGN KEY (user_id) REFERENCES user(user_id)
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
         ON DELETE RESTRICT ON UPDATE RESTRICT,
     FOREIGN KEY (client_id) REFERENCES client(client_id)
         ON DELETE RESTRICT ON UPDATE RESTRICT
@@ -136,6 +139,7 @@ CREATE TABLE user_client_favorites (
 -- -----------------------------------------------------
 -- Saved Searches
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS saved_searches;
 CREATE TABLE saved_searches (
     saved_search_id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
@@ -145,7 +149,7 @@ CREATE TABLE saved_searches (
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (user_id, client_id, name),
-    FOREIGN KEY (user_id) REFERENCES user(user_id)
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
         ON DELETE RESTRICT ON UPDATE RESTRICT,
     FOREIGN KEY (client_id) REFERENCES client(client_id)
         ON DELETE RESTRICT ON UPDATE RESTRICT
