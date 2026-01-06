@@ -19,10 +19,10 @@ It is designed to minimize rework, refactors, and operational risk.
 - [x] Build checklist defined
 - [x] Database schema finalized (auth, profiles, clients)
 - [x] Security model defined
-- [ ] Admin governance policy defined
-- [ ] Operational runbook created
-- [ ] Sequence diagrams completed
-- [ ] API contract finalized
+- [x] Admin governance policy defined
+- [x] Operational runbook created
+- [x] Sequence diagrams completed
+- [x] API contract finalized
 
 **Exit Criteria:**  
 Architecture decisions are locked and traceable.
@@ -34,8 +34,8 @@ Architecture decisions are locked and traceable.
 **Goal:** Establish clean auth boundaries before adding features.
 
 - [x] Split monolithic auth module into layered components
-- [ ] Isolated crypto logic (JWT / bcrypt)
-- [ ] Isolated FastAPI dependencies
+- [x] Isolated crypto logic (JWT / bcrypt)
+- [x] Isolated FastAPI dependencies
 - [x] Isolated auth service logic
 - [x] Updated all tests to reference new structure
 - [x] Deleted legacy `auth_routes.py`
