@@ -47,15 +47,47 @@ Auth structure is stable, test-covered, and extensible.
 
 ---
 
-## Phase 2 — Persistence Layer (⏳ Next)
+## Phase 2 — Persistence Layer
 
-**Goal:** Replace in-memory auth storage with Turso-backed persistence.
+**Goal:** Give the application long-term memory by storing users in a database instead of in temporary in-memory storage.
 
-- [x] Define DB connection module
-- [ ] Implement user repository (CRUD)
-- [ ] Migrate auth service to DB-backed users
-- [ ] Update tests to use DB fixtures or fakes
-- [ ] Validate migrations and rollback strategy
+### What This Phase Accomplishes
+- User accounts persist across restarts and deployments
+- Authentication becomes production-ready
+- The system is safer to test and easier to extend
+
+### Checklist
+
+- [x] **Define DB Module**
+- [x] **Create database connection layer**
+  - Add a single, centralized module responsible for connecting to the database
+  - Ensure all database access flows through this module
+- [x] Validate schema & migrations
+- [x] Seed admin user
+- [x] Verify DB access programmatically
+
+- [ ] **Implement user data access (CRUD)**
+  - Add functions to create, read, update, and delete users
+  - Isolate database logic from authentication and route handlers
+
+- [ ] **Migrate authentication to database-backed users**
+  - Replace in-memory user storage with database queries
+  - Validate credentials against stored user records
+
+- [ ] **Update tests for database usage**
+  - Modify tests to use test users, fixtures, or mock data
+  - Ensure tests do not interact with real user data
+
+- [ ] **Verify migrations and rollback safety**
+  - Confirm database schema changes apply cleanly
+  - Validate rollback procedures in case of migration failure
+
+### Completion Criteria
+- Users persist after application restarts
+- Authentication no longer relies on in-memory data
+- All tests pass using database-backed user data
+- Database changes are reversible and documented
+
 
 **Exit Criteria:**  
 Auth no longer depends on in-memory data structures.
