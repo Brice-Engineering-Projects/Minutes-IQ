@@ -52,6 +52,7 @@ Auth structure is stable, test-covered, and extensible.
 **Goal:** Give the application long-term memory by storing users in a database instead of in temporary in-memory storage.
 
 ### What This Phase Accomplishes
+
 - User accounts persist across restarts and deployments
 - Authentication becomes production-ready
 - The system is safer to test and easier to extend
@@ -83,11 +84,11 @@ Auth structure is stable, test-covered, and extensible.
   - Validate rollback procedures in case of migration failure
 
 ### Completion Criteria
+
 - Users persist after application restarts
 - Authentication no longer relies on in-memory data
 - All tests pass using database-backed user data
 - Database changes are reversible and documented
-
 
 **Exit Criteria:**  
 Auth no longer depends on in-memory data structures.

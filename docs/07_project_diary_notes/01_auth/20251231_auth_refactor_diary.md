@@ -47,7 +47,7 @@ All major architectural, security, and operational decisions are now locked in *
 
 The original monolithic `auth_routes.py` module was decomposed into layered components:
 
-```
+```text
 auth/
 ├── routes.py        # HTTP endpoints only
 ├── schemas.py       # Pydantic models
@@ -106,6 +106,7 @@ This is intentional technical debt being paid down incrementally.
 **Goal:** Fully decouple tests from `auth_routes.py`
 
 Tasks:
+
 - Identify all imports in `tests/` referencing:
   - `auth_routes`
   - old auth symbols
@@ -122,6 +123,7 @@ Tasks:
 ### 2. Delete `auth_routes.py`
 
 Once no references remain:
+
 - Remove the file
 - Run full test suite
 - Commit deletion as a **separate cleanup commit**
