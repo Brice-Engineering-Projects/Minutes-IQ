@@ -1,4 +1,6 @@
-# 🛠️ Project Diary — 2026-01-05
+# 🛠️ Project Diary
+
+## Project Diary Date: 2026-01-05
 
 ## Project
 **JEA Meeting Web Scraper & Intelligence Dashboard**

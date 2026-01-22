@@ -66,18 +66,18 @@ Verified via:
 
 ### Repositories (Data Access Layer)
 
-- [ ] Create `user_repository.py`
+- [x] Create `user_repository.py`
   - [x] Implement `get_user_by_id`
   - [x] Implement `get_user_by_username`
-  - [ ] Return identity-only fields (no auth logic)
+  - [x] Return identity-only fields (no auth logic)
   - [x] No SQL outside repository
 
-- [ ] Create `auth_repository.py`
-  - [ ] Join `users`, `auth_credentials`, `auth_provider`
-  - [ ] Provider-aware credential lookup (password provider)
-  - [ ] Filter on active credentials
-  - [ ] Read-only access only
-  - [ ] No password verification logic
+- [x] Create `auth_repository.py`
+  - [x] Join `users`, `auth_credentials`, `auth_provider`
+  - [x] Provider-aware credential lookup (password provider)
+  - [x] Filter on active credentials
+  - [x] Read-only access only
+  - [x] No password verification logic
 
 ---
 

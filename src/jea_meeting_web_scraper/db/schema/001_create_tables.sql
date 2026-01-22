@@ -51,7 +51,7 @@ CREATE TABLE users (
 -- -----------------------------------------------------
 -- Auth Providers
 -- -----------------------------------------------------
-CREATE TABLE auth_provider (
+CREATE TABLE auth_providers (
     provider_id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
     provider_type TEXT NOT NULL,
