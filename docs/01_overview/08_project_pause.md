@@ -81,6 +81,11 @@ Verified via:
 
 ---
 
+### Database Table Names
+
+- [ ] Run sql code in database to change table names
+  - [ ] auth_provider to auth_providers
+
 ### Authentication Service (Logic Layer)
 
 - [ ] Create `auth_service.py`
