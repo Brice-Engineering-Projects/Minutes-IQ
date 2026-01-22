@@ -44,7 +44,9 @@ JEA_WEB_SCRAPING/
 │   │
 │   ├── db/
 │   │   ├── __init__.py
-│   │   └── client.py            # Database client module for interacting with the database
+│   │   ├── client.py            # Database client module for interacting with the database
+│   │   ├── user_repository.py   # Identity-only
+│   │   └── auth_repository.py   # Joins & Hashes
 │   │
 │   ├── nlp/
 │   │   ├── __init__.py

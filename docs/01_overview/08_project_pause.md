@@ -67,10 +67,10 @@ Verified via:
 ### Repositories (Data Access Layer)
 
 - [ ] Create `user_repository.py`
-  - [ ] Implement `get_user_by_id`
-  - [ ] Implement `get_user_by_username`
+  - [x] Implement `get_user_by_id`
+  - [x] Implement `get_user_by_username`
   - [ ] Return identity-only fields (no auth logic)
-  - [ ] No SQL outside repository
+  - [x] No SQL outside repository
 
 - [ ] Create `auth_repository.py`
   - [ ] Join `users`, `auth_credentials`, `auth_provider`
