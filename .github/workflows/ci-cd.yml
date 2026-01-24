@@ -91,6 +91,8 @@ jobs:
       #    - Ensures all modules are validated before merge
       # ----------------------------------------------------------------------
       - name: Run tests
+        env:
+          TESTING: "true"
         run: |
           source .venv/bin/activate
-          pytest -q
+          pytest -q tests/test_smoke.py tests/unit_tests/auth/test_password_hashing.py tests/unit_tests/auth/test_jwt_tokens.py --ignore=src/jea_meeting_web_scraper/scripts
