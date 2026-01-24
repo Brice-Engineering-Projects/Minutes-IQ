@@ -93,6 +93,10 @@ Verified via:
   - [x] Verify password using security utilities
   - [x] Return authenticated user context or failure
   - [x] No SQL in this layer
+- [x] Split monolithic auth module into layered components.
+- [x] Create database connection layer.
+- [x] Implement user data access (CRUD).
+- [x] Migrate authentication to database-backed users.
 
 ---
 

@@ -26,7 +26,7 @@ def get_db_client() -> Connection:
 
 
 @contextmanager
-def get_db() -> Iterator[Connection]:
+def get_db_connection() -> Iterator[Connection]:
     """
     Context-managed database connection.
 
@@ -44,7 +44,7 @@ def healthcheck() -> bool:
     Verify database connectivity.
     """
     try:
-        with get_db() as conn:
+        with get_db_connection() as conn:
             # Simple query to verify the connection is alive
             conn.execute("SELECT 1;")
         return True

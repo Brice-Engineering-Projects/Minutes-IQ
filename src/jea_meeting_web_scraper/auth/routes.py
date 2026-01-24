@@ -1,91 +1,63 @@
+# jea_meeting_web_scraper/auth/routes.py
 """
-jea_meeting_web_scraper/auth/routes.py
---------------------------------------
-
-This module contains routes for handling authentication-related functionality.
+Auth Routes
+Handles HTTP requests for login, logout, and registration.
 """
 
-from datetime import timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from fastapi.security import OAuth2PasswordRequestForm
 
-from jea_meeting_web_scraper.auth.dependencies import get_current_active_user
-from jea_meeting_web_scraper.auth.schemas import (
-    Token,
-    User,
-    UserCreate,
-    UserInDB,
-    fake_users_db,
-)
-from jea_meeting_web_scraper.auth.security import (
-    ACCESS_TOKEN_EXPIRE_MINUTES,
-    create_access_token,
-    get_password_hash,
-)
-from jea_meeting_web_scraper.auth.service import authenticate_user
+from jea_meeting_web_scraper.auth.dependencies import get_auth_service, get_current_user
+from jea_meeting_web_scraper.auth.security import create_access_token
+from jea_meeting_web_scraper.auth.service import AuthService
 
-router = APIRouter()
+router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
-# Routes
-@router.post("/login", response_model=Token)
-async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
-    """Login endpoint to get an access token."""
-    user = authenticate_user(fake_users_db, form_data.username, form_data.password)
-    if not user or not isinstance(user, UserInDB):
+@router.post("/login")
+async def login(
+    response: Response,
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    auth_service: Annotated[AuthService, Depends(get_auth_service)],
+):
+    """
+    Handles the login flow:
+    1. Authenticates user via AuthService (DB-backed).
+    2. Generates a JWT access token.
+    3. Sets an HttpOnly cookie for security.
+    """
+    # Use the service layer to verify credentials (this triggers the triple-join)
+    user = auth_service.authenticate_user(form_data.username, form_data.password)
+
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
+
+    # Generate JWT containing the user_id context
+    access_token = create_access_token(data={"sub": str(user["user_id"])})
+
+    # Store token in a secure, HttpOnly cookie to prevent XSS attacks
+    response.set_cookie(
+        key="access_token",
+        value=f"Bearer {access_token}",
+        httponly=True,
+        max_age=1800,  # 30 minutes
+        samesite="lax",
+        secure=True,  # Ensure this is True in production (HTTPS)
     )
-    return Token(access_token=access_token, token_type="bearer")
+
+    return {"message": "Successfully logged in", "user": user}
 
 
-@router.post("/register", response_model=User)
-async def register(user_data: UserCreate) -> User:
-    """Register a new user."""
-    # Check if user already exists
-    if user_data.username in fake_users_db:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username already registered",
-        )
-
-    # Create new user
-    hashed_password = get_password_hash(user_data.password)
-    user_dict = {
-        "username": user_data.username,
-        "email": user_data.email,
-        "full_name": user_data.full_name,
-        "hashed_password": hashed_password,
-        "disabled": False,
-    }
-    fake_users_db[user_data.username] = user_dict
-
-    return User(**user_dict)
-
-
-@router.get("/me", response_model=User)
-async def read_users_me(
-    current_user: Annotated[User, Depends(get_current_active_user)],
-) -> User:
-    """Get current user information."""
+@router.get("/me")
+async def read_users_me(current_user: Annotated[dict, Depends(get_current_user)]):
+    """
+    Returns the currently authenticated user's profile.
+    This verifies that the persistence layer and JWT flow are fully integrated.
+    """
     return current_user
-
-
-@router.post("/refresh", response_model=Token)
-async def refresh_token(
-    current_user: Annotated[User, Depends(get_current_active_user)],
-) -> Token:
-    """Refresh the access token."""
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": current_user.username}, expires_delta=access_token_expires
-    )
-    return Token(access_token=access_token, token_type="bearer")
