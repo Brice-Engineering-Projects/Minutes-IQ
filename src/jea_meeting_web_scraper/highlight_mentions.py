@@ -58,7 +58,7 @@ def highlight_pdf(file_path, mentions):
                 highlight_pages.add(page_num)
         except Exception as e:
             print(
-                f"❌ Could not highlight '{keyword}' on page {page_num+1} in {file_path}: {e}"
+                f"❌ Could not highlight '{keyword}' on page {page_num + 1} in {file_path}: {e}"
             )
 
     # Add bookmarks for highlight pages
@@ -68,12 +68,12 @@ def highlight_pdf(file_path, mentions):
         # If TOC is empty, start with level 1; otherwise use level 2
         if not toc:
             new_entries = [
-                [1, f"Highlight {idx+1} (Page {pnum+1})", pnum]
+                [1, f"Highlight {idx + 1} (Page {pnum + 1})", pnum]
                 for idx, pnum in enumerate(sorted(highlight_pages))
             ]
         else:
             new_entries = [
-                [2, f"Highlight {idx+1} (Page {pnum+1})", pnum]
+                [2, f"Highlight {idx + 1} (Page {pnum + 1})", pnum]
                 for idx, pnum in enumerate(sorted(highlight_pages))
             ]
 
