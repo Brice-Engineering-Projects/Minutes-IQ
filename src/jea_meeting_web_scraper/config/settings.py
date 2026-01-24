@@ -77,7 +77,6 @@ class FeatureSettings(BaseModel):
 
 
 class DatabaseSettings(BaseSettings):
-    provider: str = "turso"  # future-proofing: could be sqlite or postgres later
     model_config = SettingsConfigDict(
         env_prefix="",
         env_file=".env",
@@ -151,12 +150,12 @@ class Settings(BaseSettings):
 def load_settings() -> Settings:
     yaml_path = Path(__file__).parent / "config.yaml"
 
-    yaml_data = {}
+    yaml_data: dict[str, object] = {}
     if yaml_path.exists():
         with yaml_path.open("r") as f:
             yaml_data = yaml.safe_load(f) or {}
 
-    return Settings(**yaml_data)
+    return Settings(**yaml_data)  # type: ignore[arg-type]
 
 
 settings = load_settings()

@@ -210,7 +210,7 @@ if __name__ == "__main__":
     print(f"🔑 Loaded {len(keywords)} keywords from {KEYWORDS_FILE}")
 
     all_mentions = []
-    keyword_counts = defaultdict(int)
+    keyword_counts: dict[str, int] = defaultdict(int)
 
     print("🔎 Scanning and downloading PDFs with matches...")
     for url in pdf_links:

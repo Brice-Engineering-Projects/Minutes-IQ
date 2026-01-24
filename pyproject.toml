@@ -72,3 +72,13 @@ ignore = [
 quote-style = "double"
 indent-style = "space"
 line-ending = "lf"
+
+[tool.mypy]
+python_version = "3.12"
+mypy_path = "src"
+warn_return_any = false
+warn_unused_configs = true
+disallow_untyped_defs = false
+check_untyped_defs = true
+# Ignore missing library stubs for third-party packages
+ignore_missing_imports = true

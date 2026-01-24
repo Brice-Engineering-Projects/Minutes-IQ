@@ -58,11 +58,12 @@ jobs:
           python -m pip install --upgrade pip wheel
 
       # ----------------------------------------------------------------------
-      # 5. Install Development Tooling
+      # 5. Install Dependencies
       # ----------------------------------------------------------------------
-      - name: Install dev dependencies
+      - name: Install dependencies
         run: |
           source .venv/bin/activate
+          pip install -e .
           pip install ruff pytest pre-commit mypy
 
       # ----------------------------------------------------------------------
@@ -82,7 +83,7 @@ jobs:
       - name: Type check with Mypy
         run: |
           source .venv/bin/activate
-          mypy .
+          mypy src/jea_meeting_web_scraper
 
       # ----------------------------------------------------------------------
       # 8. Run Test Suite

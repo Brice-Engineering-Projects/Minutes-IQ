@@ -5,13 +5,14 @@ src/jea_meeting_web_scraper/api/users.py
 API endpoints for user management in the JEA Meeting Web Scraper application.
 """
 
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from src.jea_meeting_web_scraper.auth import get_current_user
-from src.jea_meeting_web_scraper.database import UserDB, get_user_db
+from jea_meeting_web_scraper.auth.dependencies import get_current_user
+from jea_meeting_web_scraper.db.client import get_db_connection
+from jea_meeting_web_scraper.db.user_repository import UserRepository
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -34,11 +35,18 @@ class UserCreate(BaseModel):
 
 
 # -------------------------
-# Dependency aliases
+# Dependencies
 # -------------------------
 
-UserDBDep = Annotated[UserDB, Depends(get_user_db)]
-CurrentUserDep = Annotated[User, Depends(get_current_user)]
+
+def get_user_repository() -> UserRepository:
+    """Provides a UserRepository instance with a fresh DB connection."""
+    conn = get_db_connection()
+    return UserRepository(conn.__enter__())
+
+
+UserRepoDep = Annotated[UserRepository, Depends(get_user_repository)]
+CurrentUserDep = Annotated[dict[str, Any], Depends(get_current_user)]
 
 
 # -------------------------
@@ -49,30 +57,30 @@ CurrentUserDep = Annotated[User, Depends(get_current_user)]
 @router.post("/", response_model=User)
 async def create_user(
     user: UserCreate,
-    db: UserDBDep,
+    user_repo: UserRepoDep,
 ):
-    if db.get_user_by_username(user.username):
+    if user_repo.get_user_by_username(user.username):
         raise HTTPException(status_code=400, detail="Username already registered")
-    return db.create_user(user.username, user.email, user.password)
+    return user_repo.create_user(user.username, user.email, user.password)  # type: ignore[attr-defined]
 
 
 @router.get("/", response_model=list[User])
 async def read_users(
     current_user: CurrentUserDep,
-    db: UserDBDep,
+    user_repo: UserRepoDep,
     skip: int = 0,
     limit: int = 10,
 ):
-    return db.get_users(skip=skip, limit=limit)
+    return user_repo.get_users(skip=skip, limit=limit)  # type: ignore[attr-defined]
 
 
 @router.get("/{user_id}", response_model=User)
 async def read_user(
     user_id: int,
     current_user: CurrentUserDep,
-    db: UserDBDep,
+    user_repo: UserRepoDep,
 ):
-    user = db.get_user_by_id(user_id)
+    user = user_repo.get_user_by_id(user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
@@ -82,9 +90,9 @@ async def read_user(
 async def delete_user(
     user_id: int,
     current_user: CurrentUserDep,
-    db: UserDBDep,
+    user_repo: UserRepoDep,
 ):
-    user = db.get_user_by_id(user_id)
+    user = user_repo.get_user_by_id(user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return db.delete_user(user_id)
+    return user_repo.delete_user(user_id)  # type: ignore[attr-defined]
