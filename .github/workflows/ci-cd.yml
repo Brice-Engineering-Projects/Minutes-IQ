@@ -59,50 +59,23 @@ jobs:
 
       # ----------------------------------------------------------------------
       # 5. Install Development Tooling
-      #    - Installs linters, formatters, test framework
-      #    - Using pip ensures compatibility with GitHub Actions runners
       # ----------------------------------------------------------------------
       - name: Install dev dependencies
         run: |
           source .venv/bin/activate
-          pip install \
-            ruff \
-            black \
-            pytest \
-            isort \
-            pre-commit
+          pip install ruff pytest pre-commit
 
       # ----------------------------------------------------------------------
-      # 6. Run Ruff Linter
-      #    - Enforces static analysis and code health
-      #    - Fastest Python linter available; great for CI
+      # 6. Run Ruff (Lint + Format Check)
+      #    - Replaces Black, isort, and flake8 with one ultra-fast tool
       # ----------------------------------------------------------------------
-      - name: Lint with Ruff
+      - name: Lint and Format with Ruff
         run: |
           source .venv/bin/activate
           ruff check .
-
+          ruff format --check .
       # ----------------------------------------------------------------------
-      # 7. Enforce Black Code Formatting
-      #    - Ensures consistent style across the codebase
-      #    - --check mode prevents silent auto-updates in CI
-      # ----------------------------------------------------------------------
-      - name: Black formatting check
-        run: |
-          source .venv/bin/activate
-          black --check .
-
-      # ----------------------------------------------------------------------
-      # 8. Sort Imports (isort)
-      #    - Prevents import drift and maintains structure hygiene
-      # ----------------------------------------------------------------------
-      - name: Import sorting check (isort)
-        run: |
-          source .venv/bin/activate
-          isort . --check-only
-
-      # ----------------------------------------------------------------------
-      # 9. Run Test Suite
+      # 7. Run Test Suite
       #    - Pytest in quiet mode for clean CI logs
       #    - Ensures all modules are validated before merge
       # ----------------------------------------------------------------------
