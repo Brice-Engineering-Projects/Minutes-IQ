@@ -74,8 +74,18 @@ jobs:
           source .venv/bin/activate
           ruff check .
           ruff format --check .
+
       # ----------------------------------------------------------------------
-      # 7. Run Test Suite
+      # 7. NEW: Static Type Checking (Optional but recommended)
+      #    - Ensures type safety and catches potential bugs early
+      # ----------------------------------------------------------------------
+      - name: Type check with Mypy
+        run: |
+          source .venv/bin/activate
+          mypy src
+
+      # ----------------------------------------------------------------------
+      # 8. Run Test Suite
       #    - Pytest in quiet mode for clean CI logs
       #    - Ensures all modules are validated before merge
       # ----------------------------------------------------------------------
