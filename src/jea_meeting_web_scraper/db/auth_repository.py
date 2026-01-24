@@ -14,7 +14,7 @@ class AuthRepository:
         self.conn = conn
 
     def get_credentials_by_username(
-        self, username: str, provider_type: str = "password"
+        self, username: str, provider_type: str = "local"
     ) -> dict[str, Any] | None:
         """
         Retrieves hashed credentials and user identity by joining
@@ -42,6 +42,10 @@ class AuthRepository:
         if not row:
             return None
 
-        # Return the dictionary-style Row object
-        # This allows the AuthService to verify the hash and return a user context.
-        return dict(row)
+        # Manually map row to dictionary (libSQL doesn't support row_factory)
+        return {
+            "hashed_password": row[0],
+            "user_id": row[1],
+            "username": row[2],
+            "email": row[3],
+        }

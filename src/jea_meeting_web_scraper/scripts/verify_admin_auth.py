@@ -1,9 +1,12 @@
 """
 Maintenance Script: Admin Login Verification
-Refined for libSQL / Turso connection compatibility.
+Refactored to avoid 'row_factory' attribute errors with libSQL.
 """
 
+import sys
+
 from jea_meeting_web_scraper.auth.service import AuthService
+from jea_meeting_web_scraper.config.settings import settings
 from jea_meeting_web_scraper.db.auth_repository import AuthRepository
 from jea_meeting_web_scraper.db.client import get_db_connection
 
@@ -11,22 +14,29 @@ from jea_meeting_web_scraper.db.client import get_db_connection
 def verify_admin_login():
     print("🚀 Starting Admin Auth Verification...")
 
-    # Standard admin credentials from seed
+    # Use the plain-text password from .env
     admin_username = "admin"
-    # Note: Use the actual plain-text password you used when generating the hash
-    test_password = "your_admin_password_here"
+    test_password = settings.app_password
+    provider_type = "local"  # Match the provider_type in database
 
     try:
-        # get_db_connection handles the connection lifecycle
+        # The context manager in client.py should yield the raw connection
         with get_db_connection() as conn:
-            # We initialize the repository with the connection
+            # Initialize layers
             auth_repo = AuthRepository(conn)
-            # We initialize the service with the repository
             auth_service = AuthService(auth_repo)
 
-            print(f"🔍 Testing credentials for: {admin_username}")
+            print(
+                f"🔍 Testing credentials for: {admin_username} (provider: {provider_type})"
+            )
 
-            # authenticate_user performs the triple-join and bcrypt check
+            # First check if credentials exist
+            creds = auth_repo.get_credentials_by_username(admin_username, provider_type)
+            print(f"📊 Credentials found: {creds is not None}")
+            if creds:
+                print(f"   Fields: {list(creds.keys())}")
+
+            # This is where password hashing happens, but only IF the DB query succeeds
             user_context = auth_service.authenticate_user(admin_username, test_password)
 
             if user_context:
@@ -34,13 +44,10 @@ def verify_admin_login():
                 print(f"👤 User Context: {user_context}")
             else:
                 print("❌ FAILURE: Authentication returned None.")
-                print("Possible reasons:")
-                print("- Password mismatch.")
-                print("- Table names 'auth_providers' or 'auth_credentials' mismatch.")
-                print("- User 'is_active' is not set to 1.")
 
     except Exception as e:
-        print(f"💥 CRITICAL ERROR during verification: {e}")
+        print(f"💥 CRITICAL ERROR: {e}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

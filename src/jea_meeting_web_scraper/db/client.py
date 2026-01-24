@@ -1,7 +1,6 @@
 # src/jea_meeting_web_scraper/db/client.py
 """Database client module for interacting with the database."""
 
-import sqlite3
 from collections.abc import Iterator
 from contextlib import contextmanager
 
@@ -12,15 +11,12 @@ from jea_meeting_web_scraper.config.settings import settings
 
 def get_db_client() -> Connection:
     """
-    Create and return a new database connection with dictionary-style access.
+    Create and return a new database connection.
     """
     conn = connect(
         settings.database.db_url,
         auth_token=settings.database.auth_token,
     )
-
-    # Enables row access by column name: row["user_id"] instead of row[0]
-    conn.row_factory = sqlite3.Row
 
     return conn
 
