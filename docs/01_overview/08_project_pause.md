@@ -83,16 +83,16 @@ Verified via:
 
 ### Database Table Names
 
-- [ ] Run sql code in database to change table names
-  - [ ] auth_provider to auth_providers
+- [x] Run sql code in database to change table names
+  - [x] auth_provider to auth_providers
 
 ### Authentication Service (Logic Layer)
 
-- [ ] Create `auth_service.py`
-  - [ ] Call `auth_repository` for credential lookup
-  - [ ] Verify password using security utilities
-  - [ ] Return authenticated user context or failure
-  - [ ] No SQL in this layer
+- [x] Create `auth_service.py`
+  - [x] Call `auth_repository` for credential lookup
+  - [x] Verify password using security utilities
+  - [x] Return authenticated user context or failure
+  - [x] No SQL in this layer
 
 ---
 

@@ -17,7 +17,7 @@ PRAGMA foreign_keys = ON;
 -- This script is idempotent and safe to re-run.
 -- -----------------------------------------------------
 
-INSERT INTO auth_provider (user_id, provider_type)
+INSERT INTO auth_providers (user_id, provider_type)
 SELECT u.user_id, 'local'
 FROM users u
 WHERE u.username = 'admin'

@@ -1,4 +1,8 @@
 # src/jea_meeting_web_scraper/db/auth_repository.py
+"""
+Auth Repository
+Handles specialized authentication lookups using triple-joins.
+"""
 
 from typing import Any
 
@@ -9,33 +13,35 @@ class AuthRepository:
     def __init__(self, conn: Connection):
         self.conn = conn
 
-    def get_credentials_by_identifier(
-        self, identifier: str, provider_name: str = "password"
+    def get_credentials_by_username(
+        self, username: str, provider_type: str = "password"
     ) -> dict[str, Any] | None:
         """
-        Retrieves credentials using exact column names from the JEA Schema.
+        Retrieves hashed credentials and user identity by joining
+        users, auth_providers, and auth_credentials.
         """
-        # Note: Using 'active' and 'user_id' as per PDF sources 8, 71, and 52
+        # Note: We join on provider_type to support future OAuth/SAML
+        # We also filter for active credentials at the database level
         query = """
-SELECT ac.hashed_password,
-       ac.user_id,
-       u.active
-FROM auth_credentials ac
-JOIN auth_providers ap ON ac.provider_id = ap.provider_id
-JOIN users u ON ac.user_id = u.user_id
-WHERE ac.identifier = ?
-  AND ap.provider = ?
-  AND u.active = 1
-""".strip()
+            SELECT
+                ac.hashed_password,
+                u.user_id,
+                u.username,
+                u.email
+            FROM users u
+            JOIN auth_providers ap ON u.user_id = ap.user_id
+            JOIN auth_credentials ac ON ap.provider_id = ac.provider_id
+            WHERE u.username = ?
+              AND ap.provider_type = ?
+              AND ac.is_active = 1;
+        """.strip()
 
-        cursor = self.conn.execute(query, (identifier, provider_name))
+        cursor = self.conn.execute(query, (username, provider_type))
         row = cursor.fetchone()
 
         if not row:
             return None
 
-        return {
-            "hashed_password": row["hashed_password"],
-            "user_id": row["user_id"],
-            "is_active": bool(row["active"]),
-        }
+        # Return the dictionary-style Row object
+        # This allows the AuthService to verify the hash and return a user context.
+        return dict(row)
