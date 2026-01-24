@@ -1,11 +1,11 @@
 # schema_check.py
 """Module for checking schema of users table."""
 
-from jea_meeting_web_scraper.db.client import get_db
+from jea_meeting_web_scraper.db.client import get_db_client
 
 
 def main():
-    with get_db() as conn:
+    with get_db_client() as conn:
         rows = conn.execute("PRAGMA table_info(users);").fetchall()
         for row in rows:
             print(row)
