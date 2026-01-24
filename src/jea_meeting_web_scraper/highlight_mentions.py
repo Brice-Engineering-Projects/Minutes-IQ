@@ -9,11 +9,12 @@ Highlight Matched Keywords in PDFs
 - Saves a new copy in data/annotated_pdfs/
 """
 
-import os
 import glob
-import pandas as pd
-import fitz  # PyMuPDF
+import os
 from pathlib import Path
+
+import fitz  # PyMuPDF
+import pandas as pd
 
 # === Root path ===
 BASE_DIR = Path(__file__).resolve().parents[1]
@@ -22,10 +23,16 @@ ANNOTATED_PDF_DIR = BASE_DIR / "data" / "annotated_pdfs"
 MENTIONS_DIR = BASE_DIR / "data" / "processed"
 ANNOTATED_PDF_DIR.mkdir(parents=True, exist_ok=True)
 
+
 # === Load the latest extracted_mentions CSV ===
 def get_latest_csv():
-    files = sorted(glob.glob(str(MENTIONS_DIR / "extracted_mentions_*.csv")), key=os.path.getmtime, reverse=True)
+    files = sorted(
+        glob.glob(str(MENTIONS_DIR / "extracted_mentions_*.csv")),
+        key=os.path.getmtime,
+        reverse=True,
+    )
     return Path(files[0]) if files else None
+
 
 # === Highlight Matches in PDFs ===
 def highlight_pdf(file_path, mentions):
@@ -40,8 +47,8 @@ def highlight_pdf(file_path, mentions):
     highlight_pages = set()
 
     for _, row in mentions.iterrows():
-        page_num = int(row['page']) - 1
-        keyword = row['keyword']
+        page_num = int(row["page"]) - 1
+        keyword = row["keyword"]
         try:
             page = doc[page_num]
             text_instances = page.search_for(keyword, quads=True)  # type: ignore
@@ -50,25 +57,32 @@ def highlight_pdf(file_path, mentions):
                 annot.update()
                 highlight_pages.add(page_num)
         except Exception as e:
-            print(f"❌ Could not highlight '{keyword}' on page {page_num+1} in {file_path}: {e}")
+            print(
+                f"❌ Could not highlight '{keyword}' on page {page_num + 1} in {file_path}: {e}"
+            )
 
     # Add bookmarks for highlight pages
     if highlight_pages:
         toc = doc.get_toc()  # type: ignore
-        
+
         # If TOC is empty, start with level 1; otherwise use level 2
         if not toc:
-            new_entries = [[1, f"Highlight {idx+1} (Page {pnum+1})", pnum] 
-                          for idx, pnum in enumerate(sorted(highlight_pages))]
+            new_entries = [
+                [1, f"Highlight {idx + 1} (Page {pnum + 1})", pnum]
+                for idx, pnum in enumerate(sorted(highlight_pages))
+            ]
         else:
-            new_entries = [[2, f"Highlight {idx+1} (Page {pnum+1})", pnum] 
-                          for idx, pnum in enumerate(sorted(highlight_pages))]
-        
+            new_entries = [
+                [2, f"Highlight {idx + 1} (Page {pnum + 1})", pnum]
+                for idx, pnum in enumerate(sorted(highlight_pages))
+            ]
+
         doc.set_toc(toc + new_entries)  # type: ignore
 
     doc.save(annotated_path)
     doc.close()
     print(f"✅ Highlighted and saved: {annotated_path.relative_to(BASE_DIR)}")
+
 
 # === Main ===
 def main():
@@ -78,23 +92,26 @@ def main():
         return
 
     print(f"📄 Using mentions from: {csv_path.relative_to(BASE_DIR)}")
-    
+
     try:
         df = pd.read_csv(csv_path)
     except pd.errors.EmptyDataError:
         print("⚠️ CSV file is empty - no matches were found by the scraper.")
-        print("   Try adjusting the DATE_RANGE or keywords, or increasing MAX_SCAN_PAGES in the scraper.")
+        print(
+            "   Try adjusting the DATE_RANGE or keywords, or increasing MAX_SCAN_PAGES in the scraper."
+        )
         return
-    
+
     if df.empty:
         print("⚠️ No mentions found in CSV file.")
         return
-    
-    df['file'] = df['file'].astype(str)
 
-    for pdf_name in df['file'].unique():
-        mentions = df[df['file'] == pdf_name]
+    df["file"] = df["file"].astype(str)
+
+    for pdf_name in df["file"].unique():
+        mentions = df[df["file"] == pdf_name]
         highlight_pdf(pdf_name, mentions)
+
 
 if __name__ == "__main__":
     main()

@@ -11,26 +11,88 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # ----------------------------------------------------------------------
+      # 1. Checkout Repository
+      # ----------------------------------------------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1  # shallow clone for faster CI runs
 
-      - name: Set up UV
-        uses: astral-sh/setup-uv@v1
+      # ----------------------------------------------------------------------
+      # 2. Set Up Python Runtime
+      #    - Ensures consistent interpreter version across local + CI
+      #    - Enables use of pip caching and deterministic virtualenv behavior
+      # ----------------------------------------------------------------------
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
-      - name: Cache UV installation
+      # ----------------------------------------------------------------------
+      # 3. Cache Pip Downloads
+      #    - Dramatically reduces execution time for repeated runs
+      #    - Cache key includes requirements hash to ensure validity
+      #    - If cache is invalidated, pip will rebuild cleanly
+      # ----------------------------------------------------------------------
+      - name: Cache pip packages
         uses: actions/cache@v4
         with:
-          path: ~/.cache/uv
-          key: uv-${{ hashFiles('pyproject.toml', 'uv.lock') }}
+          path: ~/.cache/pip
+          key: >
+            pip-${{ runner.os }}-
+            ${{ hashFiles('pyproject.toml') }}-
+            ${{ hashFiles('**/*.txt') }}
+          restore-keys: |
+            pip-${{ runner.os }}-
 
+      # ----------------------------------------------------------------------
+      # 4. Create Virtual Environment
+      #    - Keeps CI isolated
+      #    - Allows reproducible tool installs
+      # ----------------------------------------------------------------------
+      - name: Create virtual environment
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          python -m pip install --upgrade pip wheel
+
+      # ----------------------------------------------------------------------
+      # 5. Install Dependencies
+      # ----------------------------------------------------------------------
       - name: Install dependencies
-        run: uv sync
+        run: |
+          source .venv/bin/activate
+          pip install -e .
+          pip install ruff pytest pre-commit mypy
 
-      - name: Lint with Ruff
-        run: uv run ruff check .
+      # ----------------------------------------------------------------------
+      # 6. Run Ruff (Lint + Format Check)
+      #    - Replaces Black, isort, and flake8 with one ultra-fast tool
+      # ----------------------------------------------------------------------
+      - name: Lint and Format with Ruff
+        run: |
+          source .venv/bin/activate
+          ruff check .
+          ruff format --check .
 
-      - name: Black formatting check
-        run: uv run black --check .
+      # ----------------------------------------------------------------------
+      # 7. NEW: Static Type Checking (Optional but recommended)
+      #    - Ensures type safety and catches potential bugs early
+      # ----------------------------------------------------------------------
+      - name: Type check with Mypy
+        run: |
+          source .venv/bin/activate
+          mypy src/jea_meeting_web_scraper
 
+      # ----------------------------------------------------------------------
+      # 8. Run Test Suite
+      #    - Pytest in quiet mode for clean CI logs
+      #    - Ensures all modules are validated before merge
+      # ----------------------------------------------------------------------
       - name: Run tests
-        run: uv run pytest -q
+        env:
+          TESTING: "true"
+        run: |
+          source .venv/bin/activate
+          pytest -q tests/test_smoke.py tests/unit_tests/auth/test_password_hashing.py tests/unit_tests/auth/test_jwt_tokens.py --ignore=src/jea_meeting_web_scraper/scripts

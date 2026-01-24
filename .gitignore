@@ -11,6 +11,9 @@ __pycache__/
 *.ipr
 .idea_modules/
 
+# VS Code IDE
+.vscode/
+
 # Jupyter Notebook
 .ipynb_checkpoints
 */.ipynb_checkpoints/*

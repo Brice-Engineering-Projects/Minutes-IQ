@@ -1,9 +1,11 @@
 # Web Application Architecture
 
 ## 1. System Overview
+
 The web application consists of a FastAPI backend paired with Jinja-rendered HTML templates and Bootstrap styling.
 
 It is built on a modular structure:
+
 - Web layer (`webapp`)
 - Service layer (`services`)
 - NLP & scraper logic (`NLP`)
@@ -13,7 +15,7 @@ It is built on a modular structure:
 
 ## 2. Architecture Diagram (ASCII)
 
-```
+```mermaid
                  ┌─────────────────────────────┐
                  │         Web Browser         │
                  │ (User Interface, Bootstrap) │
@@ -50,6 +52,7 @@ It is built on a modular structure:
 ## 3. Components
 
 ### 3.1 Web Layer (`webapp/`)
+
 - Routes
 - JWT authentication
 - Jinja templates
@@ -57,17 +60,21 @@ It is built on a modular structure:
 - User login flow
 
 ### 3.2 Service Layer (`services/`)
+
 - Wraps scraper logic
 - Runs PDF annotation
 - Ensures clean separation between UI and backend logic
 
 ### 3.3 NLP Layer (`NLP/`)
+
 - Existing scraper logic
 - Keyword detection
 - Highlighting logic
 
 ### 3.4 Data Layer
+
 Folders for:
+
 - Raw PDFs
 - Processed text
 - Annotated PDFs
@@ -77,7 +84,7 @@ Folders for:
 ## 4. Route Overview
 
 | Route | Purpose | Auth Required |
-|-------|---------|---------------|
+| ------- | --------- | --------------- |
 | `/login` | Login form | ❌ |
 | `/auth/login` | Validate credentials | ❌ |
 | `/dashboard` | Main UI | ✔ |
@@ -88,12 +95,13 @@ Folders for:
 ---
 
 ## 5. Authentication Model
+
 JWT tokens stored in secure, HttpOnly cookies.
 
 ---
 
 ## 6. UI Architecture
+
 - Template inheritance via `base.html`
 - Bootstrap components
 - Flash messages / status banners
-

@@ -1,128 +1,140 @@
-# 🏛️ JEA Meeting Minutes Scraper & Intelligence Dashboard
+# 🏛️ JEA Meeting Minutes Intelligence Platform
 
-This project scrapes, analyzes, and visualizes public JEA board meeting minutes for strategic business development insights.
+> *A Secure FastAPI Web Application for Scraping, Annotating, and Extracting Signals From Municipal Meeting Records*
 
----
+This application is a **private, login-protected FastAPI web platform** designed to extract **business development and pre-positioning intelligence** from publicly available municipal meeting records.
 
-## 🚀 Features
+While the system initially targets **JEA (Jacksonville Electric Authority)**, it is architected to support additional municipalities such as **City of Jacksonville Beach**, **Atlantic Beach**, **Palm Coast**, and others.
 
-### 🧠 Scraper: `JEA_minutes_scraper.py`
-
-- Streams and scans JEA board meeting PDFs
-- Filters by date and keyword
-- Extracts text and detects keywords
-- Uses **spaCy NLP** to extract named entities (e.g., organizations, locations, money, dates)
-- Saves:
-  - Matching PDFs to `/data/raw_pdfs/`
-  - Match metadata to `/data/processed/*.csv`
-
-### ✨ PDF Highlighter: `highlight_mentions.py`
-
-- Reopens saved PDFs
-- Highlights matched keywords (and optionally named entities)
-- Adds bookmarks to matched pages ("Jump to Highlights")
-- Saves annotated PDFs to `/data/annotated_pdfs/`
-
-### 📊 Dashboard: `dashboard.py`
-
-- Filters by keyword, named entity, or date
-- Displays:
-  - Keyword frequency chart
-  - Data table with matches and extracted context
-  - Entity-level filtering (GPE, ORG, MONEY, etc.)
+Authenticated users can manage profiles, select municipalities, define keyword sets, execute scraping and NLP pipelines, and download **annotated meeting records** bundled as ZIP archives. No scraped documents are stored long-term.
 
 ---
 
-## 🛠️ Setup
+## 🔐 Key Design Principles
+
+- FastAPI backend with Jinja2-rendered UI
+- JWT-based authentication using HttpOnly secure cookies
+- Database stores users and profiles only
+- No PDFs stored in the database (disk-only to minimize cost and risk)
+- Service-layer architecture separating web, scraping, and NLP concerns
+- Background task execution for long-running scraper jobs
+- ZIP-based export model for all results
+- Expandable to additional municipalities
+
+---
+
+## 🚀 Core Features
+
+### 🔑 Authentication & User Profiles
+
+Authenticated users can manage personal and organizational profile data.
+Authentication uses JWT tokens stored in HttpOnly cookies.
+
+---
+
+### 🧠 Keyword Management
+
+Users can select predefined keyword categories or define custom keyword sets
+used for text extraction and PDF annotation.
+
+---
+
+### 🏙️ Municipality / Client Selection
+
+Supported municipalities include:
+
+- JEA
+- City of Jacksonville Beach
+- Atlantic Beach
+- Palm Coast
+
+---
+
+### 📄 Scraper & NLP Pipeline
+
+Scraping jobs are launched from the UI and executed as background tasks.
+
+Pipeline stages include web scraping, PDF text extraction, keyword matching,
+NLP annotation, and PDF highlighting.
+
+Outputs are written to disk only.
+
+---
+
+### 📦 Result Packaging
+
+Completed runs generate a ZIP bundle containing raw PDFs, annotated PDFs,
+and extracted metadata.
+
+---
+
+## 🗂️ Project Structure
+
+```text
+src/
+├── webapp/
+├── services/
+├── NLP/
+└── data/
+```
+
+---
+
+## 🧰 Technology Stack
+
+- FastAPI
+- Jinja2
+- Bootstrap 5
+- JWT (HttpOnly cookies)
+- spaCy
+- pdfplumber / PyPDFium2
+- SQLite / PostgreSQL
+- uv
+
+---
+
+## ⚙️ Running Locally (uv + FastAPI)
+
+### Install uv
 
 ```bash
-conda create -n jea_scraper python=3.11
-conda activate jea_scraper
-conda install -c conda-forge pdfplumber pymupdf beautifulsoup4 spacy pandas
-python -m spacy download en_core_web_sm
+pip install uv
 ```
 
----
-
-## 📁 Project Structure
-
-```plaintext
-📂 data/
-├── raw_pdfs/              # PDFs saved when a keyword match is found
-├── annotated_pdfs/        # Highlighted PDFs with bookmarks for fast reading
-└── processed/             # CSV files with extracted match + NLP metadata
-
-📂 src/
-├── JEA_minutes_scraper.py   # Main scraper with NLP integration
-├── highlight_mentions.py    # Highlights keywords in PDFs + jump bookmarks
-└── dashboard/
-    └── dashboard.py         # Streamlit-based insights dashboard
-
-📄 keywords.txt              # One keyword per line to match against PDFs
-```
-
----
-
-## 🧪 How to Use
-
-### 1. Scrape & Analyze
+or
 
 ```bash
-python src/JEA_minutes_scraper.py
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-- Finds matching PDFs based on keywords
-- Extracts relevant context and NLP entities
-- Saves results to CSV
+---
 
-### 2. Highlight PDFs + Add Bookmarks
+### Install Dependencies
 
 ```bash
-python src/highlight_mentions.py
+uv sync
 ```
 
-- Highlights matches in the original PDFs
-- Adds PDF outline bookmarks for each match
-- Saves new annotated PDFs for fast navigation
+---
 
-### 3. Launch Dashboard
+### Run the Application
 
 ```bash
-streamlit run src/dashboard/dashboard.py
+uv run uvicorn src.jea_meeting_web_scraper.main:app --reload
 ```
 
-- Filter and explore all matches interactively
+---
+
+## 🛡️ Security Summary
+
+- Short-lived JWT tokens
+- HttpOnly cookies
+- HTTPS recommended
+- No document storage in DB
 
 ---
 
-## 🗂️ Example Output (CSV)
+## 👔 Purpose & Ethics
 
-| file                           | page | keyword   | snippet                              | entities                       |
-|--------------------------------|------|-----------|--------------------------------------|--------------------------------|
-| 2024_06_25_Board_Meeting.pdf  | 3    | stormwater | "...stormwater improvements in..."  | Jacksonville (GPE), $2M (MONEY) |
-
----
-
-## 📌 Notes
-
-- You control scanning depth with `MAX_SCAN_PAGES` in the scraper
-- Set date range via `DATE_RANGE` (e.g., `("2024-06", "2025-05")`)
-- Add or remove keywords in `keywords.txt`
-
----
-
-## 📬 Next Steps
-
-- Highlight named entities with different colors
-- Add summary previews or exports for clients
-- Build a query-based report generator using chat-style input
-
----
-
-## 👋 About
-
-This project is used for internal business development exploration. Scraped data is not shared publicly to respect ethical boundaries.
-
----
-
-Made with 💼, 🧠, and Python.
+This platform is intended solely for internal business development use.
+All materials are publicly available records.
