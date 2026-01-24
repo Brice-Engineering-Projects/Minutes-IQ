@@ -63,7 +63,7 @@ jobs:
       - name: Install dev dependencies
         run: |
           source .venv/bin/activate
-          pip install ruff pytest pre-commit
+          pip install ruff pytest pre-commit mypy
 
       # ----------------------------------------------------------------------
       # 6. Run Ruff (Lint + Format Check)
@@ -82,7 +82,7 @@ jobs:
       - name: Type check with Mypy
         run: |
           source .venv/bin/activate
-          mypy src
+          mypy .
 
       # ----------------------------------------------------------------------
       # 8. Run Test Suite
