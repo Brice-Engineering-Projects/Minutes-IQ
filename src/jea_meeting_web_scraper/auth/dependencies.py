@@ -1,6 +1,7 @@
 # src/jea_meeting_web_scraper/auth/dependencies.py
 
-from typing import Annotated, Any  # Import Annotated
+from collections.abc import Generator
+from typing import Annotated, Any
 
 from fastapi import Depends, HTTPException, Request, status
 from jose import JWTError, jwt
@@ -56,8 +57,11 @@ async def get_current_user(
     return user
 
 
-def get_auth_service() -> AuthService:
-    """Factory function for AuthService using context-managed DB connection."""
+def get_auth_service() -> Generator[AuthService, None, None]:
+    """
+    Factory function for AuthService with proper connection lifecycle management.
+    Uses generator to ensure connection is closed after request completes.
+    """
     with get_db_connection() as conn:
         repo = AuthRepository(conn)
-        return AuthService(repo)
+        yield AuthService(repo)

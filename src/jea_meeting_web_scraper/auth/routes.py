@@ -13,7 +13,7 @@ from jea_meeting_web_scraper.auth.dependencies import get_auth_service, get_curr
 from jea_meeting_web_scraper.auth.security import create_access_token
 from jea_meeting_web_scraper.auth.service import AuthService
 
-router = APIRouter(prefix="/auth", tags=["Authentication"])
+router = APIRouter(tags=["Authentication"])
 
 
 @router.post("/login")
