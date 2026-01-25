@@ -101,6 +101,20 @@ def test_db_connection(test_db_file):
         );
     """)
 
+    # Create password_reset_tokens table (Phase 4)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS password_reset_tokens (
+            token_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            token_hash TEXT NOT NULL UNIQUE,
+            created_at INTEGER NOT NULL,
+            expires_at INTEGER NOT NULL,
+            used_at INTEGER,
+            is_valid INTEGER NOT NULL DEFAULT 1,
+            FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+        );
+    """)
+
     # Seed reference data
     conn.execute(
         "INSERT OR IGNORE INTO roles (role_id, role_name) VALUES (1, 'admin');"
@@ -142,6 +156,7 @@ def setup_test_db(test_db_connection, monkeypatch):
 
     # Clean database before each test
     conn = connect(f"file:{test_db_connection}")
+    conn.execute("DELETE FROM password_reset_tokens;")
     conn.execute("DELETE FROM code_usage;")
     conn.execute("DELETE FROM auth_codes;")
     conn.execute("DELETE FROM auth_credentials;")
@@ -162,6 +177,7 @@ def db_connection(test_db_connection):
 def clean_db(test_db_connection):
     """Clean the database before a test (explicit fixture for tests that need it)."""
     conn = connect(f"file:{test_db_connection}")
+    conn.execute("DELETE FROM password_reset_tokens;")
     conn.execute("DELETE FROM code_usage;")
     conn.execute("DELETE FROM auth_codes;")
     conn.execute("DELETE FROM auth_credentials;")

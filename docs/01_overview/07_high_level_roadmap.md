@@ -142,11 +142,11 @@ Only explicitly authorized users can create accounts.
 
 **Goal:** Enable safe account recovery.
 
-- [ ] Password reset token model
-- [ ] Token expiration enforcement
-- [ ] One-time token usage
-- [ ] Email delivery integration
-- [ ] End-to-end password reset tests
+- [x] Password reset token model
+- [x] Token expiration enforcement
+- [x] One-time token usage
+- [x] Email delivery integration
+- [x] End-to-end password reset tests
 
 **Exit Criteria:**  
 Users can recover access without admin intervention.

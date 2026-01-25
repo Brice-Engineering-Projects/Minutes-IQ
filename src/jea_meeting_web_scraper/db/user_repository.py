@@ -221,6 +221,49 @@ class UserRepository:
 
         return True
 
+    def update_password(self, user_id: int, new_password: str) -> bool:
+        """
+        Update a user's password in the auth_credentials table.
+
+        Args:
+            user_id: ID of the user
+            new_password: New plaintext password (will be hashed)
+
+        Returns:
+            True if password was updated successfully
+
+        Raises:
+            ValueError: If user doesn't exist or has no password credentials
+        """
+        from jea_meeting_web_scraper.auth.security import get_password_hash
+
+        # Check if user exists
+        user = self.get_user_by_id(user_id)
+        if not user:
+            raise ValueError(f"User with ID {user_id} not found")
+
+        # Hash the new password
+        hashed_password = get_password_hash(new_password)
+
+        # Update the password in auth_credentials
+        # Assuming provider_id=1 is password-based auth
+        cursor = self.db.execute(
+            """
+            UPDATE auth_credentials
+            SET hashed_password = ?
+            WHERE user_id = ? AND provider_id = 1;
+            """,
+            (hashed_password, user_id),
+        )
+
+        rows_affected = cursor.rowcount
+        cursor.close()
+
+        if rows_affected == 0:
+            raise ValueError(f"No password credentials found for user {user_id}")
+
+        return True
+
     def list_users(self, limit: int = 100, offset: int = 0) -> list[dict[str, Any]]:
         """
         Lists all users with pagination.

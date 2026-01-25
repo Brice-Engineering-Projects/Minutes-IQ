@@ -13,6 +13,10 @@ from jea_meeting_web_scraper.db.auth_code_repository import AuthCodeRepository
 from jea_meeting_web_scraper.db.auth_code_service import AuthCodeService
 from jea_meeting_web_scraper.db.auth_repository import AuthRepository
 from jea_meeting_web_scraper.db.client import get_db_connection
+from jea_meeting_web_scraper.db.password_reset_repository import (
+    PasswordResetRepository,
+)
+from jea_meeting_web_scraper.db.password_reset_service import PasswordResetService
 from jea_meeting_web_scraper.db.user_repository import UserRepository
 from jea_meeting_web_scraper.db.user_service import UserService
 
@@ -109,6 +113,17 @@ def get_user_service() -> Generator[UserService, None, None]:
         user_repo = UserRepository(conn)
         auth_repo = AuthRepository(conn)
         yield UserService(user_repo, auth_repo)
+
+
+def get_password_reset_service() -> Generator[PasswordResetService, None, None]:
+    """
+    Factory function for PasswordResetService with proper connection lifecycle management.
+    Uses generator to ensure connection is closed after request completes.
+    """
+    with get_db_connection() as conn:
+        reset_repo = PasswordResetRepository(conn)
+        user_repo = UserRepository(conn)
+        yield PasswordResetService(reset_repo, user_repo)
 
 
 async def get_current_admin_user(
