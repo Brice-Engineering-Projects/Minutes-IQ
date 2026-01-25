@@ -312,3 +312,45 @@ def client():
 def test_user_credentials():
     """Provide test user credentials for login."""
     return {"username": "testuser", "password": "secret"}
+
+
+@pytest.fixture
+def admin_token(client: TestClient, test_db_connection):
+    """Create an admin user and return their auth token."""
+    from jea_meeting_web_scraper.auth.security import get_password_hash
+
+    conn = connect(f"file:{test_db_connection}")
+
+    # Create admin user (role_id=1 is admin)
+    hashed_password = get_password_hash("adminpass")
+    cursor = conn.execute(
+        "INSERT INTO users (username, email, role_id) VALUES (?, ?, ?);",
+        ("admin", "admin@example.com", 1),
+    )
+    admin_id = cursor.lastrowid
+    conn.execute(
+        "INSERT INTO auth_credentials (user_id, provider_id, hashed_password) VALUES (?, ?, ?);",
+        (admin_id, 1, hashed_password),
+    )
+    conn.commit()
+    conn.close()
+
+    # Login to get token
+    response = client.post(
+        "/auth/login",
+        data={"username": "admin", "password": "adminpass"},
+    )
+    return response.json()["access_token"]
+
+
+@pytest.fixture
+def user_token(client: TestClient, test_user, test_user_credentials):
+    """Return auth token for regular test user."""
+    response = client.post(
+        "/auth/login",
+        data={
+            "username": test_user_credentials["username"],
+            "password": test_user_credentials["password"],
+        },
+    )
+    return response.json()["access_token"]
