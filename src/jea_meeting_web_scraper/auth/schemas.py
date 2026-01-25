@@ -42,15 +42,3 @@ class UserCreate(BaseModel):
         if not v or not v.strip():
             raise ValueError("Username cannot be empty")
         return v
-
-
-# Fake database - TODO: Replace with actual database
-fake_users_db = {
-    "testuser": {
-        "username": "testuser",
-        "full_name": "Test User",
-        "email": "test@example.com",
-        "hashed_password": "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",  # "secret"
-        "disabled": False,
-    }
-}

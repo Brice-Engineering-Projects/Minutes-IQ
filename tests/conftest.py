@@ -1,0 +1,183 @@
+"""
+Shared pytest fixtures for all tests.
+"""
+
+import os
+import tempfile
+from collections.abc import Generator
+
+import pytest
+from fastapi.testclient import TestClient
+from libsql_experimental import connect
+
+from jea_meeting_web_scraper.auth.security import get_password_hash
+from jea_meeting_web_scraper.config.settings import settings
+from jea_meeting_web_scraper.main import app
+
+
+@pytest.fixture(scope="session")
+def test_db_file() -> Generator[str, None, None]:
+    """Create a temporary database file for testing."""
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".db", delete=False) as f:
+        db_path = f.name
+
+    yield db_path
+
+    # Cleanup
+    if os.path.exists(db_path):
+        os.unlink(db_path)
+
+
+@pytest.fixture(scope="session")
+def test_db_connection(test_db_file):
+    """
+    Create a test database with schema.
+    This is session-scoped to avoid recreating the schema for every test.
+    """
+    conn = connect(f"file:{test_db_file}")
+
+    # Create schema
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS roles (
+            role_id INTEGER PRIMARY KEY,
+            role_name TEXT NOT NULL UNIQUE
+        );
+    """)
+
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL UNIQUE,
+            email TEXT NOT NULL UNIQUE,
+            role_id INTEGER NOT NULL,
+            FOREIGN KEY (role_id) REFERENCES roles(role_id)
+        );
+    """)
+
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS auth_providers (
+            provider_id INTEGER PRIMARY KEY,
+            provider_name TEXT NOT NULL UNIQUE
+        );
+    """)
+
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS auth_credentials (
+            credential_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            provider_id INTEGER NOT NULL,
+            hashed_password TEXT NOT NULL,
+            is_active INTEGER NOT NULL DEFAULT 1,
+            FOREIGN KEY (user_id) REFERENCES users(user_id),
+            FOREIGN KEY (provider_id) REFERENCES auth_providers(provider_id)
+        );
+    """)
+
+    # Seed reference data
+    conn.execute(
+        "INSERT OR IGNORE INTO roles (role_id, role_name) VALUES (1, 'admin');"
+    )
+    conn.execute("INSERT OR IGNORE INTO roles (role_id, role_name) VALUES (2, 'user');")
+    conn.execute(
+        "INSERT OR IGNORE INTO auth_providers (provider_id, provider_name) VALUES (1, 'password');"
+    )
+
+    conn.commit()
+    conn.close()
+
+    return test_db_file
+
+
+@pytest.fixture(autouse=True)
+def setup_test_db(test_db_connection, monkeypatch):
+    """
+    Setup test database for all tests.
+    Monkeypatches the db client to use the test database.
+    This runs automatically for all tests.
+    """
+
+    def mock_get_db_connection():
+        """Return a connection to the test database."""
+        conn = connect(f"file:{test_db_connection}")
+        try:
+            yield conn
+        finally:
+            conn.close()
+
+    # Monkeypatch the database connection function
+    monkeypatch.setattr(
+        "jea_meeting_web_scraper.db.client.get_db_connection", mock_get_db_connection
+    )
+
+    # Also patch the database URL in settings
+    monkeypatch.setattr(settings.database, "db_url", f"file:{test_db_connection}")
+
+    # Clean database before each test
+    conn = connect(f"file:{test_db_connection}")
+    conn.execute("DELETE FROM auth_credentials;")
+    conn.execute("DELETE FROM users;")
+    conn.commit()
+    conn.close()
+
+
+@pytest.fixture
+def db_connection(test_db_connection):
+    """Provide a database connection for tests that need direct DB access."""
+    conn = connect(f"file:{test_db_connection}")
+    yield conn
+    conn.close()
+
+
+@pytest.fixture
+def clean_db(test_db_connection):
+    """Clean the database before a test (explicit fixture for tests that need it)."""
+    conn = connect(f"file:{test_db_connection}")
+    conn.execute("DELETE FROM auth_credentials;")
+    conn.execute("DELETE FROM users;")
+    conn.commit()
+    conn.close()
+
+
+@pytest.fixture
+def test_user(test_db_connection):
+    """Create a test user in the database."""
+    conn = connect(f"file:{test_db_connection}")
+
+    # Create user
+    cursor = conn.execute(
+        "INSERT INTO users (username, email, role_id) VALUES (?, ?, ?) RETURNING user_id;",
+        ("testuser", "test@example.com", 2),
+    )
+    user_id = cursor.fetchone()[0]
+    cursor.close()  # Close cursor before next statement
+
+    # Create password credential
+    hashed_password = get_password_hash("secret")
+    cursor2 = conn.execute(
+        "INSERT INTO auth_credentials (user_id, provider_id, hashed_password, is_active) VALUES (?, ?, ?, ?);",
+        (user_id, 1, hashed_password, 1),
+    )
+    cursor2.close()  # Close cursor before commit
+
+    conn.commit()
+    conn.close()
+
+    return {
+        "user_id": user_id,
+        "username": "testuser",
+        "email": "test@example.com",
+        "role_id": 2,
+        "password": "secret",  # Plain text for testing
+    }
+
+
+@pytest.fixture
+def client():
+    """Create a test client with the test database."""
+    return TestClient(app)
+
+
+@pytest.fixture
+def test_user_credentials():
+    """Provide test user credentials for login."""
+    return {"username": "testuser", "password": "secret"}

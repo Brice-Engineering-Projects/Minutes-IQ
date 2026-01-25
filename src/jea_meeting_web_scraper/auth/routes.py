@@ -62,7 +62,13 @@ async def login(
         secure=settings.app.env == "production",  # Only require HTTPS in production
     )
 
-    return {"message": "Successfully logged in", "user": user}
+    # Also return the token in response body for testing in Swagger UI
+    return {
+        "message": "Successfully logged in",
+        "user": user,
+        "access_token": access_token,
+        "token_type": "bearer",
+    }
 
 
 @router.get("/me")

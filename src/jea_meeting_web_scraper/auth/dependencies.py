@@ -4,6 +4,7 @@ from collections.abc import Generator
 from typing import Annotated, Any
 
 from fastapi import Depends, HTTPException, Request, status
+from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 
 from jea_meeting_web_scraper.auth.service import AuthService
@@ -13,27 +14,46 @@ from jea_meeting_web_scraper.db.client import get_db_connection
 from jea_meeting_web_scraper.db.user_repository import UserRepository
 
 
-def get_user_repository() -> UserRepository:
-    """Provides a UserRepository instance with a fresh DB connection."""
-    return UserRepository(get_db_connection())
+def get_user_repository() -> Generator[UserRepository, None, None]:
+    """
+    Provides a UserRepository instance with proper connection lifecycle management.
+    Uses generator to ensure connection is closed after request completes.
+    """
+    with get_db_connection() as conn:
+        yield UserRepository(conn)
+
+
+# OAuth2 scheme for Swagger UI - this makes the "Authorize" button appear
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login", auto_error=False)
 
 
 async def get_current_user(
     request: Request,
+    token_from_scheme: Annotated[str | None, Depends(oauth2_scheme)],
     # Annotated satisfies B008 by moving the function call into the type hint
     user_repo: Annotated[UserRepository, Depends(get_user_repository)],
 ) -> dict[str, Any]:
     """
-    Validates JWT from HttpOnly cookie and retrieves user identity.
+    Validates JWT from HttpOnly cookie OR Authorization header and retrieves user identity.
+    Supports both cookie-based auth (for browser) and Bearer token (for API/Swagger).
     """
-    token_cookie = request.cookies.get("access_token")
-    if not token_cookie or not token_cookie.startswith("Bearer "):
+    # Try to get token from Authorization header first (for Swagger UI)
+    # The oauth2_scheme dependency will extract it automatically
+    token = None
+    if token_from_scheme:
+        token = token_from_scheme
+    else:
+        # Fall back to cookie (for browser-based auth)
+        token_cookie = request.cookies.get("access_token")
+        if token_cookie and token_cookie.startswith("Bearer "):
+            token = token_cookie.split(" ")[1]
+
+    if not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authenticated",
+            detail="Not authenticated - no token in Authorization header or cookie",
+            headers={"WWW-Authenticate": "Bearer"},
         )
-
-    token = token_cookie.split(" ")[1]
 
     try:
         payload = jwt.decode(token, settings.secret_key, algorithms=["HS256"])

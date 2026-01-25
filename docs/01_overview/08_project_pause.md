@@ -102,13 +102,13 @@ Verified via:
 
 ### Auth Wiring (Integration)
 
-- [ ] Insert seam in auth routes (e.g. `authenticate_user`)
-- [ ] Swap in DB-backed authentication via `auth_service`
-- [ ] Preserve existing login behavior (routes, responses, cookies)
-- [ ] Verify admin login succeeds
-- [ ] Verify invalid username fails
-- [ ] Verify invalid password fails
-- [ ] Restart app and re-verify login
+- [x] Insert seam in auth routes (e.g. `authenticate_user`)
+- [x] Swap in DB-backed authentication via `auth_service`
+- [x] Preserve existing login behavior (routes, responses, cookies)
+- [x] Verify admin login succeeds
+- [x] Verify invalid username fails
+- [x] Verify invalid password fails
+- [x] Restart app and re-verify login
 
 ---
 
@@ -122,21 +122,21 @@ Verified via:
 
 ### Testing & Validation
 
-- [ ] Add repository-level sanity checks
-- [ ] Mock repositories for auth service tests
-- [ ] Ensure tests do not touch real credentials
-- [ ] Confirm all existing tests pass
+- [x] Add repository-level sanity checks
+- [x] Mock repositories for auth service tests
+- [x] Ensure tests do not touch real credentials
+- [x] Confirm all existing tests pass
 
 ---
 
 ### Phase 2 Exit Criteria
 
-- [ ] Authentication is fully database-backed
-- [ ] No in-memory user storage remains
-- [ ] Repositories are the only DB access points
-- [ ] Auth behavior matches pre-DB behavior
-- [ ] Phase 2 ready to be marked complete
-- [ ] Verify all auth-related tests pass
-- [ ] Verify no regressions in existing functionality
-- [ ] Document any new auth-related APIs or behaviors
-- [ ] Review and approve by project lead
+- [x] Authentication is fully database-backed
+- [x] No in-memory user storage remains
+- [x] Repositories are the only DB access points
+- [x] Auth behavior matches pre-DB behavior
+- [x] Phase 2 ready to be marked complete
+- [x] Verify all auth-related tests pass
+- [x] Verify no regressions in existing functionality
+- [x] Document any new auth-related APIs or behaviors
+- [x] Review and approve by project lead

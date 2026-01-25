@@ -12,8 +12,7 @@ class UserRepository:
     def __init__(self, db: Connection):
         """
         Initializes with a database connection.
-        Note: Ensure your db/client.py sets 'conn.row_factory = sqlite3.Row'
-        to support name-based access.
+        Note: libSQL doesn't support row_factory, so we manually map rows to dicts.
         """
         self.db = db
 
@@ -30,7 +29,16 @@ class UserRepository:
         cursor = self.db.execute(query, (user_id,))
         row = cursor.fetchone()
 
-        return dict(row) if row else None
+        if not row:
+            return None
+
+        # Manually map row to dictionary (libSQL doesn't support row_factory)
+        return {
+            "user_id": row[0],
+            "username": row[1],
+            "email": row[2],
+            "role_id": row[3],
+        }
 
     def get_user_by_username(self, username: str) -> dict[str, Any] | None:
         """
@@ -45,4 +53,13 @@ class UserRepository:
         cursor = self.db.execute(query, (username,))
         row = cursor.fetchone()
 
-        return dict(row) if row else None
+        if not row:
+            return None
+
+        # Manually map row to dictionary (libSQL doesn't support row_factory)
+        return {
+            "user_id": row[0],
+            "username": row[1],
+            "email": row[2],
+            "role_id": row[3],
+        }
