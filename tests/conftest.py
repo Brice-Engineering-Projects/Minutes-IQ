@@ -73,6 +73,34 @@ def test_db_connection(test_db_file):
         );
     """)
 
+    # Create auth_codes table (Phase 3)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS auth_codes (
+            code_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            code TEXT NOT NULL UNIQUE,
+            created_by INTEGER NOT NULL,
+            created_at INTEGER NOT NULL,
+            expires_at INTEGER,
+            max_uses INTEGER DEFAULT 1,
+            current_uses INTEGER DEFAULT 0,
+            is_active INTEGER DEFAULT 1,
+            notes TEXT,
+            FOREIGN KEY (created_by) REFERENCES users(user_id)
+        );
+    """)
+
+    # Create code_usage table (Phase 3)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS code_usage (
+            usage_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            code_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            used_at INTEGER NOT NULL,
+            FOREIGN KEY (code_id) REFERENCES auth_codes(code_id),
+            FOREIGN KEY (user_id) REFERENCES users(user_id)
+        );
+    """)
+
     # Seed reference data
     conn.execute(
         "INSERT OR IGNORE INTO roles (role_id, role_name) VALUES (1, 'admin');"
@@ -114,6 +142,8 @@ def setup_test_db(test_db_connection, monkeypatch):
 
     # Clean database before each test
     conn = connect(f"file:{test_db_connection}")
+    conn.execute("DELETE FROM code_usage;")
+    conn.execute("DELETE FROM auth_codes;")
     conn.execute("DELETE FROM auth_credentials;")
     conn.execute("DELETE FROM users;")
     conn.commit()
@@ -132,6 +162,8 @@ def db_connection(test_db_connection):
 def clean_db(test_db_connection):
     """Clean the database before a test (explicit fixture for tests that need it)."""
     conn = connect(f"file:{test_db_connection}")
+    conn.execute("DELETE FROM code_usage;")
+    conn.execute("DELETE FROM auth_codes;")
     conn.execute("DELETE FROM auth_credentials;")
     conn.execute("DELETE FROM users;")
     conn.commit()

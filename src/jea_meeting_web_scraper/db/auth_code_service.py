@@ -69,19 +69,22 @@ class AuthCodeService:
             notes: Optional notes about the code
 
         Returns:
-            Dictionary containing the created code's data
+            Dictionary containing the created code's data (with formatted code)
         """
-        # Generate a unique code
-        code = self.generate_code()
+        # Generate a unique code (formatted with hyphens)
+        formatted_code = self.generate_code()
+
+        # Normalize for storage (remove hyphens)
+        normalized_code = self.normalize_code(formatted_code)
 
         # Calculate expiration timestamp
         expires_at = None
         if expires_in_days is not None:
             expires_at = int(time.time()) + (expires_in_days * 24 * 60 * 60)
 
-        # Create the code
+        # Create the code (store normalized version)
         result = self.repo.create_code(
-            code=code,
+            code=normalized_code,
             created_by=created_by,
             expires_at=expires_at,
             max_uses=max_uses,
@@ -89,6 +92,9 @@ class AuthCodeService:
         )
 
         self.repo.db.commit()
+
+        # Return with formatted code for display
+        result["code_formatted"] = formatted_code
         return result
 
     def validate_code(
