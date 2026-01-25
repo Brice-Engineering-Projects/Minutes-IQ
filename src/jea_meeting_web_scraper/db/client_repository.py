@@ -252,7 +252,7 @@ class ClientRepository:
 
         query = f"""
             UPDATE clients
-            SET {', '.join(updates)}
+            SET {", ".join(updates)}
             WHERE client_id = ?
             RETURNING client_id, name, description, website_url, is_active, created_at, created_by, updated_at;
         """

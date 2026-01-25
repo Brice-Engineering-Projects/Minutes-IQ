@@ -256,7 +256,7 @@ class KeywordRepository:
 
         query = f"""
             UPDATE keywords
-            SET {', '.join(updates)}
+            SET {", ".join(updates)}
             WHERE keyword_id = ?
             RETURNING keyword_id, keyword, category, description, is_active, created_at, created_by;
         """
