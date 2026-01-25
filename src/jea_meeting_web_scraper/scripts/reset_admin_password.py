@@ -1,5 +1,11 @@
 """Force update admin password - delete old and insert new"""
 
+from dotenv import load_dotenv
+
+# Load environment variables from .env file BEFORE importing settings
+load_dotenv()
+
+# ruff: noqa: E402
 from jea_meeting_web_scraper.auth.security import get_password_hash, verify_password
 from jea_meeting_web_scraper.config.settings import settings
 from jea_meeting_web_scraper.db.client import get_db_connection
@@ -30,21 +36,22 @@ def force_update():
     with get_db_connection() as conn:
         # Get current state
         cursor = conn.execute("""
-            SELECT ac.auth_id, ac.hashed_password
+            SELECT ac.credential_id, ac.hashed_password
             FROM users u
-            JOIN auth_providers ap ON u.user_id = ap.user_id
-            JOIN auth_credentials ac ON ap.provider_id = ac.provider_id
-            WHERE u.username = 'admin' AND ap.provider_type = 'local'
+            JOIN auth_credentials ac ON u.user_id = ac.user_id
+            JOIN auth_providers ap ON ac.provider_id = ap.provider_id
+            WHERE u.username = 'admin' AND ap.provider_name = 'password'
         """)
         row = cursor.fetchone()
+        cursor.close()
 
         if not row:
             print("❌ Admin credentials not found!")
             return
 
-        auth_id, old_hash = row
+        credential_id, old_hash = row
         print("\n📊 Current database state:")
-        print(f"   auth_id: {auth_id}")
+        print(f"   credential_id: {credential_id}")
         print(f"   old_hash: {old_hash[:50]}...")
 
         # Test old hash
@@ -53,7 +60,10 @@ def force_update():
 
         # Delete old credential
         print("\n🗑️  Deleting old credential...")
-        conn.execute("DELETE FROM auth_credentials WHERE auth_id = ?", (auth_id,))
+        cursor = conn.execute(
+            "DELETE FROM auth_credentials WHERE credential_id = ?", (credential_id,)
+        )
+        cursor.close()
         conn.commit()
 
         # Insert new credential
@@ -61,24 +71,32 @@ def force_update():
         cursor = conn.execute(
             """
             INSERT INTO auth_credentials (provider_id, user_id, hashed_password, is_active)
-            SELECT ap.provider_id, ap.user_id, ?, 1
+            SELECT ap.provider_id, u.user_id, ?, 1
             FROM users u
-            JOIN auth_providers ap ON u.user_id = ap.user_id
-            WHERE u.username = 'admin' AND ap.provider_type = 'local'
+            CROSS JOIN auth_providers ap
+            WHERE u.username = 'admin' AND ap.provider_name = 'password'
         """,
             (new_hash,),
         )
+        cursor.close()
         conn.commit()
 
         # Verify it was inserted correctly
         cursor = conn.execute("""
             SELECT ac.hashed_password
             FROM users u
-            JOIN auth_providers ap ON u.user_id = ap.user_id
-            JOIN auth_credentials ac ON ap.provider_id = ac.provider_id
-            WHERE u.username = 'admin' AND ap.provider_type = 'local'
+            JOIN auth_credentials ac ON u.user_id = ac.user_id
+            JOIN auth_providers ap ON ac.provider_id = ap.provider_id
+            WHERE u.username = 'admin' AND ap.provider_name = 'password'
         """)
-        inserted_hash = cursor.fetchone()[0]
+        result = cursor.fetchone()
+        cursor.close()
+
+        if not result:
+            print("\n❌ ERROR: Failed to insert new credential!")
+            return
+
+        inserted_hash = result[0]
 
         print("\n✅ New credential inserted!")
         print(f"   Inserted hash: {inserted_hash[:50]}...")

@@ -102,8 +102,8 @@ Auth no longer depends on in-memory data structures.
 
 **Goal:** Prevent unauthorized self-registration.
 
-- [ ] Implement authorization-code model
-- [ ] Admin-only auth code rotation
+- [x] Implement authorization-code model
+- [x] Admin-only auth code rotation
 - [ ] Registration blocked without valid code
 - [ ] Tests for valid / invalid / expired codes
 - [ ] Update docs and sequence diagrams

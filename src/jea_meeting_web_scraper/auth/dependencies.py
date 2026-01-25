@@ -9,9 +9,12 @@ from jose import JWTError, jwt
 
 from jea_meeting_web_scraper.auth.service import AuthService
 from jea_meeting_web_scraper.config.settings import settings
+from jea_meeting_web_scraper.db.auth_code_repository import AuthCodeRepository
+from jea_meeting_web_scraper.db.auth_code_service import AuthCodeService
 from jea_meeting_web_scraper.db.auth_repository import AuthRepository
 from jea_meeting_web_scraper.db.client import get_db_connection
 from jea_meeting_web_scraper.db.user_repository import UserRepository
+from jea_meeting_web_scraper.db.user_service import UserService
 
 
 def get_user_repository() -> Generator[UserRepository, None, None]:
@@ -85,3 +88,48 @@ def get_auth_service() -> Generator[AuthService, None, None]:
     with get_db_connection() as conn:
         repo = AuthRepository(conn)
         yield AuthService(repo)
+
+
+def get_auth_code_service() -> Generator[AuthCodeService, None, None]:
+    """
+    Factory function for AuthCodeService with proper connection lifecycle management.
+    Uses generator to ensure connection is closed after request completes.
+    """
+    with get_db_connection() as conn:
+        repo = AuthCodeRepository(conn)
+        yield AuthCodeService(repo)
+
+
+def get_user_service() -> Generator[UserService, None, None]:
+    """
+    Factory function for UserService with proper connection lifecycle management.
+    Uses generator to ensure connection is closed after request completes.
+    """
+    with get_db_connection() as conn:
+        user_repo = UserRepository(conn)
+        auth_repo = AuthRepository(conn)
+        yield UserService(user_repo, auth_repo)
+
+
+async def get_current_admin_user(
+    current_user: Annotated[dict[str, Any], Depends(get_current_user)],
+) -> dict[str, Any]:
+    """
+    Validates that the current user is an admin.
+
+    Args:
+        current_user: The authenticated user from get_current_user
+
+    Returns:
+        The user dict if they are an admin
+
+    Raises:
+        HTTPException: 403 if user is not an admin
+    """
+    # role_id 1 is admin (from our schema)
+    if current_user.get("role_id") != 1:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin privileges required",
+        )
+    return current_user

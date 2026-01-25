@@ -42,3 +42,51 @@ class UserCreate(BaseModel):
         if not v or not v.strip():
             raise ValueError("Username cannot be empty")
         return v
+
+
+class RegisterRequest(BaseModel):
+    """Request model for user registration with authorization code."""
+
+    username: str
+    email: str
+    password: str
+    auth_code: str
+
+    @field_validator("username")
+    @classmethod
+    def validate_username(cls, v: str) -> str:
+        """Validate that username is not empty."""
+        if not v or not v.strip():
+            raise ValueError("Username cannot be empty")
+        return v
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, v: str) -> str:
+        """Basic email validation."""
+        if not v or "@" not in v:
+            raise ValueError("Invalid email address")
+        return v
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, v: str) -> str:
+        """Validate password strength."""
+        if len(v) < 8:
+            raise ValueError("Password must be at least 8 characters long")
+        return v
+
+    @field_validator("auth_code")
+    @classmethod
+    def validate_auth_code(cls, v: str) -> str:
+        """Validate that auth code is not empty."""
+        if not v or not v.strip():
+            raise ValueError("Authorization code is required")
+        return v.strip()
+
+
+class RegisterResponse(BaseModel):
+    """Response model for successful registration."""
+
+    message: str
+    user: dict
