@@ -82,6 +82,9 @@ Auth structure is stable, test-covered, and extensible.
 - [x] **Verify migrations and rollback safety**
   - Confirm database schema changes apply cleanly
   - Validate rollback procedures in case of migration failure
+- [x] **Registration logic** 
+  - build out the create_user_with_validation method
+  - implement the logic to check for unique email addresses and ensure the user is marked as active by default.
 
 ### Completion Criteria
 
