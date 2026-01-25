@@ -138,33 +138,101 @@ Only explicitly authorized users can create accounts.
 
 ---
 
-## Phase 4 — Password Reset Flow (⏳ Planned)
+## Phase 4 — Password Reset Flow (✅ Complete)
 
 **Goal:** Enable safe account recovery.
 
-- [x] Password reset token model
-- [x] Token expiration enforcement
-- [x] One-time token usage
-- [x] Email delivery integration
-- [x] End-to-end password reset tests
+### Completed
+- [x] Design and implement password reset token model (SHA-256 hashed, 30-min expiration)
+- [x] Create migration for `password_reset_tokens` table
+- [x] Implement `PasswordResetRepository` with CRUD operations
+- [x] Implement `PasswordResetService` (token generation, validation, password reset)
+- [x] Add `update_password()` method to `UserRepository`
+- [x] Create POST `/auth/reset-request` endpoint
+- [x] Create POST `/auth/reset-confirm` endpoint
+- [x] Write 13 comprehensive integration tests
+- [x] Token expiration enforcement (30 minutes)
+- [x] One-time token usage enforcement
+- [x] Email enumeration protection
 
-**Exit Criteria:**  
-Users can recover access without admin intervention.
+### Test Results
+- 56 tests passing (13 new password reset tests)
+- 0 failures
+- Full mypy type safety
+
+### Future Enhancement
+- [ ] Email delivery integration (SendGrid/SMTP) - Currently placeholder
+
+**Exit Criteria: ✅ ACHIEVED**
+Users can recover access without admin intervention through password reset endpoints.
 
 ---
 
-## Phase 5 — Client & Keyword Management (⏳ Planned)
+## Phase 5 — Client & Keyword Management (🚧 In Progress)
 
-**Goal:** Enable real value from the dashboard.
+**Goal:** Enable real value from the dashboard by managing clients (agencies) and keywords.
 
-- [ ] Admin-managed client pool
-- [ ] Client source configuration
-- [ ] Keyword taxonomy defined
-- [ ] User-specific favorites
-- [ ] Validation of scraper sources
+### Overview
+This phase implements the core data model for:
+- **Clients** - Government agencies/organizations being tracked (e.g., JEA, City of Jacksonville)
+- **Keywords** - Search terms used to filter relevant meeting minutes
+- **User Favorites** - Per-user client preferences
 
-**Exit Criteria:**  
-Users can reliably target relevant agencies.
+### Completed Work
+
+#### 5.1 Database Schema ✅
+- [x] Create `clients` table with metadata tracking
+- [x] Create `keywords` table (keyword taxonomy with categories)
+- [x] Create `user_client_favorites` table (many-to-many)
+- [x] Create `client_keywords` table (associate keywords with clients)
+- [x] Create `client_sources` table (track client data sources)
+- [x] Create migration: `20260125_170000_add_client_keyword_management.sql`
+- [x] Update test database setup in `conftest.py` with Phase 5 tables
+
+#### 5.2 Data Access Layer ✅
+- [x] Implement `ClientRepository` (CRUD for clients, soft delete, counting)
+- [x] Implement `KeywordRepository` (CRUD for keywords, client-keyword associations)
+- [x] Implement `FavoritesRepository` (user favorites management, counting)
+- [x] All repositories pass mypy type checking
+
+### Remaining Work
+
+#### 5.2 Data Access Layer (Continued)
+- [ ] Add `ClientSourceRepository` for tracking data sources
+
+#### 5.3 Business Logic Layer
+- [ ] Implement `ClientService` (business logic, validation, source management)
+- [ ] Implement `KeywordService` (keyword management, search, suggestions)
+- [ ] Implement dependency injection for repositories
+
+#### 5.4 API Endpoints
+- [ ] Admin: POST `/admin/clients` - Create client
+- [ ] Admin: GET `/admin/clients` - List all clients
+- [ ] Admin: PUT `/admin/clients/{id}` - Update client
+- [ ] Admin: DELETE `/admin/clients/{id}` - Delete client
+- [ ] Admin: POST `/admin/keywords` - Create keyword
+- [ ] Admin: GET `/admin/keywords` - List keywords
+- [ ] User: GET `/clients` - List available clients
+- [ ] User: POST `/clients/{id}/favorite` - Add to favorites
+- [ ] User: DELETE `/clients/{id}/favorite` - Remove from favorites
+- [ ] User: GET `/clients/favorites` - Get user's favorites
+
+#### 5.5 Testing
+- [ ] Integration tests for client management
+- [ ] Integration tests for keyword management
+- [ ] Integration tests for user favorites
+- [ ] Validation tests (duplicate clients, invalid data)
+
+#### 5.6 Documentation
+- [ ] Update API contract with client/keyword endpoints
+- [ ] Document client data model and sources
+- [ ] Update sequence diagrams for client operations
+
+**Exit Criteria:**
+- Admins can manage a pool of clients (agencies)
+- Users can select and save favorite clients
+- Keyword taxonomy is defined and manageable
+- All operations are tested and documented
 
 ---
 
