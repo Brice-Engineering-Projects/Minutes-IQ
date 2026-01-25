@@ -176,7 +176,8 @@ class UserRepository:
         if not updates:
             return existing_user
 
-        params.append(user_id)
+        # Type-safe parameter list construction
+        final_params: list[str | int] = params + [user_id]
 
         query = f"""
             UPDATE users
@@ -185,7 +186,7 @@ class UserRepository:
             RETURNING user_id, username, email, role_id;
         """
 
-        cursor = self.db.execute(query, tuple(params))
+        cursor = self.db.execute(query, tuple(final_params))
         row = cursor.fetchone()
         cursor.close()
 

@@ -61,7 +61,15 @@ async def create_user(
 ):
     if user_repo.get_user_by_username(user.username):
         raise HTTPException(status_code=400, detail="Username already registered")
-    return user_repo.create_user(user.username, user.email, user.password)  # type: ignore[attr-defined]
+    # Note: This endpoint creates users without passwords (legacy)
+    # For password-based registration, use /auth/register instead
+    created_user = user_repo.create_user(user.username, user.email, role_id=2)
+    return User(
+        id=created_user["user_id"],
+        username=created_user["username"],
+        email=created_user["email"],
+        is_active=True,
+    )
 
 
 @router.get("/", response_model=list[User])

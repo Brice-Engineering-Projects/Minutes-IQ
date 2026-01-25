@@ -154,7 +154,7 @@ class AuthCodeService:
         # Validate the code first
         is_valid, error_msg, code_data = self.validate_code(code)
 
-        if not is_valid:
+        if not is_valid or code_data is None:
             return False, error_msg
 
         # Increment usage count

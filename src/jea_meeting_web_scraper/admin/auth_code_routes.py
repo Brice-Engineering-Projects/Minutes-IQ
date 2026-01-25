@@ -83,13 +83,11 @@ async def create_auth_code(
 
 @router.get("", response_model=AuthCodeListResponse)
 async def list_auth_codes(
+    admin_user: Annotated[dict, Depends(get_current_admin_user)],
+    auth_code_service: Annotated[AuthCodeService, Depends(get_auth_code_service)],
     status_filter: str = "active",
     limit: int = 100,
     offset: int = 0,
-    admin_user: Annotated[dict, Depends(get_current_admin_user)] = None,
-    auth_code_service: Annotated[
-        AuthCodeService, Depends(get_auth_code_service)
-    ] = None,
 ):
     """
     List authorization codes with filtering.

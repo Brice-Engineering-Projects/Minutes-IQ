@@ -161,7 +161,7 @@ class AuthCodeRepository:
                 AND (expires_at IS NULL OR expires_at > ?)
                 AND current_uses < max_uses
             """
-            params = (current_time, limit, offset)
+            params: tuple[int, ...] = (current_time, limit, offset)
         elif status == "expired":
             where_clause = "WHERE expires_at IS NOT NULL AND expires_at <= ?"
             params = (current_time, limit, offset)
