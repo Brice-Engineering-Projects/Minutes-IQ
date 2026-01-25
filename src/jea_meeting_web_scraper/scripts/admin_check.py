@@ -1,11 +1,11 @@
 # admin_check.py
 """Module for checking admin status of users."""
 
-from jea_meeting_web_scraper.db.client import get_db
+from jea_meeting_web_scraper.db.client import get_db_client
 
 
 def main():
-    with get_db() as conn:
+    with get_db_client() as conn:
         rows = conn.execute(
             """
             SELECT user_id, username, email, role_id

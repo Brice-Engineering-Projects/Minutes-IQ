@@ -14,13 +14,13 @@ class AuthRepository:
         self.conn = conn
 
     def get_credentials_by_username(
-        self, username: str, provider_type: str = "local"
+        self, username: str, provider_name: str = "password"
     ) -> dict[str, Any] | None:
         """
         Retrieves hashed credentials and user identity by joining
         users, auth_providers, and auth_credentials.
         """
-        # Note: We join on provider_type to support future OAuth/SAML
+        # Note: We join on provider_name to support future OAuth/SAML
         # We also filter for active credentials at the database level
         query = """
             SELECT
@@ -29,14 +29,14 @@ class AuthRepository:
                 u.username,
                 u.email
             FROM users u
-            JOIN auth_providers ap ON u.user_id = ap.user_id
-            JOIN auth_credentials ac ON ap.provider_id = ac.provider_id
+            JOIN auth_credentials ac ON u.user_id = ac.user_id
+            JOIN auth_providers ap ON ac.provider_id = ap.provider_id
             WHERE u.username = ?
-              AND ap.provider_type = ?
+              AND ap.provider_name = ?
               AND ac.is_active = 1;
         """.strip()
 
-        cursor = self.conn.execute(query, (username, provider_type))
+        cursor = self.conn.execute(query, (username, provider_name))
         row = cursor.fetchone()
 
         if not row:

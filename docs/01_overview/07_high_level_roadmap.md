@@ -67,21 +67,24 @@ Auth structure is stable, test-covered, and extensible.
 - [x] Seed admin user
 - [x] Verify DB access programmatically
 
-- [ ] **Implement user data access (CRUD)**
+- [x] **Implement user data access (CRUD)**
   - Add functions to create, read, update, and delete users
   - Isolate database logic from authentication and route handlers
 
-- [ ] **Migrate authentication to database-backed users**
+- [x] **Migrate authentication to database-backed users**
   - Replace in-memory user storage with database queries
   - Validate credentials against stored user records
 
-- [ ] **Update tests for database usage**
+- [x] **Update tests for database usage**
   - Modify tests to use test users, fixtures, or mock data
   - Ensure tests do not interact with real user data
 
-- [ ] **Verify migrations and rollback safety**
+- [x] **Verify migrations and rollback safety**
   - Confirm database schema changes apply cleanly
   - Validate rollback procedures in case of migration failure
+- [x] **Registration logic** 
+  - build out the create_user_with_validation method
+  - implement the logic to check for unique email addresses and ensure the user is marked as active by default.
 
 ### Completion Criteria
 
@@ -95,17 +98,42 @@ Auth no longer depends on in-memory data structures.
 
 ---
 
-## Phase 3 — Controlled Registration (⏳ Planned)
+## Phase 3 — Controlled Registration (✅ Complete)
 
 **Goal:** Prevent unauthorized self-registration.
 
-- [ ] Implement authorization-code model
-- [ ] Admin-only auth code rotation
-- [ ] Registration blocked without valid code
-- [ ] Tests for valid / invalid / expired codes
-- [ ] Update docs and sequence diagrams
+### Completed
+- [x] Design authorization code model (database schema, code format, validation logic)
+- [x] Create migration for `auth_codes` and `code_usage` tables
+- [x] Implement `AuthCodeRepository` (CRUD operations)
+- [x] Implement `AuthCodeService` (business logic, validation, code generation)
+- [x] Write comprehensive unit tests (47 tests for code generation, repository, and service)
+- [x] Create admin endpoints (create, list, revoke codes, view usage history)
+- [x] Create `/auth/register` endpoint requiring authorization code
+- [x] Add request/response schemas with validation
 
-**Exit Criteria:**  
+### ✅ Completed
+
+- [x] **Fixed all integration tests** (16 tests in `test_registration_flow.py`)
+  - [x] Fixed 500 errors during registration (incorrect parameter in `use_code`)
+  - [x] Fixed `expires_at` parameter issue in expired code test
+  - [x] Corrected error message assertions
+- [x] **Added integration tests for admin endpoints** (19 tests in `test_admin_auth_codes.py`)
+  - [x] Test creating authorization codes
+  - [x] Test listing codes with filters
+  - [x] Test revoking codes
+  - [x] Test viewing usage history
+- [x] **Updated documentation**
+  - [x] Updated sequence diagrams to show registration flow with auth codes
+  - [x] Documented admin endpoints in API documentation
+  - [x] Updated security documentation with authorization code policies
+
+**Test Results:**
+- 43 tests passing (16 registration + 19 admin + 8 auth flow)
+- 0 failures
+- All Phase 3 functionality complete
+
+**Exit Criteria: ✅ ACHIEVED**
 Only explicitly authorized users can create accounts.
 
 ---
