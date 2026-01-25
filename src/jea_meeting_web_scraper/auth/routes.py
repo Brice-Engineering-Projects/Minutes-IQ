@@ -13,13 +13,21 @@ from jea_meeting_web_scraper.auth.dependencies import (
     get_auth_code_service,
     get_auth_service,
     get_current_user,
+    get_password_reset_service,
     get_user_service,
 )
-from jea_meeting_web_scraper.auth.schemas import RegisterRequest, RegisterResponse
+from jea_meeting_web_scraper.auth.schemas import (
+    PasswordResetConfirm,
+    PasswordResetRequest,
+    PasswordResetResponse,
+    RegisterRequest,
+    RegisterResponse,
+)
 from jea_meeting_web_scraper.auth.security import create_access_token
 from jea_meeting_web_scraper.auth.service import AuthService
 from jea_meeting_web_scraper.config.settings import settings
 from jea_meeting_web_scraper.db.auth_code_service import AuthCodeService
+from jea_meeting_web_scraper.db.password_reset_service import PasswordResetService
 from jea_meeting_web_scraper.db.user_service import UserService
 
 router = APIRouter(tags=["Authentication"])
@@ -175,3 +183,93 @@ async def read_users_me(current_user: Annotated[dict, Depends(get_current_user)]
     This verifies that the persistence layer and JWT flow are fully integrated.
     """
     return current_user
+
+
+@router.post("/reset-request", response_model=PasswordResetResponse)
+async def request_password_reset(
+    request: PasswordResetRequest,
+    reset_service: Annotated[PasswordResetService, Depends(get_password_reset_service)],
+):
+    """
+    Initiate a password reset by requesting a reset token.
+
+    This endpoint:
+    1. Validates the email address
+    2. Generates a secure reset token (if user exists)
+    3. Stores the token with 30-minute expiration
+    4. Returns success regardless of whether email exists (security)
+
+    Note: The actual token would be sent via email in production.
+    For now, this is a placeholder that returns success.
+
+    Args:
+        request: Password reset request containing email
+        reset_service: Password reset service
+
+    Returns:
+        PasswordResetResponse with success message
+
+    Security Note:
+        Always returns success to prevent email enumeration attacks.
+        No indication is given whether the email exists in the system.
+    """
+    # Create reset token (returns success even if email doesn't exist)
+    success, error_msg, token = reset_service.create_reset_token(request.email)
+
+    if not success:
+        # This should rarely happen (database errors, etc.)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to process password reset request",
+        )
+
+    # TODO: Send email with reset link containing the token
+    # For now, we just return success
+    # In production:
+    # reset_link = f"https://your-domain.com/reset-password?token={token}"
+    # send_email(to=request.email, subject="Password Reset", body=f"Click here: {reset_link}")
+
+    return PasswordResetResponse(
+        message="If an account exists with this email, a password reset link has been sent"
+    )
+
+
+@router.post("/reset-confirm", response_model=PasswordResetResponse)
+async def confirm_password_reset(
+    request: PasswordResetConfirm,
+    reset_service: Annotated[PasswordResetService, Depends(get_password_reset_service)],
+):
+    """
+    Complete password reset using a valid token.
+
+    This endpoint:
+    1. Validates the reset token
+    2. Updates the user's password
+    3. Marks the token as used
+    4. Invalidates all other tokens for the user
+
+    Args:
+        request: Password reset confirmation containing token and new password
+        reset_service: Password reset service
+
+    Returns:
+        PasswordResetResponse with success message
+
+    Raises:
+        HTTPException 400: If token is invalid, expired, or already used
+        HTTPException 500: If password update fails
+    """
+    # Reset the password
+    success, error_msg = reset_service.reset_password(
+        request.token, request.new_password
+    )
+
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error_msg or "Invalid or expired reset token",
+        )
+
+    return PasswordResetResponse(
+        message="Password has been reset successfully. You can now log in with your new password."
+    )
