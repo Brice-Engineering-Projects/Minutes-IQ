@@ -12,6 +12,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from jea_meeting_web_scraper.auth.dependencies import get_auth_service, get_current_user
 from jea_meeting_web_scraper.auth.security import create_access_token
 from jea_meeting_web_scraper.auth.service import AuthService
+from jea_meeting_web_scraper.config.settings import settings
 
 router = APIRouter(tags=["Authentication"])
 
@@ -28,6 +29,16 @@ async def login(
     2. Generates a JWT access token.
     3. Sets an HttpOnly cookie for security.
     """
+    import logging
+
+    logger = logging.getLogger(__name__)
+
+    logger.info("🌐 FastAPI received login request")
+    logger.info(f"   Username: '{form_data.username}' (len={len(form_data.username)})")
+    logger.info(
+        f"   Password: len={len(form_data.password)}, repr={repr(form_data.password[:10])}..."
+    )
+
     # Use the service layer to verify credentials (this triggers the triple-join)
     user = auth_service.authenticate_user(form_data.username, form_data.password)
 
@@ -48,7 +59,7 @@ async def login(
         httponly=True,
         max_age=1800,  # 30 minutes
         samesite="lax",
-        secure=True,  # Ensure this is True in production (HTTPS)
+        secure=settings.app.env == "production",  # Only require HTTPS in production
     )
 
     return {"message": "Successfully logged in", "user": user}
