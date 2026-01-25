@@ -196,7 +196,7 @@ class TestSuccessfulRegistration:
             },
         )
         assert response4.status_code == 400
-        assert "no uses remaining" in response4.json()["detail"].lower()
+        assert "fully used" in response4.json()["detail"].lower()
 
 
 class TestRegistrationValidation:
@@ -278,7 +278,7 @@ class TestRegistrationWithInvalidCode:
         )
 
         assert response.status_code == 400
-        assert "not found" in response.json()["detail"].lower()
+        assert "invalid authorization code" in response.json()["detail"].lower()
 
     def test_register_with_used_code(self, valid_auth_code):
         """Test that registration fails with a code that has been fully used."""
@@ -305,7 +305,7 @@ class TestRegistrationWithInvalidCode:
             },
         )
         assert response2.status_code == 400
-        assert "no uses remaining" in response2.json()["detail"].lower()
+        assert "fully used" in response2.json()["detail"].lower()
 
     def test_register_with_expired_code(self, admin_user):
         """Test that registration fails with an expired code."""
@@ -314,14 +314,22 @@ class TestRegistrationWithInvalidCode:
         # Create a code that expires in 1 second
         with get_db_connection() as conn:
             repo = AuthCodeRepository(conn)
-            service = AuthCodeService(repo)
 
-            code = service.create_code(
+            # Create code directly with repository to set specific expiration
+            code_string = "TESTEXPIRED1"
+            repo.create_code(
+                code=code_string,
                 created_by=admin_user["user_id"],
                 expires_at=int(time.time()) + 1,  # Expires in 1 second
                 max_uses=1,
                 notes="Test expired code",
             )
+            conn.commit()
+
+            # Format for display
+            code = {
+                "code_formatted": f"{code_string[:4]}-{code_string[4:8]}-{code_string[8:12]}"
+            }
 
         # Wait for code to expire
         time.sleep(2)
@@ -364,7 +372,7 @@ class TestRegistrationWithInvalidCode:
         )
 
         assert response.status_code == 400
-        assert "not active" in response.json()["detail"].lower()
+        assert "revoked" in response.json()["detail"].lower()
 
 
 class TestRegistrationDuplicateHandling:

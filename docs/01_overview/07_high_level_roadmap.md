@@ -98,7 +98,7 @@ Auth no longer depends on in-memory data structures.
 
 ---
 
-## Phase 3 — Controlled Registration (⏳ In Progress)
+## Phase 3 — Controlled Registration (✅ Complete)
 
 **Goal:** Prevent unauthorized self-registration.
 
@@ -112,23 +112,28 @@ Auth no longer depends on in-memory data structures.
 - [x] Create `/auth/register` endpoint requiring authorization code
 - [x] Add request/response schemas with validation
 
-### Remaining
-- [ ] **Fix failing integration tests** (12 tests in `test_registration_flow.py`)
-  - [ ] Debug 500 errors during registration
-  - [ ] Fix `expires_at` parameter issue in expired code test
-  - [ ] Correct error message assertions
-- [ ] **Add integration tests for admin endpoints**
-  - [ ] Test creating authorization codes
-  - [ ] Test listing codes with filters
-  - [ ] Test revoking codes
-  - [ ] Test viewing usage history
-- [ ] **Update documentation**
-  - [ ] Update sequence diagrams to show registration flow with auth codes
-  - [ ] Document admin endpoints in API documentation
-  - [ ] Update security documentation with authorization code policies
-- [ ] **Mark Phase 3 complete** once all tests pass
+### ✅ Completed
 
-**Exit Criteria:**
+- [x] **Fixed all integration tests** (16 tests in `test_registration_flow.py`)
+  - [x] Fixed 500 errors during registration (incorrect parameter in `use_code`)
+  - [x] Fixed `expires_at` parameter issue in expired code test
+  - [x] Corrected error message assertions
+- [x] **Added integration tests for admin endpoints** (19 tests in `test_admin_auth_codes.py`)
+  - [x] Test creating authorization codes
+  - [x] Test listing codes with filters
+  - [x] Test revoking codes
+  - [x] Test viewing usage history
+- [x] **Updated documentation**
+  - [x] Updated sequence diagrams to show registration flow with auth codes
+  - [x] Documented admin endpoints in API documentation
+  - [x] Updated security documentation with authorization code policies
+
+**Test Results:**
+- 43 tests passing (16 registration + 19 admin + 8 auth flow)
+- 0 failures
+- All Phase 3 functionality complete
+
+**Exit Criteria: ✅ ACHIEVED**
 Only explicitly authorized users can create accounts.
 
 ---

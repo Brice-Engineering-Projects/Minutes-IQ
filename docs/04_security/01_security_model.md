@@ -7,7 +7,44 @@ This document describes authentication, data protection, and access control.
 
 ---
 
-## 2. Authentication
+## 2. User Registration & Access Control
+
+### Authorization Code System
+
+**Purpose:** Control who can create accounts through invite-only registration.
+
+**Key Features:**
+- All new user registrations require a valid authorization code
+- Only administrators can create authorization codes
+- Codes are cryptographically secure (12 characters: uppercase + digits)
+- Format: `XXXX-XXXX-XXXX` (e.g., `A3B7-9K2M-5PQ8`)
+
+**Code Properties:**
+- **Max Uses:** Configurable (1 = single-use, N = multi-use)
+- **Expiration:** Optional expiration date (days from creation)
+- **Revocation:** Admins can revoke codes at any time
+- **Usage Tracking:** Full audit trail of who used each code
+
+**Security Benefits:**
+- Prevents unauthorized account creation
+- Enables controlled user onboarding
+- Provides accountability through usage tracking
+- Allows time-limited invitations
+
+**Code Generation:**
+- Uses Python's `secrets` module (cryptographically secure)
+- 12-character alphanumeric codes (62^12 = ~3.2 quintillion combinations)
+- Normalized for comparison (case-insensitive, hyphen-flexible)
+
+**Admin Operations:**
+- `POST /admin/auth-codes` - Create new codes
+- `GET /admin/auth-codes` - List codes (with filters: active, expired, used, revoked)
+- `DELETE /admin/auth-codes/{id}` - Revoke a code
+- `GET /admin/auth-codes/{id}/usage` - View usage history
+
+---
+
+## 3. Authentication
 
 ### JWT Access Tokens
 
@@ -25,31 +62,47 @@ This document describes authentication, data protection, and access control.
 
 ---
 
-## 3. Password Security
+## 4. Password Security
 
-- Passwords hashed using SHA-256
-- Stored in environment variables
-- Never committed to repo
-- Use hashed passwords if desired (bcrypt)
+- Passwords hashed using bcrypt (via passlib)
+- Minimum 8 characters required
+- Stored securely in database
+- Never logged or exposed in responses
+- Environment variables for admin bootstrap credentials
 
 ---
 
-## 4. Route Protection
+## 5. Route Protection
 
-Each protected route uses:
+### User Authentication
 
-```text
+Protected routes use dependency injection:
+
+```python
 Depends(get_current_user)
 ```
 
 If authentication fails:
-
 - Token rejected
-- User redirected to login
+- Returns `401 Unauthorized`
+
+### Admin-Only Routes
+
+Admin routes require elevated permissions:
+
+```python
+Depends(get_current_admin_user)
+```
+
+If user is not an admin:
+- Returns `403 Forbidden`
+
+**Admin Routes:**
+- `/admin/auth-codes/*` - Authorization code management
 
 ---
 
-## 5. Secure Deployment
+## 6. Secure Deployment
 
 Best practice:
 
@@ -61,7 +114,7 @@ Best practice:
 
 ---
 
-## 6. Data Protection
+## 7. Data Protection
 
 - Annotated PDFs stored only locally
 - No remote storage unless explicitly configured

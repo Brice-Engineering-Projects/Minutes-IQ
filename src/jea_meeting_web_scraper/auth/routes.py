@@ -143,7 +143,11 @@ async def register(
 
     # Step 3: Mark the authorization code as used
     try:
-        auth_code_service.use_code(code_data["code_id"], user["user_id"])
+        success, error_msg = auth_code_service.use_code(
+            request.auth_code, user["user_id"]
+        )
+        if not success:
+            raise ValueError(error_msg)
     except Exception as e:
         # This is a critical error - user was created but code wasn't marked as used
         # In production, you might want to implement a rollback or compensating transaction
