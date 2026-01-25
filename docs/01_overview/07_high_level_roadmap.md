@@ -98,17 +98,37 @@ Auth no longer depends on in-memory data structures.
 
 ---
 
-## Phase 3 — Controlled Registration (⏳ Planned)
+## Phase 3 — Controlled Registration (⏳ In Progress)
 
 **Goal:** Prevent unauthorized self-registration.
 
-- [x] Implement authorization-code model
-- [x] Admin-only auth code rotation
-- [ ] Registration blocked without valid code
-- [ ] Tests for valid / invalid / expired codes
-- [ ] Update docs and sequence diagrams
+### Completed
+- [x] Design authorization code model (database schema, code format, validation logic)
+- [x] Create migration for `auth_codes` and `code_usage` tables
+- [x] Implement `AuthCodeRepository` (CRUD operations)
+- [x] Implement `AuthCodeService` (business logic, validation, code generation)
+- [x] Write comprehensive unit tests (47 tests for code generation, repository, and service)
+- [x] Create admin endpoints (create, list, revoke codes, view usage history)
+- [x] Create `/auth/register` endpoint requiring authorization code
+- [x] Add request/response schemas with validation
 
-**Exit Criteria:**  
+### Remaining
+- [ ] **Fix failing integration tests** (12 tests in `test_registration_flow.py`)
+  - [ ] Debug 500 errors during registration
+  - [ ] Fix `expires_at` parameter issue in expired code test
+  - [ ] Correct error message assertions
+- [ ] **Add integration tests for admin endpoints**
+  - [ ] Test creating authorization codes
+  - [ ] Test listing codes with filters
+  - [ ] Test revoking codes
+  - [ ] Test viewing usage history
+- [ ] **Update documentation**
+  - [ ] Update sequence diagrams to show registration flow with auth codes
+  - [ ] Document admin endpoints in API documentation
+  - [ ] Update security documentation with authorization code policies
+- [ ] **Mark Phase 3 complete** once all tests pass
+
+**Exit Criteria:**
 Only explicitly authorized users can create accounts.
 
 ---
