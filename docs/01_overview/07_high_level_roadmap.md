@@ -67,19 +67,19 @@ Auth structure is stable, test-covered, and extensible.
 - [x] Seed admin user
 - [x] Verify DB access programmatically
 
-- [ ] **Implement user data access (CRUD)**
+- [x] **Implement user data access (CRUD)**
   - Add functions to create, read, update, and delete users
   - Isolate database logic from authentication and route handlers
 
-- [ ] **Migrate authentication to database-backed users**
+- [x] **Migrate authentication to database-backed users**
   - Replace in-memory user storage with database queries
   - Validate credentials against stored user records
 
-- [ ] **Update tests for database usage**
+- [x] **Update tests for database usage**
   - Modify tests to use test users, fixtures, or mock data
   - Ensure tests do not interact with real user data
 
-- [ ] **Verify migrations and rollback safety**
+- [x] **Verify migrations and rollback safety**
   - Confirm database schema changes apply cleanly
   - Validate rollback procedures in case of migration failure
 
