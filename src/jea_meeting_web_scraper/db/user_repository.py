@@ -180,7 +180,7 @@ class UserRepository:
 
         query = f"""
             UPDATE users
-            SET {', '.join(updates)}
+            SET {", ".join(updates)}
             WHERE user_id = ?
             RETURNING user_id, username, email, role_id;
         """
