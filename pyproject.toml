@@ -1,7 +1,7 @@
 [project]
-name = "jea-meeting-web-scraper"
+name = "minutes_iq"
 version = "0.1.0"
-description = "A backend-ready scraper and NLP pipeline for extracting signals from JEA and municipal agency meeting minutes."
+description = "MinutesIQ is a role-based backend platform that ingests public meeting records, applies configurable keyword intelligence, and delivers structured reports to authenticated users."
 requires-python = ">=3.12"
 
 dependencies = [

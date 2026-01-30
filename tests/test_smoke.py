@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from jea_meeting_web_scraper.main import app
+from minutes_iq.main import app
 
 
 def test_app_starts_and_health_route_loads():

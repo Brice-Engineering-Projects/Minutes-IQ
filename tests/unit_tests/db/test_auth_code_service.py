@@ -2,8 +2,8 @@
 
 import time
 
-from jea_meeting_web_scraper.db.auth_code_repository import AuthCodeRepository
-from jea_meeting_web_scraper.db.auth_code_service import AuthCodeService
+from minutes_iq.db.auth_code_repository import AuthCodeRepository
+from minutes_iq.db.auth_code_service import AuthCodeService
 
 
 class TestCreateCode:

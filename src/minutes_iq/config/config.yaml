@@ -1,0 +1,47 @@
+# minutes_iq/config/config.yaml
+
+app:
+  name: jea-meeting-web-scraper
+  debug: false
+  env: development       # development | staging | production
+  log_level: info
+
+scraper:
+  pdf_directory: "./data/raw_pdfs"
+  annotated_directory: "./data/annotated_pdfs"
+  processed_directory: "./data/processed"
+  concurrency: 4
+  timeout: 30
+  user_agent: "Mozilla/5.0 (compatible; JEAScraper/1.0)"
+
+downloads:
+  export_directory: "./data/exports"          # where final ZIPs are written
+  zip_directory: "./data/zipped"              # scratch area for zip creation
+  zip_filename_pattern: "jea_results_{date}.zip"
+  include_raw_pdfs: true                      # allow raw PDFs in zip
+  include_annotated_pdfs: true                # allow annotated in zip
+
+database:
+  provider: "turso"                           # turso | sqlite | postgres (future-proof)
+  db_url: "file:jea_webapp?mode=ro"           # overridden by .env for prod
+  replica_url: null                           # optional Turso replica
+  timeout: 30                                 # DB timeout in seconds
+
+auth:
+  token_expiration_minutes: 30
+  algorithm: "HS256"
+
+cookies:
+  secure: true
+  samesite: strict
+  max_age_minutes: 30
+
+tasks:
+  allow_background_tasks: true
+  workers: 2
+
+features:
+  enable_zip_downloads: true
+  enable_keyword_management: true
+  enable_client_selection: true
+  enable_profile_customization: true

@@ -286,19 +286,19 @@ This phase migrates the CLI-based scraper logic (`jea_minutes_scraper.py`, `high
 ### Completed Work
 
 #### 6.1 Database Schema
-- [ ] Create `scrape_jobs` table
+- [x] Create `scrape_jobs` table
   - Fields: job_id, client_id, status, created_by, created_at, started_at, completed_at, error_message
   - Status enum: pending, running, completed, failed, cancelled
   - Foreign keys to clients and users
-- [ ] Create `scrape_results` table
+- [x] Create `scrape_results` table
   - Fields: result_id, job_id, pdf_filename, page_number, keyword_id, snippet, entities_json
   - Foreign keys to scrape_jobs and keywords
   - Store NLP entities as JSON
-- [ ] Create `scrape_job_config` table
+- [x] Create `scrape_job_config` table
   - Fields: config_id, job_id, date_range_start, date_range_end, max_scan_pages, include_minutes, include_packages
   - Store per-job configuration
-- [ ] Create migration: `20260126_000000_add_scraper_orchestration.sql`
-- [ ] Update test database setup with Phase 6 tables
+- [x] Create migration: `20260126_000000_add_scraper_orchestration.sql`
+- [x] Update test database setup with Phase 6 tables
 
 #### 6.2 Core Scraper Refactor
 - [ ] Extract reusable functions from `jea_minutes_scraper.py`

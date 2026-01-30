@@ -1,4 +1,4 @@
-name: jea_meeting_web_scraper
+name: minutes_iq
 channels:
   - conda-forge
   - defaults

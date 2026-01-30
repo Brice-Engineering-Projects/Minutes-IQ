@@ -120,7 +120,7 @@ uv sync
 ### Run the Application
 
 ```bash
-uv run uvicorn src.jea_meeting_web_scraper.main:app --reload
+uv run uvicorn src.minutes_iq.main:app --reload
 ```
 
 ---
