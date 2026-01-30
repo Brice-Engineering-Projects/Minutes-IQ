@@ -7,7 +7,10 @@ import logging
 from pathlib import Path
 from typing import Any
 
-import fitz  # PyMuPDF
+try:
+    import fitz  # PyMuPDF
+except ImportError:
+    fitz = None  # type: ignore[assignment]
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +31,9 @@ def highlight_pdf(
     Returns:
         True if successful, False otherwise
     """
+    if fitz is None:
+        logger.error("PyMuPDF (fitz) is not installed. Cannot highlight PDFs.")
+        return False
     pdf_path = Path(pdf_path)
     output_path = Path(output_path)
 
