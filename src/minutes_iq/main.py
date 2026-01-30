@@ -9,6 +9,7 @@ from minutes_iq.admin import (
 )
 from minutes_iq.api import clients
 from minutes_iq.auth import routes
+from minutes_iq.scraper import routes as scraper_routes
 
 app = FastAPI()
 router = APIRouter()
@@ -19,6 +20,7 @@ app.include_router(auth_code_routes.router)
 app.include_router(client_routes.router)
 app.include_router(keyword_routes.router)
 app.include_router(clients.router)
+app.include_router(scraper_routes.router)
 # nlp = router.include_router(APIRouter(), prefix="/nlp")
 
 
