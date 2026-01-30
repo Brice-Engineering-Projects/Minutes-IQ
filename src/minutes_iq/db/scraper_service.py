@@ -247,6 +247,29 @@ class ScraperService:
         """
         return self.repository.get_job_results(job_id)
 
+    def cancel_job(self, job_id: int) -> bool:
+        """
+        Cancel a running or pending scrape job.
+
+        Args:
+            job_id: The job ID to cancel
+
+        Returns:
+            True if job was cancelled, False if job was not in cancellable state
+        """
+        job = self.repository.get_job(job_id)
+        if not job:
+            raise ValueError(f"Job {job_id} not found")
+
+        # Only pending or running jobs can be cancelled
+        if job["status"] not in ("pending", "running"):
+            logger.warning(f"Cannot cancel job {job_id} with status '{job['status']}'")
+            return False
+
+        self.repository.update_job_status(job_id, "cancelled")
+        logger.info(f"Cancelled job {job_id}")
+        return True
+
     def highlight_pdfs(
         self,
         job_id: int,

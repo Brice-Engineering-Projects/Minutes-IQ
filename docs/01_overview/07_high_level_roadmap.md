@@ -341,21 +341,21 @@ This phase migrates the CLI-based scraper logic (`jea_minutes_scraper.py`, `high
   - [x] `get_config_by_job()` - Retrieve config for job execution
 
 #### 6.5 Business Logic Layer
-- [ ] Implement `ScraperService` (core scraper orchestration)
-  - [ ] `create_scrape_job()` - Create job with validation
-  - [ ] `execute_scrape()` - Main async scraper logic
-  - [ ] `stream_and_scan()` - PDF streaming and keyword matching
-  - [ ] `save_results()` - Persist matches to database
-  - [ ] `handle_failure()` - Error handling and cleanup
-  - [ ] `cancel_job()` - Cancel running job
-- [ ] Implement `ResultsService` (result processing)
-  - [ ] `generate_csv_export()` - Export results to CSV
-  - [ ] `generate_zip_artifact()` - Bundle PDFs + CSV + metadata
-  - [ ] `get_results_summary()` - Aggregate statistics
-- [ ] Implement `HighlighterService` (PDF annotation)
-  - [ ] `highlight_job_results()` - Annotate all PDFs for a job
-  - [ ] `add_highlights_to_pdf()` - Process single PDF
-  - [ ] `create_annotated_zip()` - Bundle annotated PDFs
+- [x] Implement `ScraperService` (core scraper orchestration)
+  - [x] `create_scrape_job()` - Create job with validation
+  - [x] `execute_scrape()` - Main async scraper logic
+  - [x] `stream_and_scan()` - PDF streaming and keyword matching
+  - [x] `save_results()` - Persist matches to database
+  - [x] `handle_failure()` - Error handling and cleanup
+  - [x] `cancel_job()` - Cancel running job
+- [x] Implement `ResultsService` (result processing)
+  - [x] `generate_csv_export()` - Export results to CSV
+  - [x] `generate_zip_artifact()` - Bundle PDFs + CSV + metadata
+  - [x] `get_results_summary()` - Aggregate statistics
+- [x] Implement `HighlighterService` (PDF annotation)
+  - [x] `highlight_job_results()` - Annotate all PDFs for a job
+  - [x] `add_highlights_to_pdf()` - Process single PDF
+  - [x] `create_annotated_zip()` - Bundle annotated PDFs
 
 #### 6.6 Background Job Execution
 - [ ] Choose async execution strategy
