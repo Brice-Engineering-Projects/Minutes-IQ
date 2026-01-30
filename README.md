@@ -1,6 +1,13 @@
 # 🧠 Minutes IQ
 
-### Municipal Meeting Intelligence Platform
+## Municipal Meeting Intelligence Platform
+
+![Python](https://img.shields.io/badge/python-3.12+-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-async-success)
+![uv](https://img.shields.io/badge/uv-package%20manager-orange)
+![Build](https://img.shields.io/badge/build-passing-brightgreen)
+![License](https://img.shields.io/badge/license-private-lightgrey)
+![Status](https://img.shields.io/badge/status-active%20development-yellow)
 
 > *A secure FastAPI platform for scraping, annotating, and extracting actionable intelligence from municipal meeting records.*
 
