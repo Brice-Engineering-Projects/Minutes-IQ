@@ -1,140 +1,179 @@
-# 🏛️ JEA Meeting Minutes Intelligence Platform
+# 🧠 Minutes IQ
 
-> *A Secure FastAPI Web Application for Scraping, Annotating, and Extracting Signals From Municipal Meeting Records*
+### Municipal Meeting Intelligence Platform
 
-This application is a **private, login-protected FastAPI web platform** designed to extract **business development and pre-positioning intelligence** from publicly available municipal meeting records.
+> *A secure FastAPI platform for scraping, annotating, and extracting actionable intelligence from municipal meeting records.*
 
-While the system initially targets **JEA (Jacksonville Electric Authority)**, it is architected to support additional municipalities such as **City of Jacksonville Beach**, **Atlantic Beach**, **Palm Coast**, and others.
+**Minutes IQ** is a **private, login-protected intelligence platform** designed to extract **business development and pre-positioning signals** from publicly available municipal meeting documents.
 
-Authenticated users can manage profiles, select municipalities, define keyword sets, execute scraping and NLP pipelines, and download **annotated meeting records** bundled as ZIP archives. No scraped documents are stored long-term.
+The system currently targets **JEA (Jacksonville Electric Authority)** and is architected to support additional municipalities including **Jacksonville Beach**, **Atlantic Beach**, **Palm Coast**, and others.
+
+All scraping, NLP, and PDF annotation workflows are executed as **tracked asynchronous jobs**, with results packaged into downloadable ZIP artifacts. Documents are stored **on disk only**, never in the database.
+
+---
+
+## 📌 Versioning
+
+* **Current Version:** `v0.6.0`
+* **Phase Status:** Phase 6 – Scraper Orchestration **COMPLETE**
+* **Stability:** Backend feature-complete, UI & deployment pending
+
+Versioning follows semantic intent:
+
+* `0.x` → Active architecture development
+* `0.6.x` → Async scraper orchestration milestone
+* `0.7.x` → UI + deployment
+* `1.0.0` → Production-ready release
 
 ---
 
 ## 🔐 Key Design Principles
 
-- FastAPI backend with Jinja2-rendered UI
-- JWT-based authentication using HttpOnly secure cookies
-- Database stores users and profiles only
-- No PDFs stored in the database (disk-only to minimize cost and risk)
-- Service-layer architecture separating web, scraping, and NLP concerns
-- Background task execution for long-running scraper jobs
-- ZIP-based export model for all results
-- Expandable to additional municipalities
+* FastAPI backend with service-oriented architecture
+* JWT authentication using HttpOnly secure cookies
+* Background task execution for long-running jobs
+* Database used for metadata only (users, jobs, results)
+* No PDFs stored in the database
+* Structured disk storage with retention policies
+* ZIP-based export model for all results
+* Designed for multi-municipality expansion
 
 ---
 
-## 🚀 Core Features
+## 🚀 Core Capabilities
 
-### 🔑 Authentication & User Profiles
+### 🔑 Authentication & Profiles
 
-Authenticated users can manage personal and organizational profile data.
-Authentication uses JWT tokens stored in HttpOnly cookies.
+* Secure login using JWT (HttpOnly cookies)
+* User-scoped access to jobs, results, and artifacts
 
----
+### 🧠 Keyword Intelligence
 
-### 🧠 Keyword Management
+* Predefined and client-specific keyword sets
+* Database-driven keyword selection
+* NLP entity extraction and annotation
 
-Users can select predefined keyword categories or define custom keyword sets
-used for text extraction and PDF annotation.
+### 🏙️ Municipality Targeting
 
----
+Currently supported:
 
-### 🏙️ Municipality / Client Selection
+* JEA
+* City of Jacksonville Beach
+* Atlantic Beach
+* Palm Coast
 
-Supported municipalities include:
-
-- JEA
-- City of Jacksonville Beach
-- Atlantic Beach
-- Palm Coast
-
----
+Designed for easy onboarding of additional agencies.
 
 ### 📄 Scraper & NLP Pipeline
 
-Scraping jobs are launched from the UI and executed as background tasks.
+Scraping jobs run asynchronously and include:
 
-Pipeline stages include web scraping, PDF text extraction, keyword matching,
-NLP annotation, and PDF highlighting.
+1. PDF discovery
+2. Text extraction
+3. Keyword matching
+4. NLP entity extraction
+5. PDF highlighting
+6. Result persistence
+7. Artifact generation
 
-Outputs are written to disk only.
+All stages are monitored, cancellable, and auditable.
 
----
+### 📦 Artifact Generation
 
-### 📦 Result Packaging
+Each completed job produces a ZIP archive containing:
 
-Completed runs generate a ZIP bundle containing raw PDFs, annotated PDFs,
-and extracted metadata.
+* Raw PDFs
+* Annotated PDFs
+* CSV result exports
+* Metadata JSON
+
+Artifacts are stored temporarily with configurable retention policies.
 
 ---
 
 ## 🗂️ Project Structure
 
-```text
-src/
-├── webapp/
-├── services/
-├── NLP/
-└── data/
-```
+The authoritative project structure is documented in:
+
+`docs/02_architecture/01_project_structure.md`
+
+That document defines:
+
+* Complete directory layout
+* Module responsibilities
+* Separation between web, service, scraper, NLP, and data layers
+* Conventions for future expansion
+
+The README intentionally avoids duplicating the structure here to prevent documentation drift.
 
 ---
 
 ## 🧰 Technology Stack
 
-- FastAPI
-- Jinja2
-- Bootstrap 5
-- JWT (HttpOnly cookies)
-- spaCy
-- pdfplumber / PyPDFium2
-- SQLite / PostgreSQL
-- uv
+* Python 3.12+
+* FastAPI
+* Jinja2
+* Bootstrap 5
+* JWT (HttpOnly cookies)
+* spaCy (lazy-loaded)
+* pdfplumber / PyMuPDF / PyPDFium2
+* SQLite / PostgreSQL
+* uv (dependency & environment management)
 
 ---
 
-## ⚙️ Running Locally (uv + FastAPI)
+## ⚙️ Local Development
 
 ### Install uv
 
-```bash
-pip install uv
-```
+`pip install uv`
 
 or
 
-```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-
----
+`curl -LsSf [https://astral.sh/uv/install.sh](https://astral.sh/uv/install.sh) | sh`
 
 ### Install Dependencies
 
-```bash
-uv sync
-```
-
----
+`uv sync`
 
 ### Run the Application
 
-```bash
-uv run uvicorn src.minutes_iq.main:app --reload
-```
+`uv run uvicorn src.minutes_iq.main:app --reload`
+
+API documentation will be available at:
+
+[http://localhost:8000/docs](http://localhost:8000/docs)
 
 ---
 
 ## 🛡️ Security Summary
 
-- Short-lived JWT tokens
-- HttpOnly cookies
-- HTTPS recommended
-- No document storage in DB
+* Short-lived JWT tokens
+* HttpOnly cookies (XSS-resistant)
+* HTTPS required in production
+* No document persistence in DB
+* Ownership enforcement on all job and artifact resources
 
 ---
 
 ## 👔 Purpose & Ethics
 
-This platform is intended solely for internal business development use.
-All materials are publicly available records.
+Minutes IQ is intended for private, internal business development use only.
+
+All data is sourced from publicly available municipal records and is used for ethical pre-positioning and intelligence analysis. No sensitive or personally identifiable information is collected or distributed.
+
+---
+
+## 🧭 Roadmap
+
+* UI completion (dashboard, job monitoring, downloads)
+* Deployment (Cloudflare Tunnel / Fly.io / Render)
+* Role-based access control
+* Scheduled scraping
+* Artifact expiration automation
+* Multi-municipality onboarding tooling
+
+---
+
+Minutes IQ
+Turning meeting minutes into signals, not noise.
