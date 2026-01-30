@@ -18,10 +18,10 @@ logger = logging.getLogger(__name__)
 
 # === NLP SETUP ===
 # Lazy load spaCy model to avoid loading during import
-_nlp = None
+_nlp: Any = None
 
 
-def _get_nlp():
+def _get_nlp() -> Any:
     """Lazy load spaCy model."""
     global _nlp
     if _nlp is None:
