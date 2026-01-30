@@ -23,6 +23,7 @@ from minutes_iq.db.scraper_repository import ScraperRepository
 from minutes_iq.db.scraper_service import ScraperService
 from minutes_iq.scraper.async_runner import cancel_job_async, run_scrape_job_async
 from minutes_iq.scraper.schemas import (
+    CleanupResponse,
     CreateArtifactRequest,
     CreateArtifactResponse,
     CreateJobRequest,
@@ -33,7 +34,9 @@ from minutes_iq.scraper.schemas import (
     JobSummary,
     ResultsListResponse,
     ResultsSummaryResponse,
+    StorageStatsResponse,
 )
+from minutes_iq.scraper.storage import StorageManager
 
 logger = logging.getLogger(__name__)
 
@@ -67,6 +70,12 @@ def get_highlighter_service(
     return HighlighterService(repository)
 
 
+def get_storage_manager() -> StorageManager:
+    """Get StorageManager instance."""
+    # TODO: Load configuration from settings
+    return StorageManager(base_dir="data")
+
+
 # === Job Management Endpoints ===
 
 
@@ -96,13 +105,16 @@ def create_scrape_job(
             include_packages=request.include_packages,
         )
 
+        # Get storage manager
+        storage = get_storage_manager()
+
         # Start background execution
         background_tasks.add_task(
             run_scrape_job_async,
             job_id=job_id,
             service=service,
             source_urls=request.source_urls,
-            pdf_storage_dir=None,  # TODO: Configure from settings
+            storage_manager=storage,
         )
 
         logger.info(f"Created scrape job {job_id} for user {current_user['user_id']}")
@@ -532,4 +544,90 @@ def create_job_artifact(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create artifact: {str(e)}",
+        ) from e
+
+
+# === Storage Management Endpoints ===
+
+
+@router.delete("/jobs/{job_id}/cleanup", response_model=CleanupResponse)
+def cleanup_job_files(
+    job_id: int,
+    current_user: Annotated[dict, Depends(get_current_user)],
+    service: Annotated[ScraperService, Depends(get_scraper_service)],
+    storage: Annotated[StorageManager, Depends(get_storage_manager)],
+    include_artifacts: bool = Query(True),
+) -> CleanupResponse:
+    """
+    Delete all files associated with a job.
+
+    Admin-only endpoint. Removes raw PDFs, annotated PDFs, and optionally artifacts.
+    """
+    try:
+        # Get job and verify ownership
+        job = service.repository.get_job(job_id)
+        if not job:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Job {job_id} not found",
+            )
+
+        # Admin-only check (requires is_admin field in user context)
+        if not current_user.get("is_admin", False):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only administrators can cleanup job files",
+            )
+
+        # Perform cleanup
+        deleted = storage.cleanup_job(job_id, include_artifacts=include_artifacts)
+
+        logger.info(f"Admin {current_user['user_id']} cleaned up job {job_id}")
+
+        return CleanupResponse(
+            job_id=job_id,
+            files_deleted=deleted,
+            message=f"Cleaned up {sum(deleted.values())} files for job {job_id}",
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to cleanup job files: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to cleanup job files: {str(e)}",
+        ) from e
+
+
+@router.get("/storage/stats", response_model=StorageStatsResponse)
+def get_storage_statistics(
+    current_user: Annotated[dict, Depends(get_current_user)],
+    storage: Annotated[StorageManager, Depends(get_storage_manager)],
+) -> StorageStatsResponse:
+    """
+    Get storage usage statistics.
+
+    Admin-only endpoint showing disk space usage by file type.
+    """
+    try:
+        # Admin-only check
+        if not current_user.get("is_admin", False):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only administrators can view storage statistics",
+            )
+
+        # Get statistics
+        stats = storage.get_storage_stats()
+
+        return StorageStatsResponse(**stats)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get storage stats: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get storage stats: {str(e)}",
         ) from e

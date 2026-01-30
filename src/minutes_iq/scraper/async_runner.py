@@ -79,6 +79,7 @@ def run_scrape_job_async(
     service: ScraperService,
     source_urls: list[str],
     pdf_storage_dir: str | None = None,
+    storage_manager=None,
 ) -> None:
     """
     Execute a scrape job in the background with timeout and cancellation support.
@@ -89,7 +90,8 @@ def run_scrape_job_async(
         job_id: The job ID to execute
         service: The ScraperService instance
         source_urls: List of URLs to scrape for PDF links
-        pdf_storage_dir: Optional directory to save matched PDFs
+        pdf_storage_dir: Optional directory to save matched PDFs (deprecated)
+        storage_manager: Optional StorageManager for organized file storage
     """
     start_time = time.time()
     logger.info(f"Starting background execution of job {job_id}")
@@ -109,6 +111,7 @@ def run_scrape_job_async(
             service=service,
             source_urls=source_urls,
             pdf_storage_dir=pdf_storage_dir,
+            storage_manager=storage_manager,
             start_time=start_time,
         )
 
@@ -138,6 +141,7 @@ def _execute_with_monitoring(
     service: ScraperService,
     source_urls: list[str],
     pdf_storage_dir: str | None,
+    storage_manager,
     start_time: float,
 ) -> dict[str, Any]:
     """
@@ -147,7 +151,8 @@ def _execute_with_monitoring(
         job_id: The job ID
         service: The ScraperService instance
         source_urls: List of URLs to scrape
-        pdf_storage_dir: Optional PDF storage directory
+        pdf_storage_dir: Optional PDF storage directory (deprecated)
+        storage_manager: Optional StorageManager for organized file storage
         start_time: Job start timestamp
 
     Returns:
@@ -235,14 +240,25 @@ def _execute_with_monitoring(
                     )
                     matches_found += 1
 
-                # Download PDF if storage directory specified
-                if pdf_storage_dir and pdf_content:
-                    import os
+                # Download PDF using storage manager (preferred) or legacy path
+                if pdf_content:
+                    if storage_manager:
+                        # Use storage manager for organized storage
+                        storage_manager.ensure_job_directories(job_id)
+                        filepath = storage_manager.get_raw_pdf_path(job_id, filename)
+                        with open(filepath, "wb") as f:
+                            f.write(pdf_content)
+                        logger.debug(
+                            f"[Job {job_id}] Saved PDF to {filepath} using StorageManager"
+                        )
+                    elif pdf_storage_dir:
+                        # Legacy flat directory storage
+                        import os
 
-                    filepath = os.path.join(pdf_storage_dir, filename)
-                    with open(filepath, "wb") as f:
-                        f.write(pdf_content)
-                    logger.debug(f"[Job {job_id}] Saved PDF to {filepath}")
+                        filepath = os.path.join(pdf_storage_dir, filename)
+                        with open(filepath, "wb") as f:
+                            f.write(pdf_content)
+                        logger.debug(f"[Job {job_id}] Saved PDF to {filepath}")
 
                 logger.info(
                     f"[Job {job_id}] Found {len(matches)} matches in {filename} "

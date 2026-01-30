@@ -377,29 +377,170 @@ SELECT * FROM scrape_jobs WHERE status = 'running';
 
 ## Storage and Cleanup Policies
 
-### PDF Storage
+### Storage Organization
 
-**Location:** Configured via `pdf_storage_dir` parameter
+The scraper uses a structured directory layout managed by `StorageManager`:
 
-**Recommendations:**
-- Store matched PDFs for 90 days
-- Archive to cold storage after 90 days
-- Delete after 1 year if not accessed
+```
+data/
+├── raw_pdfs/{job_id}/           # Original PDFs downloaded during scrape
+├── annotated_pdfs/{job_id}/     # PDFs with keyword highlights
+└── artifacts/{job_id}/          # ZIP archives for download
+```
 
-**Storage Script:**
+**Benefits:**
+- Job isolation: Each job has its own directory
+- Easy cleanup: Delete entire job directory at once
+- Traceable: File organization matches database records
+
+### Retention Policies
+
+**Default Retention Periods:**
+
+| File Type | Retention | Rationale |
+|-----------|-----------|-----------|
+| Raw PDFs | 30 days | Temporary storage for processing |
+| Annotated PDFs | 90 days | Primary output for users |
+| Artifacts | 30 days | One-time downloads or until downloaded |
+
+**Configuration:**
+
+```python
+from minutes_iq.scraper.storage import StorageManager
+
+storage = StorageManager(
+    base_dir="data",
+    raw_pdf_retention_days=30,
+    annotated_pdf_retention_days=90,
+    artifact_retention_days=30
+)
+```
+
+### Manual File Cleanup
+
+**Cleanup Specific Job (Admin API):**
 
 ```bash
+# Delete all files for job 123
+curl -X DELETE "http://localhost:8000/scraper/jobs/123/cleanup" \
+  -H "Authorization: Bearer <admin_token>"
+
+# Preserve artifacts (only delete PDFs)
+curl -X DELETE "http://localhost:8000/scraper/jobs/123/cleanup?include_artifacts=false" \
+  -H "Authorization: Bearer <admin_token>"
+```
+
+**Response:**
+
+```json
+{
+  "job_id": 123,
+  "files_deleted": {
+    "raw_pdfs": 15,
+    "annotated_pdfs": 12,
+    "artifacts": 2
+  },
+  "message": "Cleaned up 29 files for job 123"
+}
+```
+
+### Automated Cleanup
+
+**Python Script (Age-Based):**
+
+```python
+#!/usr/bin/env python3
+"""
+Automated cleanup script for scraper storage.
+Run as cron job daily: 0 2 * * * /usr/local/bin/cleanup_scraper_storage.py
+"""
+
+from minutes_iq.scraper.storage import StorageManager
+
+def main():
+    storage = StorageManager(
+        base_dir="/var/lib/minutes_iq/data",
+        raw_pdf_retention_days=30,
+        annotated_pdf_retention_days=90,
+        artifact_retention_days=30
+    )
+
+    # Cleanup files older than retention periods
+    summary = storage.cleanup_old_files()
+
+    print(f"Cleanup Summary:")
+    print(f"  Raw PDFs deleted: {summary['raw_pdfs_deleted']}")
+    print(f"  Annotated PDFs deleted: {summary['annotated_pdfs_deleted']}")
+    print(f"  Artifacts deleted: {summary['artifacts_deleted']}")
+    print(f"  Jobs cleaned: {len(summary['jobs_cleaned'])}")
+
+if __name__ == "__main__":
+    main()
+```
+
+**Cron Configuration:**
+
+```bash
+# /etc/cron.daily/cleanup_scraper_storage.sh
 #!/bin/bash
-# cleanup_old_pdfs.sh
+cd /opt/minutes_iq
+source venv/bin/activate
+python -m minutes_iq.scripts.cleanup_storage
+```
 
-PDF_DIR="/var/lib/minutes_iq/pdfs"
-ARCHIVE_DIR="/var/lib/minutes_iq/pdfs_archive"
+### Storage Monitoring
 
-# Archive PDFs older than 90 days
-find "$PDF_DIR" -type f -mtime +90 -exec mv {} "$ARCHIVE_DIR" \;
+**Get Storage Statistics (Admin API):**
 
-# Delete archived PDFs older than 365 days
-find "$ARCHIVE_DIR" -type f -mtime +365 -delete
+```bash
+curl "http://localhost:8000/scraper/storage/stats" \
+  -H "Authorization: Bearer <admin_token>"
+```
+
+**Response:**
+
+```json
+{
+  "raw_pdfs": {
+    "size_bytes": 157286400,
+    "file_count": 350,
+    "job_count": 45
+  },
+  "annotated_pdfs": {
+    "size_bytes": 210534400,
+    "file_count": 280,
+    "job_count": 38
+  },
+  "artifacts": {
+    "size_bytes": 52428800,
+    "file_count": 12,
+    "job_count": 12
+  },
+  "total_size_bytes": 420249600
+}
+```
+
+**Python Script for Monitoring:**
+
+```python
+from minutes_iq.scraper.storage import StorageManager
+
+def check_storage():
+    storage = StorageManager(base_dir="data")
+    stats = storage.get_storage_stats()
+
+    total_gb = stats["total_size_bytes"] / (1024**3)
+
+    print(f"Total Storage: {total_gb:.2f} GB")
+    print(f"Raw PDFs: {stats['raw_pdfs']['file_count']} files ({stats['raw_pdfs']['job_count']} jobs)")
+    print(f"Annotated PDFs: {stats['annotated_pdfs']['file_count']} files")
+    print(f"Artifacts: {stats['artifacts']['file_count']} files")
+
+    # Alert if storage exceeds threshold
+    if total_gb > 50:
+        print("WARNING: Storage exceeds 50GB threshold!")
+
+check_storage()
 ```
 
 ### Database Cleanup

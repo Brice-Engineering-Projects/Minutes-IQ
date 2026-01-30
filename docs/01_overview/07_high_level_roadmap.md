@@ -432,31 +432,31 @@ This phase migrates the CLI-based scraper logic (`jea_minutes_scraper.py`, `high
   - [x] Test memory usage with large result sets
 
 #### 6.9 Documentation
-- [ ] **API Documentation** - REST API reference for scraper endpoints
+- [x] **API Documentation** - REST API reference for scraper endpoints
   - POST, GET, DELETE endpoints with examples
   - Job status lifecycle diagram
   - Error codes and handling
-- [ ] **Data Model Documentation** - Schema for scrape_jobs, scrape_results, scrape_job_config
+- [x] **Data Model Documentation** - Schema for scrape_jobs, scrape_results, scrape_job_config
   - Table relationships and constraints
   - Status enums and transitions
-- [ ] **Operational Guide** - Admin guide for monitoring scraper jobs
+- [x] **Operational Guide** - Admin guide for monitoring scraper jobs
   - Job management workflows
   - Troubleshooting failed jobs
   - Performance tuning (max_scan_pages, timeout)
   - Storage cleanup policies
 
 #### 6.10 Storage Management
-- [ ] Implement file storage strategy
-  - [ ] Organize PDFs: `data/raw_pdfs/{job_id}/{filename}.pdf`
-  - [ ] Organize annotated: `data/annotated_pdfs/{job_id}/{filename}_annotated.pdf`
-  - [ ] Organize artifacts: `data/artifacts/{job_id}/{artifact_id}.zip`
-- [ ] Add storage cleanup policies
-  - [ ] Auto-delete raw PDFs after 30 days
-  - [ ] Keep annotated PDFs for 90 days
-  - [ ] Keep artifacts for 30 days or until downloaded
-- [ ] Implement cleanup endpoint
-  - [ ] DELETE `/scraper/jobs/{job_id}/cleanup` - Remove all files for job
-  - [ ] Admin-only endpoint for bulk cleanup
+- [x] Implement file storage strategy
+  - [x] Organize PDFs: `data/raw_pdfs/{job_id}/{filename}.pdf`
+  - [x] Organize annotated: `data/annotated_pdfs/{job_id}/{filename}_annotated.pdf`
+  - [x] Organize artifacts: `data/artifacts/{job_id}/{artifact_id}.zip`
+- [x] Add storage cleanup policies
+  - [x] Auto-delete raw PDFs after 30 days
+  - [x] Keep annotated PDFs for 90 days
+  - [x] Keep artifacts for 30 days or until downloaded
+- [x] Implement cleanup endpoint
+  - [x] DELETE `/scraper/jobs/{job_id}/cleanup` - Remove all files for job
+  - [x] Admin-only endpoint for bulk cleanup
 
 ### Test Coverage Goals
 - 35+ new integration tests (job management, results, artifacts)

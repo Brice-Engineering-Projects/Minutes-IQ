@@ -8,8 +8,9 @@ This document provides comprehensive documentation for the Scraper API endpoints
 2. [Job Management Endpoints](#job-management-endpoints)
 3. [Results Endpoints](#results-endpoints)
 4. [Artifact Endpoints](#artifact-endpoints)
-5. [Error Codes](#error-codes)
-6. [Job Status Lifecycle](#job-status-lifecycle)
+5. [Storage Management Endpoints](#storage-management-endpoints)
+6. [Error Codes](#error-codes)
+7. [Job Status Lifecycle](#job-status-lifecycle)
 
 ---
 
@@ -380,6 +381,127 @@ Generate a ZIP artifact containing job results and PDFs.
   "include_metadata": true
 }
 ```
+
+---
+
+## Storage Management Endpoints
+
+### Delete Job Files (Cleanup)
+
+Delete all files associated with a job. **Admin-only endpoint.**
+
+**Endpoint:** `DELETE /scraper/jobs/{job_id}/cleanup`
+
+**Authentication:** Required (Admin only)
+
+**Query Parameters:**
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| include_artifacts | boolean | No | true | Whether to delete artifacts along with PDFs |
+
+**Example Request:**
+
+```bash
+curl -X DELETE "http://localhost:8000/scraper/jobs/123/cleanup?include_artifacts=false" \
+  -H "Authorization: Bearer <admin_token>"
+```
+
+**Response (200 OK):**
+
+```json
+{
+  "job_id": 123,
+  "files_deleted": {
+    "raw_pdfs": 15,
+    "annotated_pdfs": 12,
+    "artifacts": 0
+  },
+  "message": "Cleaned up 27 files for job 123"
+}
+```
+
+**Response Codes:**
+
+| Code | Description |
+|------|-------------|
+| 200 | Files successfully deleted |
+| 401 | Unauthorized (missing or invalid token) |
+| 403 | Forbidden (user is not an administrator) |
+| 404 | Job not found |
+| 500 | Internal server error |
+
+**Notes:**
+
+- Only administrators can cleanup job files
+- Raw PDFs are stored in: `data/raw_pdfs/{job_id}/`
+- Annotated PDFs are stored in: `data/annotated_pdfs/{job_id}/`
+- Artifacts are stored in: `data/artifacts/{job_id}/`
+- Use `include_artifacts=false` to preserve artifacts for download
+
+---
+
+### Get Storage Statistics
+
+Get disk usage statistics for all stored files. **Admin-only endpoint.**
+
+**Endpoint:** `GET /scraper/storage/stats`
+
+**Authentication:** Required (Admin only)
+
+**Example Request:**
+
+```bash
+curl "http://localhost:8000/scraper/storage/stats" \
+  -H "Authorization: Bearer <admin_token>"
+```
+
+**Response (200 OK):**
+
+```json
+{
+  "raw_pdfs": {
+    "size_bytes": 157286400,
+    "file_count": 350,
+    "job_count": 45
+  },
+  "annotated_pdfs": {
+    "size_bytes": 210534400,
+    "file_count": 280,
+    "job_count": 38
+  },
+  "artifacts": {
+    "size_bytes": 52428800,
+    "file_count": 12,
+    "job_count": 12
+  },
+  "total_size_bytes": 420249600
+}
+```
+
+**Response Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| size_bytes | integer | Total size in bytes for this category |
+| file_count | integer | Number of files in this category |
+| job_count | integer | Number of jobs with files in this category |
+| total_size_bytes | integer | Total disk usage across all categories |
+
+**Response Codes:**
+
+| Code | Description |
+|------|-------------|
+| 200 | Statistics retrieved successfully |
+| 401 | Unauthorized (missing or invalid token) |
+| 403 | Forbidden (user is not an administrator) |
+| 500 | Internal server error |
+
+**Notes:**
+
+- Statistics are calculated on-demand (may take a few seconds for large datasets)
+- Sizes include all files recursively in each directory tree
+- Use for capacity planning and cleanup scheduling
 
 ---
 

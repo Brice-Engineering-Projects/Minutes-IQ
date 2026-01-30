@@ -180,3 +180,33 @@ class ArtifactDetails(BaseModel):
     size_bytes: int | None
     download_url: str | None
     expires_at: int | None
+
+
+# === Storage Management Schemas ===
+
+
+class CleanupResponse(BaseModel):
+    """Response schema for cleanup operations."""
+
+    job_id: int
+    files_deleted: dict[str, int] = Field(
+        ..., description="Count of files deleted by type"
+    )
+    message: str
+
+
+class StorageCategory(BaseModel):
+    """Storage statistics for a category."""
+
+    size_bytes: int
+    file_count: int
+    job_count: int
+
+
+class StorageStatsResponse(BaseModel):
+    """Response schema for storage statistics."""
+
+    raw_pdfs: StorageCategory
+    annotated_pdfs: StorageCategory
+    artifacts: StorageCategory
+    total_size_bytes: int

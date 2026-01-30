@@ -73,6 +73,7 @@ class ScraperService:
         job_id: int,
         source_urls: list[str],
         pdf_storage_dir: str | None = None,
+        storage_manager=None,
     ) -> dict[str, Any]:
         """
         Execute a scrape job.
@@ -80,7 +81,8 @@ class ScraperService:
         Args:
             job_id: The job ID to execute
             source_urls: List of URLs to scrape for PDF links
-            pdf_storage_dir: Optional directory to save matched PDFs
+            pdf_storage_dir: Optional directory to save matched PDFs (deprecated)
+            storage_manager: Optional StorageManager for organized file storage
 
         Returns:
             Dict with execution summary (pdfs_scanned, matches_found, errors)
@@ -164,14 +166,27 @@ class ScraperService:
                             )
                             matches_found += 1
 
-                        # Download PDF if storage directory specified
-                        if pdf_storage_dir and pdf_content:
-                            import os
+                        # Download PDF using storage manager (preferred) or legacy path
+                        if pdf_content:
+                            if storage_manager:
+                                # Use storage manager for organized storage
+                                storage_manager.ensure_job_directories(job_id)
+                                filepath = storage_manager.get_raw_pdf_path(
+                                    job_id, filename
+                                )
+                                with open(filepath, "wb") as f:
+                                    f.write(pdf_content)
+                                logger.info(
+                                    f"Saved PDF to {filepath} using StorageManager"
+                                )
+                            elif pdf_storage_dir:
+                                # Legacy flat directory storage
+                                import os
 
-                            filepath = os.path.join(pdf_storage_dir, filename)
-                            with open(filepath, "wb") as f:
-                                f.write(pdf_content)
-                            logger.info(f"Saved PDF to {filepath}")
+                                filepath = os.path.join(pdf_storage_dir, filename)
+                                with open(filepath, "wb") as f:
+                                    f.write(pdf_content)
+                                logger.info(f"Saved PDF to {filepath}")
 
                         logger.info(
                             f"Found {len(matches)} matches in {filename} "
