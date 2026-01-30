@@ -120,7 +120,7 @@ def main():
 
     # Scan PDFs for keywords
     all_mentions = []
-    keyword_counts = defaultdict(int)
+    keyword_counts: dict[str, int] = defaultdict(int)
 
     print("\n🔎 Scanning and downloading PDFs with matches...")
     for link_info in unique_links:

@@ -166,7 +166,7 @@ def highlight_job_results(
     output_dir = Path(output_base_dir) / str(job_id)
 
     # Group results by filename
-    matches_by_file = {}
+    matches_by_file: dict[str, list[dict[str, Any]]] = {}
     for result in results:
         filename = result["pdf_filename"]
         if filename not in matches_by_file:

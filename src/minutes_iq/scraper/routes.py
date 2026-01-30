@@ -28,10 +28,13 @@ from minutes_iq.scraper.schemas import (
     CreateArtifactResponse,
     CreateJobRequest,
     CreateJobResponse,
+    JobConfig,
     JobDetails,
     JobListResponse,
+    JobStatistics,
     JobStatusResponse,
     JobSummary,
+    ResultMatch,
     ResultsListResponse,
     ResultsSummaryResponse,
     StorageStatsResponse,
@@ -221,13 +224,13 @@ def get_job_details(
             started_at=job["started_at"],
             completed_at=job["completed_at"],
             error_message=job["error_message"],
-            config=config,
-            statistics={
-                "total_matches": summary["total_matches"],
-                "unique_pdfs": summary["unique_pdfs"],
-                "unique_keywords": summary["unique_keywords"],
-                "execution_time_seconds": summary["execution_time_seconds"],
-            },
+            config=JobConfig(**config),
+            statistics=JobStatistics(
+                total_matches=summary["total_matches"],
+                unique_pdfs=summary["unique_pdfs"],
+                unique_keywords=summary["unique_keywords"],
+                execution_time_seconds=summary["execution_time_seconds"],
+            ),
         )
 
     except HTTPException:
@@ -381,8 +384,11 @@ def list_job_results(
         # Apply pagination
         paginated_results = all_results[offset : offset + limit]
 
+        # Convert to ResultMatch objects
+        result_matches = [ResultMatch(**r) for r in paginated_results]
+
         return ResultsListResponse(
-            results=paginated_results,
+            results=result_matches,
             total=len(all_results),
             limit=limit,
             offset=offset,

@@ -149,7 +149,7 @@ class StorageManager:
             Dict with cleanup summary
         """
         now = datetime.now()
-        summary = {
+        summary: dict[str, Any] = {
             "raw_pdfs_deleted": 0,
             "annotated_pdfs_deleted": 0,
             "artifacts_deleted": 0,

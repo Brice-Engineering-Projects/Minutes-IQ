@@ -359,7 +359,7 @@ class ScraperRepository:
             JOIN clients c ON j.client_id = c.client_id
             WHERE 1=1
         """
-        params = []
+        params: list[Any] = []
 
         if user_id is not None:
             query += " AND j.created_by = ?"
