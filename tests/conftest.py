@@ -10,9 +10,9 @@ import pytest
 from fastapi.testclient import TestClient
 from libsql_experimental import connect
 
-from jea_meeting_web_scraper.auth.security import get_password_hash
-from jea_meeting_web_scraper.config.settings import settings
-from jea_meeting_web_scraper.main import app
+from minutes_iq.auth.security import get_password_hash
+from minutes_iq.config.settings import settings
+from minutes_iq.main import app
 
 
 @pytest.fixture(scope="session")
@@ -188,6 +188,52 @@ def test_db_connection(test_db_file):
         );
     """)
 
+    # Create scrape_jobs table (Phase 6)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS scrape_jobs (
+            job_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            client_id INTEGER NOT NULL,
+            status TEXT NOT NULL CHECK (status IN ('pending', 'running', 'completed', 'failed', 'cancelled')),
+            created_by INTEGER NOT NULL,
+            created_at INTEGER NOT NULL,
+            started_at INTEGER,
+            completed_at INTEGER,
+            error_message TEXT,
+            FOREIGN KEY (client_id) REFERENCES clients(client_id) ON DELETE RESTRICT,
+            FOREIGN KEY (created_by) REFERENCES users(user_id) ON DELETE RESTRICT
+        );
+    """)
+
+    # Create scrape_job_config table (Phase 6)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS scrape_job_config (
+            config_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            job_id INTEGER NOT NULL UNIQUE,
+            date_range_start TEXT,
+            date_range_end TEXT,
+            max_scan_pages INTEGER,
+            include_minutes INTEGER NOT NULL DEFAULT 1,
+            include_packages INTEGER NOT NULL DEFAULT 1,
+            FOREIGN KEY (job_id) REFERENCES scrape_jobs(job_id) ON DELETE CASCADE
+        );
+    """)
+
+    # Create scrape_results table (Phase 6)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS scrape_results (
+            result_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            job_id INTEGER NOT NULL,
+            pdf_filename TEXT NOT NULL,
+            page_number INTEGER NOT NULL,
+            keyword_id INTEGER NOT NULL,
+            snippet TEXT NOT NULL,
+            entities_json TEXT,
+            created_at INTEGER NOT NULL,
+            FOREIGN KEY (job_id) REFERENCES scrape_jobs(job_id) ON DELETE CASCADE,
+            FOREIGN KEY (keyword_id) REFERENCES keywords(keyword_id) ON DELETE RESTRICT
+        );
+    """)
+
     # Seed reference data
     conn.execute(
         "INSERT OR IGNORE INTO roles (role_id, role_name) VALUES (1, 'admin');"
@@ -221,7 +267,7 @@ def setup_test_db(test_db_connection, monkeypatch):
 
     # Monkeypatch the database connection function
     monkeypatch.setattr(
-        "jea_meeting_web_scraper.db.client.get_db_connection", mock_get_db_connection
+        "minutes_iq.db.client.get_db_connection", mock_get_db_connection
     )
 
     # Also patch the database URL in settings
@@ -229,6 +275,9 @@ def setup_test_db(test_db_connection, monkeypatch):
 
     # Clean database before each test (order matters for foreign keys)
     conn = connect(f"file:{test_db_connection}")
+    conn.execute("DELETE FROM scrape_results;")
+    conn.execute("DELETE FROM scrape_job_config;")
+    conn.execute("DELETE FROM scrape_jobs;")
     conn.execute("DELETE FROM client_sources;")
     conn.execute("DELETE FROM user_client_favorites;")
     conn.execute("DELETE FROM client_keywords;")
@@ -255,6 +304,9 @@ def db_connection(test_db_connection):
 def clean_db(test_db_connection):
     """Clean the database before a test (explicit fixture for tests that need it)."""
     conn = connect(f"file:{test_db_connection}")
+    conn.execute("DELETE FROM scrape_results;")
+    conn.execute("DELETE FROM scrape_job_config;")
+    conn.execute("DELETE FROM scrape_jobs;")
     conn.execute("DELETE FROM client_sources;")
     conn.execute("DELETE FROM user_client_favorites;")
     conn.execute("DELETE FROM client_keywords;")
@@ -317,7 +369,7 @@ def test_user_credentials():
 @pytest.fixture
 def admin_token(client: TestClient, test_db_connection):
     """Create an admin user and return their auth token."""
-    from jea_meeting_web_scraper.auth.security import get_password_hash
+    from minutes_iq.auth.security import get_password_hash
 
     conn = connect(f"file:{test_db_connection}")
 

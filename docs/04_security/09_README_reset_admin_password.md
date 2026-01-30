@@ -11,13 +11,13 @@ This guide explains how to reset the admin user's password in the JEA Meeting We
 
 2. **Run the reset script:**
    ```bash
-   uv run python src/jea_meeting_web_scraper/scripts/reset_admin_password.py
+   uv run python src/minutes_iq/scripts/reset_admin_password.py
    ```
 
 3. **Restart your FastAPI server** (if running):
    ```bash
    # Press Ctrl+C to stop, then:
-   uv run uvicorn src.jea_meeting_web_scraper.main:app --reload
+   uv run uvicorn src.minutes_iq.main:app --reload
    ```
 
 4. **Login** at `http://localhost:8000/docs` with:
@@ -61,7 +61,7 @@ The `reset_admin_password.py` script:
 
 2. **Verify the `.env` file is being read:**
    ```bash
-   uv run python src/jea_meeting_web_scraper/scripts/check_env_password.py
+   uv run python src/minutes_iq/scripts/check_env_password.py
    ```
 
 3. **Ensure you restarted the FastAPI server** completely (Ctrl+C and restart, don't rely on auto-reload)
@@ -70,7 +70,7 @@ The `reset_admin_password.py` script:
 
 This means the admin user doesn't exist in the database. Run the seed script first:
 ```bash
-uv run python src/jea_meeting_web_scraper/scripts/seed_admin_credential.py
+uv run python src/minutes_iq/scripts/seed_admin_credential.py
 ```
 
 ## Security Best Practices

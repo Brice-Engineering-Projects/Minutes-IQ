@@ -14,14 +14,14 @@ import time
 import pytest
 from fastapi.testclient import TestClient
 
-from jea_meeting_web_scraper.auth.security import get_password_hash, verify_password
-from jea_meeting_web_scraper.db.client import get_db_connection
-from jea_meeting_web_scraper.db.password_reset_repository import (
+from minutes_iq.auth.security import get_password_hash, verify_password
+from minutes_iq.db.client import get_db_connection
+from minutes_iq.db.password_reset_repository import (
     PasswordResetRepository,
 )
-from jea_meeting_web_scraper.db.password_reset_service import PasswordResetService
-from jea_meeting_web_scraper.db.user_repository import UserRepository
-from jea_meeting_web_scraper.main import app
+from minutes_iq.db.password_reset_service import PasswordResetService
+from minutes_iq.db.user_repository import UserRepository
+from minutes_iq.main import app
 
 client = TestClient(app)
 

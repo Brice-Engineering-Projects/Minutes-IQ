@@ -1,6 +1,6 @@
 """Unit tests for password hashing functionality."""
 
-from jea_meeting_web_scraper.auth.security import get_password_hash, verify_password
+from minutes_iq.auth.security import get_password_hash, verify_password
 
 
 class TestPasswordHashing:

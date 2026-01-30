@@ -83,7 +83,7 @@ jobs:
       - name: Type check with Mypy
         run: |
           source .venv/bin/activate
-          mypy src/jea_meeting_web_scraper
+          mypy src/minutes_iq
 
       # ----------------------------------------------------------------------
       # 8. Run Test Suite
@@ -95,4 +95,4 @@ jobs:
           TESTING: "true"
         run: |
           source .venv/bin/activate
-          pytest -q tests/test_smoke.py tests/unit_tests/auth/test_password_hashing.py tests/unit_tests/auth/test_jwt_tokens.py --ignore=src/jea_meeting_web_scraper/scripts
+          pytest -q tests/test_smoke.py tests/unit_tests/auth/test_password_hashing.py tests/unit_tests/auth/test_jwt_tokens.py --ignore=src/minutes_iq/scripts

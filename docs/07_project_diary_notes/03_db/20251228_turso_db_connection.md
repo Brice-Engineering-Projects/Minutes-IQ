@@ -115,7 +115,7 @@ Final implementation:
 
 ```python
 from libsql_experimental import connect
-from jea_meeting_web_scraper.config.settings import settings
+from minutes_iq.config.settings import settings
 
 
 def get_db_client():

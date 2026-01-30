@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 
-from jea_meeting_web_scraper.auth.security import create_access_token, get_password_hash
+from minutes_iq.auth.security import create_access_token, get_password_hash
 
 
 class TestCompleteUserJourney:

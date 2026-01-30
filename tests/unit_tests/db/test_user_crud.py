@@ -2,7 +2,7 @@
 
 import pytest
 
-from jea_meeting_web_scraper.db.user_repository import UserRepository
+from minutes_iq.db.user_repository import UserRepository
 
 
 class TestUserCreate:

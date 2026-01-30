@@ -10,12 +10,12 @@ Tests the complete registration flow including:
 import pytest
 from fastapi.testclient import TestClient
 
-from jea_meeting_web_scraper.auth.security import get_password_hash
-from jea_meeting_web_scraper.db.auth_code_repository import AuthCodeRepository
-from jea_meeting_web_scraper.db.auth_code_service import AuthCodeService
-from jea_meeting_web_scraper.db.client import get_db_connection
-from jea_meeting_web_scraper.db.user_repository import UserRepository
-from jea_meeting_web_scraper.main import app
+from minutes_iq.auth.security import get_password_hash
+from minutes_iq.db.auth_code_repository import AuthCodeRepository
+from minutes_iq.db.auth_code_service import AuthCodeService
+from minutes_iq.db.client import get_db_connection
+from minutes_iq.db.user_repository import UserRepository
+from minutes_iq.main import app
 
 client = TestClient(app)
 

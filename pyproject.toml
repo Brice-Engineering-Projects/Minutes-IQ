@@ -1,7 +1,7 @@
 [project]
-name = "jea-meeting-web-scraper"
+name = "minutes_iq"
 version = "0.1.0"
-description = "A backend-ready scraper and NLP pipeline for extracting signals from JEA and municipal agency meeting minutes."
+description = "MinutesIQ is a role-based backend platform that ingests public meeting records, applies configurable keyword intelligence, and delivers structured reports to authenticated users."
 requires-python = ">=3.12"
 
 dependencies = [
@@ -26,7 +26,7 @@ dependencies = [
     "httpx>=0.28.1",
     "pandas-stubs==2.3.3.251201",
     "streamlit>=1.52.1",
-    "fitz>=0.0.1.dev2",
+    "PyMuPDF>=1.23.0",
     "bcrypt>=3.2.0,<4.0.0",
     "passlib[bcrypt]>=1.7.4",
     "python-jose[cryptography]>=3.5.0",
