@@ -11,6 +11,7 @@ from minutes_iq.scraper.core import (
     scrape_pdf_links,
     stream_and_scan_pdf,
 )
+from minutes_iq.scraper.highlighter import highlight_job_results
 
 logger = logging.getLogger(__name__)
 
@@ -245,3 +246,43 @@ class ScraperService:
             List of result dicts
         """
         return self.repository.get_job_results(job_id)
+
+    def highlight_pdfs(
+        self,
+        job_id: int,
+        pdf_dir: str,
+        output_base_dir: str,
+    ) -> dict[str, Any]:
+        """
+        Highlight PDFs for all results from a scrape job.
+
+        Args:
+            job_id: The job ID
+            pdf_dir: Directory containing source PDFs
+            output_base_dir: Base directory for annotated PDFs
+
+        Returns:
+            Dict with highlighting summary
+        """
+        # Get job results from database
+        results = self.repository.get_job_results(job_id)
+
+        if not results:
+            logger.warning(f"No results found for job {job_id}")
+            return {
+                "files_processed": 0,
+                "files_succeeded": 0,
+                "files_failed": 0,
+                "output_dir": None,
+            }
+
+        # Use highlighter to process PDFs
+        summary = highlight_job_results(
+            job_id=job_id,
+            pdf_dir=pdf_dir,
+            output_base_dir=output_base_dir,
+            results=results,
+        )
+
+        logger.info(f"Highlighted PDFs for job {job_id}: {summary}")
+        return summary

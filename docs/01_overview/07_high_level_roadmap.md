@@ -301,17 +301,17 @@ This phase migrates the CLI-based scraper logic (`jea_minutes_scraper.py`, `high
 - [x] Update test database setup with Phase 6 tables
 
 #### 6.2 Core Scraper Refactor
-- [ ] Extract reusable functions from `jea_minutes_scraper.py`
-  - [ ] `scrape_pdf_links()` - Fetch PDF URLs from JEA website
-  - [ ] `stream_and_scan_pdf()` - Search PDF for keywords
-  - [ ] `extract_entities()` - NLP entity extraction with spaCy
-  - [ ] `download_pdf()` - Save matched PDFs to storage
-- [ ] Replace file-based config with database queries
-  - [ ] Load keywords from `keywords` table (via client_keywords)
-  - [ ] Store results in `scrape_results` instead of CSV
-  - [ ] Use job config instead of hardcoded DATE_RANGE/MAX_SCAN_PAGES
-- [ ] Handle exceptions and timeouts gracefully
-- [ ] Add progress tracking (pages scanned, matches found)
+- [x] Extract reusable functions from `jea_minutes_scraper.py`
+  - [x] `scrape_pdf_links()` - Fetch PDF URLs from JEA website
+  - [x] `stream_and_scan_pdf()` - Search PDF for keywords
+  - [x] `extract_entities()` - NLP entity extraction with spaCy
+  - [x] `download_pdf()` - Save matched PDFs to storage
+- [x] Replace file-based config with database queries
+  - [x] Load keywords from `keywords` table (via client_keywords)
+  - [x] Store results in `scrape_results` instead of CSV
+  - [x] Use job config instead of hardcoded DATE_RANGE/MAX_SCAN_PAGES
+- [x] Handle exceptions and timeouts gracefully
+- [x] Add progress tracking (pages scanned, matches found)
 
 #### 6.3 PDF Highlighter Refactor
 - [ ] Extract reusable functions from `highlight_mentions.py`
