@@ -374,33 +374,33 @@ This phase migrates the CLI-based scraper logic (`jea_minutes_scraper.py`, `high
   - [ ] Cleanup on cancellation
 
 #### 6.7 API Endpoints
-- [ ] **Job Management Endpoints**
-  - [ ] POST `/scraper/jobs` - Create new scrape job
+- [x] **Job Management Endpoints**
+  - [x] POST `/scraper/jobs` - Create new scrape job
     - Request: client_id, date_range, max_scan_pages, include_minutes, include_packages
     - Response: job_id, status
     - Auth: Authenticated users only
-  - [ ] GET `/scraper/jobs` - List user's scrape jobs
+  - [x] GET `/scraper/jobs` - List user's scrape jobs
     - Query params: status, client_id, limit, offset
     - Response: Array of job summaries
-  - [ ] GET `/scraper/jobs/{job_id}` - Get job details
+  - [x] GET `/scraper/jobs/{job_id}` - Get job details
     - Response: Full job info + config + statistics
-  - [ ] DELETE `/scraper/jobs/{job_id}` - Cancel job
+  - [x] DELETE `/scraper/jobs/{job_id}` - Cancel job
     - Only allowed for pending/running jobs
-  - [ ] GET `/scraper/jobs/{job_id}/status` - Poll job status
+  - [x] GET `/scraper/jobs/{job_id}/status` - Poll job status
     - Response: status, progress, error_message
-- [ ] **Results Endpoints**
-  - [ ] GET `/scraper/jobs/{job_id}/results` - List results
+- [x] **Results Endpoints**
+  - [x] GET `/scraper/jobs/{job_id}/results` - List results
     - Query params: keyword_id, page_number, limit, offset
     - Response: Array of matches with snippets
-  - [ ] GET `/scraper/jobs/{job_id}/results/summary` - Result statistics
+  - [x] GET `/scraper/jobs/{job_id}/results/summary` - Result statistics
     - Response: Total matches, keywords found, pages scanned
-  - [ ] GET `/scraper/jobs/{job_id}/results/export` - Download CSV
+  - [x] GET `/scraper/jobs/{job_id}/results/export` - Download CSV
     - Response: CSV file download
-- [ ] **Artifact Endpoints**
-  - [ ] POST `/scraper/jobs/{job_id}/artifacts` - Generate ZIP artifact
+- [x] **Artifact Endpoints**
+  - [x] POST `/scraper/jobs/{job_id}/artifacts` - Generate ZIP artifact
     - Bundles: raw PDFs, annotated PDFs, results CSV, metadata JSON
     - Returns: artifact_id
-  - [ ] GET `/scraper/jobs/{job_id}/artifacts/{artifact_id}` - Download ZIP
+  - [x] GET `/scraper/jobs/{job_id}/artifacts/{artifact_id}` - Download ZIP
     - Secure download with expiring signed URLs
     - Auth: Job creator only
 
