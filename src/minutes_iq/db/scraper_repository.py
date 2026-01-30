@@ -329,3 +329,168 @@ class ScraperRepository:
         cursor.close()
 
         return [{"keyword_id": row[0], "keyword": row[1]} for row in rows]
+
+    def list_jobs(
+        self,
+        user_id: int | None = None,
+        client_id: int | None = None,
+        status: str | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[dict[str, Any]]:
+        """
+        List scrape jobs with optional filtering.
+
+        Args:
+            user_id: Filter by user who created the job
+            client_id: Filter by client
+            status: Filter by job status
+            limit: Maximum number of jobs to return
+            offset: Number of jobs to skip
+
+        Returns:
+            List of job dicts
+        """
+        query = """
+            SELECT j.job_id, j.client_id, c.name as client_name,
+                   j.status, j.created_by, j.created_at,
+                   j.started_at, j.completed_at, j.error_message
+            FROM scrape_jobs j
+            JOIN clients c ON j.client_id = c.client_id
+            WHERE 1=1
+        """
+        params = []
+
+        if user_id is not None:
+            query += " AND j.created_by = ?"
+            params.append(user_id)
+
+        if client_id is not None:
+            query += " AND j.client_id = ?"
+            params.append(client_id)
+
+        if status is not None:
+            query += " AND j.status = ?"
+            params.append(status)
+
+        query += " ORDER BY j.created_at DESC LIMIT ? OFFSET ?"
+        params.extend([limit, offset])
+
+        cursor = self.conn.execute(query, tuple(params))
+        rows = cursor.fetchall()
+        cursor.close()
+
+        jobs = []
+        for row in rows:
+            jobs.append(
+                {
+                    "job_id": row[0],
+                    "client_id": row[1],
+                    "client_name": row[2],
+                    "status": row[3],
+                    "created_by": row[4],
+                    "created_at": row[5],
+                    "started_at": row[6],
+                    "completed_at": row[7],
+                    "error_message": row[8],
+                }
+            )
+
+        return jobs
+
+    def add_error_message(self, job_id: int, error_message: str) -> None:
+        """
+        Add or update error message for a job.
+
+        Args:
+            job_id: The job ID
+            error_message: The error message to record
+        """
+        self.conn.execute(
+            """
+            UPDATE scrape_jobs
+            SET error_message = ?
+            WHERE job_id = ?
+            """,
+            (error_message, job_id),
+        )
+        self.conn.commit()
+
+    def get_job_statistics(self) -> dict[str, int]:
+        """
+        Get job statistics by status for dashboard.
+
+        Returns:
+            Dict with counts by status: {pending: N, running: N, completed: N, failed: N, cancelled: N}
+        """
+        cursor = self.conn.execute(
+            """
+            SELECT status, COUNT(*) as count
+            FROM scrape_jobs
+            GROUP BY status
+            """
+        )
+        rows = cursor.fetchall()
+        cursor.close()
+
+        stats = {
+            "pending": 0,
+            "running": 0,
+            "completed": 0,
+            "failed": 0,
+            "cancelled": 0,
+        }
+
+        for row in rows:
+            status = row[0]
+            count = row[1]
+            if status in stats:
+                stats[status] = count
+
+        return stats
+
+    def get_result_count(self, job_id: int) -> int:
+        """
+        Get the number of results for a job.
+
+        Args:
+            job_id: The job ID
+
+        Returns:
+            Number of matches found
+        """
+        cursor = self.conn.execute(
+            """
+            SELECT COUNT(*) FROM scrape_results WHERE job_id = ?
+            """,
+            (job_id,),
+        )
+        result = cursor.fetchone()
+        cursor.close()
+        return result[0] if result else 0
+
+    def get_keyword_statistics(self, job_id: int) -> list[dict[str, Any]]:
+        """
+        Get aggregated match counts by keyword for a job.
+
+        Args:
+            job_id: The job ID
+
+        Returns:
+            List of dicts with keyword and match count, sorted by count descending
+        """
+        cursor = self.conn.execute(
+            """
+            SELECT k.keyword, COUNT(*) as match_count
+            FROM scrape_results r
+            JOIN keywords k ON r.keyword_id = k.keyword_id
+            WHERE r.job_id = ?
+            GROUP BY k.keyword_id, k.keyword
+            ORDER BY match_count DESC
+            """,
+            (job_id,),
+        )
+        rows = cursor.fetchall()
+        cursor.close()
+
+        return [{"keyword": row[0], "match_count": row[1]} for row in rows]

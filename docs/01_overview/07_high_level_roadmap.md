@@ -314,31 +314,31 @@ This phase migrates the CLI-based scraper logic (`jea_minutes_scraper.py`, `high
 - [x] Add progress tracking (pages scanned, matches found)
 
 #### 6.3 PDF Highlighter Refactor
-- [ ] Extract reusable functions from `highlight_mentions.py`
-  - [ ] `highlight_pdf()` - Add highlights to PDF
-  - [ ] `add_bookmarks()` - Create outline entries
-- [ ] Replace CSV input with database queries
-  - [ ] Load matches from `scrape_results` table
-  - [ ] Group by PDF file for batch processing
-- [ ] Save annotated PDFs to structured storage
-  - [ ] Organize by job_id: `data/annotated_pdfs/{job_id}/{filename}_annotated.pdf`
+- [x] Extract reusable functions from `highlight_mentions.py`
+  - [x] `highlight_pdf()` - Add highlights to PDF
+  - [x] `add_bookmarks()` - Create outline entries
+- [x] Replace CSV input with database queries
+  - [x] Load matches from `scrape_results` table
+  - [x] Group by PDF file for batch processing
+- [x] Save annotated PDFs to structured storage
+  - [x] Organize by job_id: `data/annotated_pdfs/{job_id}/{filename}_annotated.pdf`
 
 #### 6.4 Data Access Layer
-- [ ] Implement `ScrapeJobRepository` (CRUD for scrape jobs)
-  - [ ] `create_job()` - Create new scrape job
-  - [ ] `get_job_by_id()` - Retrieve job details
-  - [ ] `list_jobs()` - List jobs with filtering (by user, client, status)
-  - [ ] `update_job_status()` - Update status and timestamps
-  - [ ] `add_error_message()` - Record failure details
-  - [ ] `get_job_statistics()` - Count by status for dashboard
-- [ ] Implement `ScrapeResultRepository` (CRUD for results)
-  - [ ] `create_result()` - Store individual match
-  - [ ] `get_results_by_job()` - Retrieve all results for a job
-  - [ ] `get_result_count()` - Count matches per job
-  - [ ] `get_keyword_statistics()` - Aggregate matches by keyword
-- [ ] Implement `JobConfigRepository` (CRUD for job config)
-  - [ ] `create_config()` - Store job parameters
-  - [ ] `get_config_by_job()` - Retrieve config for job execution
+- [x] Implement `ScrapeJobRepository` (CRUD for scrape jobs)
+  - [x] `create_job()` - Create new scrape job
+  - [x] `get_job_by_id()` - Retrieve job details
+  - [x] `list_jobs()` - List jobs with filtering (by user, client, status)
+  - [x] `update_job_status()` - Update status and timestamps
+  - [x] `add_error_message()` - Record failure details
+  - [x] `get_job_statistics()` - Count by status for dashboard
+- [x] Implement `ScrapeResultRepository` (CRUD for results)
+  - [x] `create_result()` - Store individual match
+  - [x] `get_results_by_job()` - Retrieve all results for a job
+  - [x] `get_result_count()` - Count matches per job
+  - [x] `get_keyword_statistics()` - Aggregate matches by keyword
+- [x] Implement `JobConfigRepository` (CRUD for job config)
+  - [x] `create_config()` - Store job parameters
+  - [x] `get_config_by_job()` - Retrieve config for job execution
 
 #### 6.5 Business Logic Layer
 - [ ] Implement `ScraperService` (core scraper orchestration)
