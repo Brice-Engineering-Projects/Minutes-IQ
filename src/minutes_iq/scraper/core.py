@@ -14,11 +14,27 @@ import requests
 import spacy
 from bs4 import BeautifulSoup
 
-# === NLP SETUP ===
-# Load spaCy model once at module level for efficiency
-nlp = spacy.load("en_core_web_sm")
-
 logger = logging.getLogger(__name__)
+
+# === NLP SETUP ===
+# Lazy load spaCy model to avoid loading during import
+_nlp = None
+
+
+def _get_nlp():
+    """Lazy load spaCy model."""
+    global _nlp
+    if _nlp is None:
+        try:
+            _nlp = spacy.load("en_core_web_sm")
+        except OSError:
+            logger.warning(
+                "spaCy model 'en_core_web_sm' not found. "
+                "Entity extraction will be disabled. "
+                "Install with: python -m spacy download en_core_web_sm"
+            )
+            _nlp = False  # Mark as unavailable
+    return _nlp if _nlp is not False else None
 
 
 def get_safe_filename(url: str) -> str:
@@ -187,6 +203,11 @@ def extract_entities(text: str) -> str:
     Returns:
         Comma-separated string of entities with labels (e.g., "John (PERSON), NASA (ORG)")
     """
+    nlp = _get_nlp()
+    if nlp is None:
+        # spaCy model not available
+        return ""
+
     try:
         doc = nlp(text)
         entities = ", ".join(f"{ent.text} ({ent.label_})" for ent in doc.ents)
