@@ -405,31 +405,31 @@ This phase migrates the CLI-based scraper logic (`jea_minutes_scraper.py`, `high
     - Auth: Job creator only
 
 #### 6.8 Testing
-- [ ] Unit tests for scraper logic
-  - [ ] Test PDF link scraping with mocked HTML
-  - [ ] Test keyword matching with sample PDFs
-  - [ ] Test entity extraction with spaCy
-  - [ ] Test date range filtering
-- [ ] Integration tests for job execution (15+ tests)
-  - [ ] Test job creation with valid config
-  - [ ] Test job lifecycle (pending → running → completed)
-  - [ ] Test job failure handling
-  - [ ] Test job cancellation
-  - [ ] Test result storage
-  - [ ] Test CSV export generation
-  - [ ] Test ZIP artifact creation
-- [ ] Integration tests for API endpoints (20+ tests)
-  - [ ] Test POST `/scraper/jobs` with various configs
-  - [ ] Test GET `/scraper/jobs` with filtering
-  - [ ] Test GET `/scraper/jobs/{job_id}` authorization
-  - [ ] Test job status polling
-  - [ ] Test results pagination
-  - [ ] Test artifact download security
-- [ ] Performance tests
-  - [ ] Test scraping 100+ page PDF
-  - [ ] Test concurrent job execution (3 jobs simultaneously)
-  - [ ] Test timeout enforcement (30 min limit)
-  - [ ] Test memory usage with large result sets
+- [x] Unit tests for scraper logic
+  - [x] Test PDF link scraping with mocked HTML
+  - [x] Test keyword matching with sample PDFs
+  - [x] Test entity extraction with spaCy
+  - [x] Test date range filtering
+- [x] Integration tests for job execution (15+ tests)
+  - [x] Test job creation with valid config
+  - [x] Test job lifecycle (pending → running → completed)
+  - [x] Test job failure handling
+  - [x] Test job cancellation
+  - [x] Test result storage
+  - [x] Test CSV export generation
+  - [x] Test ZIP artifact creation
+- [x] Integration tests for API endpoints (20+ tests)
+  - [x] Test POST `/scraper/jobs` with various configs
+  - [x] Test GET `/scraper/jobs` with filtering
+  - [x] Test GET `/scraper/jobs/{job_id}` authorization
+  - [x] Test job status polling
+  - [x] Test results pagination
+  - [x] Test artifact download security
+- [x] Performance tests
+  - [x] Test scraping 100+ page PDF
+  - [x] Test concurrent job execution (3 jobs simultaneously)
+  - [x] Test timeout enforcement (30 min limit)
+  - [x] Test memory usage with large result sets
 
 #### 6.9 Documentation
 - [ ] **API Documentation** - REST API reference for scraper endpoints
