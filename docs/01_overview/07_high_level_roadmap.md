@@ -725,32 +725,32 @@ _**Instructions:**_
 - No new frontend tooling decisions unless explicitly planned.
 
 _**Checklist Items:**_
-- [ ] **Admin Dashboard** (`/admin`)
-  - [ ] System statistics:
+- [x] **Admin Dashboard** (`/admin`)
+  - [x] System statistics:
     - Total users
     - Total clients
     - Total keywords
     - Total scrape jobs
     - Storage used (GB)
-  - [ ] Recent user activity
-  - [ ] Failed jobs list
-  - [ ] Quick links to admin functions
-- [ ] **User Management Page** (`/admin/users`)
-  - [ ] User list table
-  - [ ] Columns: Username, Email, Role, Status, Created
-  - [ ] Search and filter controls
-  - [ ] Actions: Edit role, Deactivate, Reset password
-- [ ] **Authorization Code Management** (`/admin/auth-codes`)
-  - [ ] List of auth codes with usage status
-  - [ ] "Generate New Code" button
-  - [ ] Code display with copy button
-  - [ ] Expiration and used status
-  - [ ] Delete code button
-- [ ] **Storage Cleanup** (`/admin/cleanup`)
-  - [ ] Storage usage breakdown by job
-  - [ ] Old jobs list (>30 days)
-  - [ ] Bulk cleanup button
-  - [ ] Confirmation dialog
+  - [x] Recent user activity
+  - [x] Failed jobs list
+  - [x] Quick links to admin functions
+- [x] **User Management Page** (`/admin/users`)
+  - [x] User list table
+  - [x] Columns: Username, Email, Role, Status, Created
+  - [x] Search and filter controls
+  - [x] Actions: Edit role, Deactivate, Reset password
+- [x] **Authorization Code Management** (`/admin/auth-codes`)
+  - [x] List of auth codes with usage status
+  - [x] "Generate New Code" button
+  - [x] Code display with copy button
+  - [x] Expiration and used status
+  - [x] Delete code button
+- [x] **Storage Cleanup** (`/admin/cleanup`)
+  - [x] Storage usage breakdown by job
+  - [x] Old jobs list (>30 days)
+  - [x] Bulk cleanup button
+  - [x] Confirmation dialog
 
 #### 7.9 User Profile & Settings
 _**Instructions:**_
