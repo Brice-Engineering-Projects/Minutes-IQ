@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - MinutesIQ{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+        <p class="mt-2 text-sm text-gray-600">System overview and administrative controls</p>
+    </div>
+
+    <!-- System Statistics -->
+    <div class="mb-8">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">System Statistics</h2>
+        <div
+            id="admin-stats"
+            hx-get="/api/admin/stats"
+            hx-trigger="load"
+            hx-swap="innerHTML"
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6"
+        >
+            <!-- Loading skeleton -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 animate-pulse">
+                <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+                <div class="h-8 bg-gray-200 rounded w-3/4"></div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 animate-pulse">
+                <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+                <div class="h-8 bg-gray-200 rounded w-3/4"></div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 animate-pulse">
+                <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+                <div class="h-8 bg-gray-200 rounded w-3/4"></div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 animate-pulse">
+                <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+                <div class="h-8 bg-gray-200 rounded w-3/4"></div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 animate-pulse">
+                <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+                <div class="h-8 bg-gray-200 rounded w-3/4"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Recent User Activity -->
+        <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Recent User Activity</h2>
+            <div
+                id="recent-activity"
+                hx-get="/api/admin/recent-activity"
+                hx-trigger="load"
+                hx-swap="innerHTML"
+            >
+                <div class="text-center py-8">
+                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Failed Jobs -->
+        <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Failed Jobs</h2>
+            <div
+                id="failed-jobs"
+                hx-get="/api/admin/failed-jobs"
+                hx-trigger="load"
+                hx-swap="innerHTML"
+            >
+                <div class="text-center py-8">
+                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div>
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <a
+                href="/admin/users"
+                class="block bg-white shadow-sm rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow"
+            >
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg class="h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-sm font-medium text-gray-900">Manage Users</h3>
+                        <p class="text-xs text-gray-500 mt-1">View and edit users</p>
+                    </div>
+                </div>
+            </a>
+
+            <a
+                href="/admin/auth-codes"
+                class="block bg-white shadow-sm rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow"
+            >
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg class="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-sm font-medium text-gray-900">Auth Codes</h3>
+                        <p class="text-xs text-gray-500 mt-1">Generate access codes</p>
+                    </div>
+                </div>
+            </a>
+
+            <a
+                href="/admin/cleanup"
+                class="block bg-white shadow-sm rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow"
+            >
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg class="h-8 w-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-sm font-medium text-gray-900">Storage Cleanup</h3>
+                        <p class="text-xs text-gray-500 mt-1">Manage disk space</p>
+                    </div>
+                </div>
+            </a>
+
+            <a
+                href="/scraper/jobs"
+                class="block bg-white shadow-sm rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow"
+            >
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg class="h-8 w-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-sm font-medium text-gray-900">View All Jobs</h3>
+                        <p class="text-xs text-gray-500 mt-1">Monitor scrape jobs</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
