@@ -804,38 +804,64 @@ _**Checklist Items:**_
   - [x] Debounced search inputs
   - [x] Minified CSS and JS
 
-#### 7.11 E2E Testing
-- [ ] Set up E2E testing framework (Playwright or Cypress)
-- [ ] **Authentication Flow Tests** (5+ tests)
-  - [ ] Test login with valid credentials
-  - [ ] Test login with invalid credentials
-  - [ ] Test registration flow
-  - [ ] Test password reset flow
-  - [ ] Test logout
-- [ ] **Client Management Tests** (5+ tests)
-  - [ ] Test viewing client list
-  - [ ] Test viewing client details
-  - [ ] Test adding to favorites
-  - [ ] Test creating new client (admin)
-  - [ ] Test editing client (admin)
-- [ ] **Scrape Job Tests** (8+ tests)
-  - [ ] Test creating new job
-  - [ ] Test viewing job list
-  - [ ] Test viewing job details
-  - [ ] Test status polling
-  - [ ] Test downloading CSV
-  - [ ] Test generating ZIP artifact
-  - [ ] Test downloading ZIP
-  - [ ] Test canceling job
-- [ ] **Admin Panel Tests** (5+ tests)
-  - [ ] Test user management
-  - [ ] Test auth code generation
-  - [ ] Test storage cleanup
-  - [ ] Test admin access control
-- [ ] **Mobile Responsiveness Tests** (3+ tests)
-  - [ ] Test mobile navigation
-  - [ ] Test forms on mobile
-  - [ ] Test tables on mobile
+#### 7.11 E2E Testing ✅
+_**Instructions:**_
+- All UI work must respect the existing frontend boundary.
+- No new frontend tooling decisions unless explicitly planned.
+
+_**Checklist Items:**_
+- [x] Set up E2E testing framework (Playwright)
+- [x] **Authentication Flow Tests** (8 tests)
+  - [x] Test login with valid credentials
+  - [x] Test login with invalid credentials
+  - [x] Test registration flow
+  - [x] Test password reset flow
+  - [x] Test logout
+  - [x] Test auth gating on protected routes
+  - [x] Test "Remember me" functionality
+  - [x] Test registration with invalid auth code
+- [x] **Client Management Tests** (7 tests)
+  - [x] Test viewing client list
+  - [x] Test viewing client details
+  - [x] Test adding to favorites
+  - [x] Test creating new client (admin)
+  - [x] Test editing client (admin)
+  - [x] Test restricting client creation to admin only
+  - [x] Test search and filter functionality
+- [x] **Scrape Job Tests** (10 tests)
+  - [x] Test creating new job
+  - [x] Test viewing job list
+  - [x] Test viewing job details
+  - [x] Test status polling
+  - [x] Test downloading CSV
+  - [x] Test generating ZIP artifact
+  - [x] Test downloading ZIP
+  - [x] Test canceling job
+  - [x] Test validation errors for invalid config
+  - [x] Test results pagination
+- [x] **Admin Panel Tests** (8 tests)
+  - [x] Test user management
+  - [x] Test auth code generation
+  - [x] Test storage cleanup
+  - [x] Test admin access control
+  - [x] Test accessing admin dashboard
+  - [x] Test revoking auth codes
+  - [x] Test viewing auth code usage
+  - [x] Test updating user roles
+- [x] **Mobile Responsiveness Tests** (5 tests)
+  - [x] Test mobile navigation
+  - [x] Test forms on mobile
+  - [x] Test tables on mobile
+  - [x] Test text readability and spacing
+  - [x] Test modals and dialogs on mobile
+
+**Test Results:**
+- 38 E2E tests implemented (exceeds minimums)
+- Framework: Playwright with TypeScript
+- Browser: Chromium (Desktop & Mobile viewports)
+- CI Integration: Runs on merge to dev/main branches
+- Dedicated test database with baseline seeded data
+- Comprehensive README and helper utilities
 
 #### 7.12 Documentation
 - [ ] **User Guide** - End-user documentation
