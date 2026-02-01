@@ -30,7 +30,7 @@ from minutes_iq.config.settings import settings
 from minutes_iq.db.auth_code_service import AuthCodeService
 from minutes_iq.db.password_reset_service import PasswordResetService
 from minutes_iq.db.user_service import UserService
-from minutes_iq.main import templates
+from minutes_iq.templates_config import templates
 
 router = APIRouter(tags=["Authentication"])
 
