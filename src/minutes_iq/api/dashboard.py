@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
 
 from minutes_iq.db.client_repository import ClientRepository
-from minutes_iq.db.dependencies import get_db_client
+from minutes_iq.db.dependencies import get_client_repository, get_keyword_repository
 from minutes_iq.db.keyword_repository import KeywordRepository
 
 router = APIRouter(prefix="/api/dashboard", tags=["Dashboard"])
@@ -15,19 +15,17 @@ router = APIRouter(prefix="/api/dashboard", tags=["Dashboard"])
 @router.get("/stats", response_class=HTMLResponse)
 async def get_dashboard_stats(
     request: Request,
-    db_client: Annotated[object, Depends(get_db_client)],
+    client_repo: Annotated[ClientRepository, Depends(get_client_repository)],
+    keyword_repo: Annotated[KeywordRepository, Depends(get_keyword_repository)],
 ):
     """Get dashboard statistics."""
     # Query real data from database
-    client_repo = ClientRepository(db_client)
-    keyword_repo = KeywordRepository(db_client)
-
     # Get active clients count
-    clients = client_repo.get_all_clients()
+    clients = client_repo.list_clients()
     active_clients_count = len([c for c in clients if c.get("is_active", True)])
 
     # Get keywords count
-    keywords = keyword_repo.get_all_keywords()
+    keywords = keyword_repo.list_keywords()
     keywords_count = len(keywords)
 
     # TODO: Get scrape jobs and results counts from their respective repositories

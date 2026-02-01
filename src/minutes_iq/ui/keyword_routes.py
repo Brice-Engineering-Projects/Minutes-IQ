@@ -5,8 +5,9 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
 
-from minutes_iq.core.dependencies import get_current_user, get_db_client
-from minutes_iq.repositories.keyword_repository import KeywordRepository
+from minutes_iq.auth.dependencies import get_current_user
+from minutes_iq.db.dependencies import get_keyword_repository
+from minutes_iq.db.keyword_repository import KeywordRepository
 from minutes_iq.templates_config import templates
 
 router = APIRouter(prefix="/keywords", tags=["Keyword UI"])
@@ -53,11 +54,10 @@ async def keyword_create(
 async def keyword_detail(
     request: Request,
     keyword_id: int,
-    db_client: Annotated[object, Depends(get_db_client)],
+    keyword_repo: Annotated[KeywordRepository, Depends(get_keyword_repository)],
     current_user: Annotated[dict | None, Depends(get_current_user)] = None,
 ):
     """Render keyword detail page."""
-    keyword_repo = KeywordRepository(db_client)
     keyword = keyword_repo.get_keyword_by_id(keyword_id)
 
     if not keyword:
@@ -73,7 +73,7 @@ async def keyword_detail(
 async def keyword_edit(
     request: Request,
     keyword_id: int,
-    db_client: Annotated[object, Depends(get_db_client)],
+    keyword_repo: Annotated[KeywordRepository, Depends(get_keyword_repository)],
     current_user: Annotated[dict, Depends(get_current_user)],
 ):
     """Render keyword edit form (admin only)."""
@@ -81,7 +81,6 @@ async def keyword_edit(
     if not current_user or current_user.get("role_id") != 1:
         raise HTTPException(status_code=403, detail="Admin access required")
 
-    keyword_repo = KeywordRepository(db_client)
     keyword = keyword_repo.get_keyword_by_id(keyword_id)
 
     if not keyword:

@@ -6,9 +6,9 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
-from minutes_iq.core.dependencies import get_db_client
-from minutes_iq.repositories.client_repository import ClientRepository
-from minutes_iq.repositories.keyword_repository import KeywordRepository
+from minutes_iq.db.client_repository import ClientRepository
+from minutes_iq.db.dependencies import get_client_repository, get_keyword_repository
+from minutes_iq.db.keyword_repository import KeywordRepository
 
 router = APIRouter(prefix="/api/keywords", tags=["Keywords UI API"])
 
@@ -32,14 +32,13 @@ class KeywordUpdate(BaseModel):
 @router.get("/list", response_class=HTMLResponse)
 async def get_keywords_list(
     request: Request,
-    db_client: Annotated[object, Depends(get_db_client)],
+    keyword_repo: Annotated[KeywordRepository, Depends(get_keyword_repository)],
     page: int = 1,
     search: str = "",
     category: str = "",
 ):
     """Return paginated keywords table HTML."""
-    keyword_repo = KeywordRepository(db_client)
-    keywords = keyword_repo.get_all_keywords()
+    keywords = keyword_repo.list_keywords()
 
     # Filter by search
     if search:
@@ -213,11 +212,10 @@ async def get_keywords_list(
 
 @router.get("/categories", response_class=HTMLResponse)
 async def get_categories(
-    db_client: Annotated[object, Depends(get_db_client)],
+    keyword_repo: Annotated[KeywordRepository, Depends(get_keyword_repository)],
 ):
     """Return JSON array of categories with counts."""
-    keyword_repo = KeywordRepository(db_client)
-    keywords = keyword_repo.get_all_keywords()
+    keywords = keyword_repo.list_keywords()
 
     # Count keywords by category
     category_counts: dict[str, int] = {}
@@ -240,11 +238,10 @@ async def get_categories(
 @router.get("/categories-grid", response_class=HTMLResponse)
 async def get_categories_grid(
     request: Request,
-    db_client: Annotated[object, Depends(get_db_client)],
+    keyword_repo: Annotated[KeywordRepository, Depends(get_keyword_repository)],
 ):
     """Return HTML grid of category cards."""
-    keyword_repo = KeywordRepository(db_client)
-    keywords = keyword_repo.get_all_keywords()
+    keywords = keyword_repo.list_keywords()
 
     # Count keywords by category
     category_counts: dict[str, int] = {}
@@ -294,24 +291,17 @@ async def get_categories_grid(
 async def get_keyword_clients(
     request: Request,
     keyword_id: int,
-    db_client: Annotated[object, Depends(get_db_client)],
+    keyword_repo: Annotated[KeywordRepository, Depends(get_keyword_repository)],
+    client_repo: Annotated[ClientRepository, Depends(get_client_repository)],
 ):
     """Return HTML list of clients using this keyword."""
-    keyword_repo = KeywordRepository(db_client)
-    client_repo = ClientRepository(db_client)
-
     # Get keyword
     keyword = keyword_repo.get_keyword_by_id(keyword_id)
     if not keyword:
         raise HTTPException(status_code=404, detail="Keyword not found")
 
-    # Get all clients and check which track this keyword
-    clients = client_repo.get_all_clients()
-    tracking_clients = []
-    for client in clients:
-        client_keywords = keyword_repo.get_keywords_for_client(client["client_id"])
-        if any(kw["keyword_id"] == keyword_id for kw in client_keywords):
-            tracking_clients.append(client)
+    # Get clients tracking this keyword
+    tracking_clients = keyword_repo.get_keyword_clients(keyword_id)
 
     if not tracking_clients:
         return """
@@ -361,24 +351,18 @@ async def get_keyword_clients(
 @router.get("/{keyword_id}/stats", response_class=HTMLResponse)
 async def get_keyword_stats(
     keyword_id: int,
-    db_client: Annotated[object, Depends(get_db_client)],
+    keyword_repo: Annotated[KeywordRepository, Depends(get_keyword_repository)],
+    client_repo: Annotated[ClientRepository, Depends(get_client_repository)],
 ):
     """Return JSON stats for keyword."""
-    keyword_repo = KeywordRepository(db_client)
-    client_repo = ClientRepository(db_client)
-
     # Get keyword
     keyword = keyword_repo.get_keyword_by_id(keyword_id)
     if not keyword:
         raise HTTPException(status_code=404, detail="Keyword not found")
 
     # Count clients tracking this keyword
-    clients = client_repo.get_all_clients()
-    client_count = 0
-    for client in clients:
-        client_keywords = keyword_repo.get_keywords_for_client(client["client_id"])
-        if any(kw["keyword_id"] == keyword_id for kw in client_keywords):
-            client_count += 1
+    tracking_clients = keyword_repo.get_keyword_clients(keyword_id)
+    client_count = len(tracking_clients)
 
     # TODO: Get mention count and last found from scraper results when implemented
     stats = {
@@ -395,13 +379,12 @@ async def get_keyword_stats(
 @router.get("/related", response_class=HTMLResponse)
 async def get_related_keywords(
     request: Request,
-    db_client: Annotated[object, Depends(get_db_client)],
+    keyword_repo: Annotated[KeywordRepository, Depends(get_keyword_repository)],
     category: str = "",
     exclude: int = 0,
 ):
     """Return HTML list of related keywords in same category."""
-    keyword_repo = KeywordRepository(db_client)
-    keywords = keyword_repo.get_all_keywords()
+    keywords = keyword_repo.list_keywords()
 
     # Filter by category and exclude current keyword
     related = [
@@ -439,21 +422,21 @@ async def get_related_keywords(
 @router.post("", response_class=HTMLResponse)
 async def create_keyword(
     keyword_data: KeywordCreate,
-    db_client: Annotated[object, Depends(get_db_client)],
+    keyword_repo: Annotated[KeywordRepository, Depends(get_keyword_repository)],
 ):
     """Create a new keyword."""
-    keyword_repo = KeywordRepository(db_client)
-
     # Check if keyword already exists
-    existing = keyword_repo.get_all_keywords()
+    existing = keyword_repo.list_keywords()
     if any(
         k.get("keyword", "").lower() == keyword_data.keyword.lower() for k in existing
     ):
         raise HTTPException(status_code=400, detail="Keyword already exists")
 
     # Create keyword
+    # TODO: Get created_by from current_user when auth is integrated
     keyword_repo.create_keyword(
         keyword=keyword_data.keyword,
+        created_by=1,  # Temporary: use admin user ID
         category=keyword_data.category,
         description=keyword_data.description,
     )
@@ -469,10 +452,9 @@ async def create_keyword(
 async def update_keyword(
     keyword_id: int,
     keyword_data: KeywordUpdate,
-    db_client: Annotated[object, Depends(get_db_client)],
+    keyword_repo: Annotated[KeywordRepository, Depends(get_keyword_repository)],
 ):
     """Update a keyword."""
-    keyword_repo = KeywordRepository(db_client)
 
     # Get existing keyword
     keyword = keyword_repo.get_keyword_by_id(keyword_id)
@@ -497,10 +479,9 @@ async def update_keyword(
 @router.delete("/{keyword_id}", response_class=HTMLResponse)
 async def delete_keyword(
     keyword_id: int,
-    db_client: Annotated[object, Depends(get_db_client)],
+    keyword_repo: Annotated[KeywordRepository, Depends(get_keyword_repository)],
 ):
     """Delete a keyword."""
-    keyword_repo = KeywordRepository(db_client)
 
     # Get keyword
     keyword = keyword_repo.get_keyword_by_id(keyword_id)

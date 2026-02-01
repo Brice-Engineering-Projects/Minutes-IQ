@@ -6,7 +6,8 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
 
 from minutes_iq.db.client_repository import ClientRepository
-from minutes_iq.db.dependencies import get_db_client
+from minutes_iq.db.dependencies import get_client_repository, get_keyword_repository
+from minutes_iq.db.keyword_repository import KeywordRepository
 
 router = APIRouter(prefix="/api/clients", tags=["Client API"])
 
@@ -14,13 +15,12 @@ router = APIRouter(prefix="/api/clients", tags=["Client API"])
 @router.get("/list", response_class=HTMLResponse)
 async def get_clients_list(
     request: Request,
-    db_client: Annotated[object, Depends(get_db_client)],
+    client_repo: Annotated[ClientRepository, Depends(get_client_repository)],
     page: int = 1,
     search: str = "",
 ):
     """Get paginated client list as HTML."""
-    client_repo = ClientRepository(db_client)
-    clients = client_repo.get_all_clients()
+    clients = client_repo.list_clients()
 
     # Filter by search if provided
     if search:
@@ -144,11 +144,10 @@ async def get_clients_list(
 
 @router.get("/favorites", response_class=HTMLResponse)
 async def get_favorites_list(
-    db_client: Annotated[object, Depends(get_db_client)],
     request: Request,
 ):
     """Get user's favorite clients as HTML."""
-    # TODO: Get current user ID from auth
+    # TODO: Get current user ID from auth and query favorites
     # For now, return empty state
     return """
     <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-12">
@@ -171,14 +170,34 @@ async def get_favorites_list(
 @router.get("/{client_id}/keywords", response_class=HTMLResponse)
 async def get_client_keywords(
     client_id: int,
-    db_client: Annotated[object, Depends(get_db_client)],
+    keyword_repo: Annotated[KeywordRepository, Depends(get_keyword_repository)],
 ):
     """Get client's keywords as HTML."""
-    # TODO: Implement client-keyword relationship query
-    return """
-    <div class="text-center py-8">
-        <p class="text-sm text-gray-500">No keywords assigned yet</p>
-    </div>
+    # Get keywords for this client
+    keywords = keyword_repo.get_client_keywords(client_id)
+
+    if not keywords:
+        return """
+        <div class="text-center py-8">
+            <p class="text-sm text-gray-500">No keywords assigned yet</p>
+        </div>
+        """
+
+    # Build keyword list HTML
+    items_html = ""
+    for kw in keywords:
+        items_html += f"""
+        <li class="py-2">
+            <a href="/keywords/{kw['keyword_id']}" class="text-sm text-blue-600 hover:text-blue-800">
+                {kw.get('keyword', '')}
+            </a>
+        </li>
+        """
+
+    return f"""
+    <ul class="divide-y divide-gray-200">
+        {items_html}
+    </ul>
     """
 
 
