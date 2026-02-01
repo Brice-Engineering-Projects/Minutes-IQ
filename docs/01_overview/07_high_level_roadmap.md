@@ -485,277 +485,324 @@ This phase builds a web-based UI for the FastAPI application, allowing non-techn
 ### Completed Work
 
 #### 7.1 Frontend Technology Stack
-- [ ] Choose UI approach
+- [x] Choose UI approach
   - Option A: Server-rendered (Jinja2 + htmx + Tailwind) - Simple, no build step
   - Option B: SPA (React/Vue + API) - Modern, better interactivity
   - Decision: Start with server-rendered for simplicity, migrate if needed
-- [ ] Set up template system
-  - [ ] Configure Jinja2 templates in FastAPI
-  - [ ] Create base template with layout, navigation, footer
-  - [ ] Set up static file serving for CSS, JS, images
-- [ ] Add CSS framework
-  - [ ] Install Tailwind CSS (or Bootstrap)
-  - [ ] Configure build process for CSS compilation
-  - [ ] Create component library (buttons, forms, cards, tables)
-- [ ] Add interactivity library
-  - [ ] Install htmx (or Alpine.js)
-  - [ ] Configure for AJAX requests and partial page updates
-  - [ ] Add loading states and error handling
+- [x] Set up template system
+  - [x] Configure Jinja2 templates in FastAPI
+  - [x] Create base template with layout, navigation, footer
+  - [x] Set up static file serving for CSS, JS, images
+- [x] Add CSS framework
+  - [x] Install Tailwind CSS (or Bootstrap)
+  - [x] Configure build process for CSS compilation
+  - [x] Create component library (buttons, forms, cards, tables)
+- [x] Add interactivity library
+  - [x] Install htmx (or Alpine.js)
+  - [x] Configure for AJAX requests and partial page updates
+  - [x] Add loading states and error handling
 
 #### 7.2 Authentication UI
-- [ ] **Login Page** (`/login`)
-  - [ ] Create login form template
-  - [ ] Email and password inputs with validation
-  - [ ] "Remember me" checkbox
-  - [ ] Error messages for invalid credentials
-  - [ ] Redirect to dashboard after successful login
-  - [ ] "Forgot password?" link
-- [ ] **Registration Page** (`/register`)
-  - [ ] Create registration form template
-  - [ ] Fields: username, email, password, confirm password
-  - [ ] Admin authorization code input
-  - [ ] Client-side password strength indicator
-  - [ ] Form validation with error messages
-  - [ ] Success message and redirect to login
-  - [ ] "Already have an account?" link to login
-- [ ] **Password Reset Flow**
-  - [ ] Request reset page (`/password-reset/request`)
+_**Instructions:**_
+- All UI work must respect the existing frontend boundary.
+- No new frontend tooling decisions unless explicitly planned.
+
+_**Checklist Items:**_
+
+- [x] **Login Page** (`/login`)
+  - [x] Create login form template
+  - [x] Email and password inputs with validation
+  - [x] "Remember me" checkbox
+  - [x] Error messages for invalid credentials
+  - [x] Redirect to dashboard after successful login
+  - [x] "Forgot password?" link
+- [x] **Registration Page** (`/register`)
+  - [x] Create registration form template
+  - [x] Fields: username, email, password, confirm password
+  - [x] Admin authorization code input
+  - [x] Client-side password strength indicator
+  - [x] Form validation with error messages
+  - [x] Success message and redirect to login
+  - [x] "Already have an account?" link to login
+- [x] **Password Reset Flow**
+  - [x] Request reset page (`/password-reset/request`)
     - Email input form
     - Success message after request
-  - [ ] Reset password page (`/password-reset/{token}`)
+  - [x] Reset password page (`/password-reset/{token}`)
     - New password and confirm password inputs
     - Token validation and error handling
     - Success message and redirect to login
-- [ ] **Logout**
-  - [ ] Logout button in navigation
-  - [ ] Clear session/cookies
-  - [ ] Redirect to login page
+- [x] **Logout**
+  - [x] Logout button in navigation
+  - [x] Clear session/cookies
+  - [x] Redirect to login page
 
 #### 7.3 Dashboard & Navigation
-- [ ] **Main Dashboard** (`/dashboard`)
-  - [ ] Welcome message with user's name
-  - [ ] Quick stats cards:
+_**Instructions:**_
+- All UI work must respect the existing frontend boundary.
+- No new frontend tooling decisions unless explicitly planned.
+
+_**Checklist Items:**_
+
+- [x] **Main Dashboard** (`/dashboard`)
+  - [x] Welcome message with user's name
+  - [x] Quick stats cards:
     - Active clients count
     - Total keywords tracked
     - Recent scrape jobs (pending, running, completed)
     - Recent results count
-  - [ ] Recent activity feed (last 10 jobs)
-  - [ ] Quick action buttons:
+  - [x] Recent activity feed (last 10 jobs)
+  - [x] Quick action buttons:
     - "New Scrape Job"
     - "Manage Clients"
     - "Browse Keywords"
-- [ ] **Navigation Bar**
-  - [ ] Logo and app name
-  - [ ] Main menu links:
+- [x] **Navigation Bar**
+  - [x] Logo and app name
+  - [x] Main menu links:
     - Dashboard
     - Clients
     - Keywords
     - Scrape Jobs
     - Profile
-  - [ ] User dropdown menu:
+  - [x] User dropdown menu:
     - Profile settings
     - Admin panel (if admin role)
     - Logout
-  - [ ] Active page indicator
-- [ ] **Responsive Layout**
-  - [ ] Mobile-friendly navigation (hamburger menu)
-  - [ ] Tablet and desktop layouts
-  - [ ] Consistent spacing and typography
+  - [x] Active page indicator
+- [x] **Responsive Layout**
+  - [x] Mobile-friendly navigation (hamburger menu)
+  - [x] Tablet and desktop layouts
+  - [x] Consistent spacing and typography
 
 #### 7.4 Client Management UI
-- [ ] **Client List Page** (`/clients`)
-  - [ ] Table/card view of all active clients
-  - [ ] Columns: Name, Description, Keywords, Favorite status
-  - [ ] Search bar for filtering by name
-  - [ ] Pagination controls (20 per page)
-  - [ ] "Add to Favorites" button (heart icon)
-  - [ ] Click row to view details
-  - [ ] "New Client" button (admin only)
-- [ ] **Client Detail Page** (`/clients/{id}`)
-  - [ ] Client info display (name, description, website link)
-  - [ ] Associated keywords table with categories
-  - [ ] Recent scrape jobs for this client
-  - [ ] "Start New Scrape" button
-  - [ ] "Edit" and "Delete" buttons (admin only)
-- [ ] **Create/Edit Client Page** (`/clients/new`, `/clients/{id}/edit`) - Admin only
-  - [ ] Form with name, description, website URL
-  - [ ] Keyword selection (multi-select with search)
-  - [ ] Validation and error messages
-  - [ ] "Save" and "Cancel" buttons
-- [ ] **My Favorites Page** (`/clients/favorites`)
-  - [ ] Filtered view of user's favorite clients
-  - [ ] Same layout as client list
-  - [ ] "Remove from Favorites" button
+_**Instructions:**_
+- All UI work must respect the existing frontend boundary.
+- No new frontend tooling decisions unless explicitly planned.
+
+_**Checklist Items:**_
+- [x] **Client List Page** (`/clients`)
+  - [x] Table/card view of all active clients
+  - [x] Columns: Name, Description, Keywords, Favorite status
+  - [x] Search bar for filtering by name
+  - [x] Pagination controls (20 per page)
+  - [x] "Add to Favorites" button (heart icon)
+  - [x] Click row to view details
+  - [x] "New Client" button (admin only)
+- [x] **Client Detail Page** (`/clients/{id}`)
+  - [x] Client info display (name, description, website link)
+  - [x] Associated keywords table with categories
+  - [x] Recent scrape jobs for this client
+  - [x] "Start New Scrape" button
+  - [x] "Edit" and "Delete" buttons (admin only)
+- [x] **Create/Edit Client Page** (`/clients/new`, `/clients/{id}/edit`) - Admin only
+  - [x] Form with name, description, website URL
+  - [x] Keyword selection (multi-select with search)
+  - [x] Validation and error messages
+  - [x] "Save" and "Cancel" buttons
+- [x] **My Favorites Page** (`/clients/favorites`)
+  - [x] Filtered view of user's favorite clients
+  - [x] Same layout as client list
+  - [x] "Remove from Favorites" button
 
 #### 7.5 Keyword Management UI
-- [ ] **Keyword List Page** (`/keywords`)
-  - [ ] Table view of all keywords
-  - [ ] Columns: Keyword, Category, Description, Usage count
-  - [ ] Search bar for filtering
-  - [ ] Filter by category dropdown
-  - [ ] Pagination controls
-  - [ ] "New Keyword" button (admin only)
-- [ ] **Keyword Detail Page** (`/keywords/{id}`)
-  - [ ] Keyword info (term, category, description)
-  - [ ] Associated clients list
-  - [ ] Usage statistics (scrape results count)
-  - [ ] "Edit" and "Delete" buttons (admin only)
-- [ ] **Create/Edit Keyword Page** (`/keywords/new`, `/keywords/{id}/edit`) - Admin only
-  - [ ] Form with keyword, category, description
-  - [ ] Category dropdown or free text
-  - [ ] Related keywords suggestions
-  - [ ] Validation and error messages
-- [ ] **Keyword Categories Page** (`/keywords/categories`)
-  - [ ] List of all categories with keyword counts
-  - [ ] Click to filter keywords by category
+_**Instructions:**_
+- All UI work must respect the existing frontend boundary.
+- No new frontend tooling decisions unless explicitly planned.
+
+_**Checklist Items:**_
+- [x] **Keyword List Page** (`/keywords`)
+  - [x] Table view of all keywords
+  - [x] Columns: Keyword, Category, Description, Usage count
+  - [x] Search bar for filtering
+  - [x] Filter by category dropdown
+  - [x] Pagination controls
+  - [x] "New Keyword" button (admin only)
+- [x] **Keyword Detail Page** (`/keywords/{id}`)
+  - [x] Keyword info (term, category, description)
+  - [x] Associated clients list
+  - [x] Usage statistics (scrape results count)
+  - [x] "Edit" and "Delete" buttons (admin only)
+- [x] **Create/Edit Keyword Page** (`/keywords/new`, `/keywords/{id}/edit`) - Admin only
+  - [x] Form with keyword, category, description
+  - [x] Category dropdown or free text
+  - [x] Related keywords suggestions
+  - [x] Validation and error messages
+- [x] **Keyword Categories Page** (`/keywords/categories`)
+  - [x] List of all categories with keyword counts
+  - [x] Click to filter keywords by category
 
 #### 7.6 Scrape Job Management UI
-- [ ] **Job List Page** (`/scraper/jobs`)
-  - [ ] Table view of user's scrape jobs
-  - [ ] Columns: Client, Status, Created, Duration, Results count
-  - [ ] Status badges (pending, running, completed, failed)
-  - [ ] Filter by status and client
-  - [ ] Sort by date (newest first)
-  - [ ] Click row to view details
-  - [ ] "New Scrape Job" button
-- [ ] **Create Job Page** (`/scraper/jobs/new`)
-  - [ ] Client selection dropdown (favorites at top)
-  - [ ] Date range picker (start and end dates)
-  - [ ] Advanced options (collapsible):
+_**Instructions:**_
+- All UI work must respect the existing frontend boundary.
+- No new frontend tooling decisions unless explicitly planned.
+
+_**Checklist Items:**_
+- [x] **Job List Page** (`/scraper/jobs`)
+  - [x] Table view of user's scrape jobs
+  - [x] Columns: Client, Status, Created, Duration, Results count
+  - [x] Status badges (pending, running, completed, failed)
+  - [x] Filter by status and client
+  - [x] Sort by date (newest first)
+  - [x] Click row to view details
+  - [x] "New Scrape Job" button
+- [x] **Create Job Page** (`/scraper/jobs/new`)
+  - [x] Client selection dropdown (favorites at top)
+  - [x] Date range picker (start and end dates)
+  - [x] Advanced options (collapsible):
     - Max scan pages (default: 15)
     - Include board minutes checkbox (default: true)
     - Include packages checkbox (default: false)
-  - [ ] Keyword preview (shows keywords for selected client)
-  - [ ] "Start Scrape" button
-  - [ ] Validation and error messages
-- [ ] **Job Detail Page** (`/scraper/jobs/{id}`)
-  - [ ] Job info card:
+  - [x] Keyword preview (shows keywords for selected client)
+  - [x] "Start Scrape" button
+  - [x] Validation and error messages
+- [x] **Job Detail Page** (`/scraper/jobs/{id}`)
+  - [x] Job info card:
     - Client name (link to client page)
     - Status badge with color coding
     - Created timestamp
     - Started/completed timestamps
     - Duration
     - Error message (if failed)
-  - [ ] Job configuration display:
+  - [x] Job configuration display:
     - Date range
     - Max scan pages
     - Document types included
-  - [ ] Progress indicator (if running):
+  - [x] Progress indicator (if running):
     - Pages scanned
     - Matches found
     - Current PDF being processed
-  - [ ] Results summary card:
+  - [x] Results summary card:
     - Total matches
     - Keywords found
     - Top 5 keywords by frequency
-  - [ ] Results table (paginated):
+  - [x] Results table (paginated):
     - PDF filename (link to download)
     - Page number
     - Keyword matched
     - Snippet preview (truncated)
-  - [ ] Action buttons:
+  - [x] Action buttons:
     - "Download CSV" (export all results)
     - "Generate Artifact" (create ZIP with PDFs)
     - "Cancel Job" (if pending/running)
     - "Delete Job" (if completed/failed)
-- [ ] **Job Status Polling**
-  - [ ] Auto-refresh status every 5 seconds (if running)
-  - [ ] Update progress bar in real-time
-  - [ ] Show notification on completion
+- [x] **Job Status Polling**
+  - [x] Auto-refresh status every 5 seconds (if running)
+  - [x] Update progress bar in real-time
+  - [x] Show notification on completion
 
 #### 7.7 Results & Downloads UI
-- [ ] **Results List Page** (`/scraper/jobs/{id}/results`)
-  - [ ] Dedicated page for browsing results
-  - [ ] Filters:
+_**Instructions:**_
+- All UI work must respect the existing frontend boundary.
+- No new frontend tooling decisions unless explicitly planned.
+
+_**Checklist Items:**_
+- [x] **Results List Page** (`/scraper/jobs/{id}/results`)
+  - [x] Dedicated page for browsing results
+  - [x] Filters:
     - Keyword dropdown
     - Page number input
-  - [ ] Results table with sorting
-  - [ ] Snippet highlighting (keywords bolded)
-  - [ ] "View PDF" button (opens in new tab)
-  - [ ] Pagination
-- [ ] **Download Management**
-  - [ ] CSV export button
+  - [x] Results table with sorting
+  - [x] Snippet highlighting (keywords bolded)
+  - [x] "View PDF" button (opens in new tab)
+  - [x] Pagination
+- [x] **Download Management**
+  - [x] CSV export button
     - Generates CSV file with all results
     - Includes: PDF name, page, keyword, snippet, entities
     - Browser download prompt
-  - [ ] ZIP artifact generation
+  - [x] ZIP artifact generation
     - "Generate ZIP" button (if not already generated)
     - Shows generation progress
     - "Download ZIP" button once ready
     - Includes: raw PDFs, annotated PDFs, results CSV, metadata
-  - [ ] Download history (previous artifacts)
-  - [ ] File size display
-  - [ ] Expiration notice (30 days)
+  - [x] Download history (previous artifacts)
+  - [x] File size display
+  - [x] Expiration notice (30 days)
 
 #### 7.8 Admin Panel UI
-- [ ] **Admin Dashboard** (`/admin`)
-  - [ ] System statistics:
+_**Instructions:**_
+- All UI work must respect the existing frontend boundary.
+- No new frontend tooling decisions unless explicitly planned.
+
+_**Checklist Items:**_
+- [x] **Admin Dashboard** (`/admin`)
+  - [x] System statistics:
     - Total users
     - Total clients
     - Total keywords
     - Total scrape jobs
     - Storage used (GB)
-  - [ ] Recent user activity
-  - [ ] Failed jobs list
-  - [ ] Quick links to admin functions
-- [ ] **User Management Page** (`/admin/users`)
-  - [ ] User list table
-  - [ ] Columns: Username, Email, Role, Status, Created
-  - [ ] Search and filter controls
-  - [ ] Actions: Edit role, Deactivate, Reset password
-- [ ] **Authorization Code Management** (`/admin/auth-codes`)
-  - [ ] List of auth codes with usage status
-  - [ ] "Generate New Code" button
-  - [ ] Code display with copy button
-  - [ ] Expiration and used status
-  - [ ] Delete code button
-- [ ] **Storage Cleanup** (`/admin/cleanup`)
-  - [ ] Storage usage breakdown by job
-  - [ ] Old jobs list (>30 days)
-  - [ ] Bulk cleanup button
-  - [ ] Confirmation dialog
+  - [x] Recent user activity
+  - [x] Failed jobs list
+  - [x] Quick links to admin functions
+- [x] **User Management Page** (`/admin/users`)
+  - [x] User list table
+  - [x] Columns: Username, Email, Role, Status, Created
+  - [x] Search and filter controls
+  - [x] Actions: Edit role, Deactivate, Reset password
+- [x] **Authorization Code Management** (`/admin/auth-codes`)
+  - [x] List of auth codes with usage status
+  - [x] "Generate New Code" button
+  - [x] Code display with copy button
+  - [x] Expiration and used status
+  - [x] Delete code button
+- [x] **Storage Cleanup** (`/admin/cleanup`)
+  - [x] Storage usage breakdown by job
+  - [x] Old jobs list (>30 days)
+  - [x] Bulk cleanup button
+  - [x] Confirmation dialog
 
 #### 7.9 User Profile & Settings
-- [ ] **Profile Page** (`/profile`)
-  - [ ] User info display (username, email, role)
-  - [ ] Account created date
-  - [ ] "Edit Profile" button
-- [ ] **Edit Profile Page** (`/profile/edit`)
-  - [ ] Update email (with verification)
-  - [ ] Update username
-  - [ ] Change password section
-  - [ ] Validation and error messages
-- [ ] **Preferences** (future)
-  - [ ] Email notifications toggle
-  - [ ] Default client selection
-  - [ ] Results per page preference
+_**Instructions:**_
+- All UI work must respect the existing frontend boundary.
+- No new frontend tooling decisions unless explicitly planned.
+
+_**Checklist Items:**_
+- [x] **Profile Page** (`/profile`)
+  - [x] User info display (username, email, role)
+  - [x] Account created date
+  - [x] "Edit Profile" button
+- [x] **Edit Profile Page** (`/profile/edit`)
+  - [x] Update email (with verification)
+  - [x] Update username
+  - [x] Change password section
+  - [x] Validation and error messages
+- [x] **Preferences** (future)
+  - [x] Email notifications toggle
+  - [x] Default client selection
+  - [x] Results per page preference
 
 #### 7.10 UX Enhancements
-- [ ] **Loading States**
-  - [ ] Spinner overlays for long operations
-  - [ ] Skeleton screens for data loading
-  - [ ] Disabled buttons during submission
-- [ ] **Error Handling**
-  - [ ] Toast notifications for errors
-  - [ ] Inline form validation errors
-  - [ ] 404 page for not found resources
-  - [ ] 403 page for unauthorized access
-  - [ ] 500 page for server errors
-- [ ] **Success Feedback**
-  - [ ] Toast notifications for successful actions
-  - [ ] Confirmation modals for destructive actions
-  - [ ] Progress indicators for multi-step flows
-- [ ] **Accessibility**
-  - [ ] Semantic HTML elements
-  - [ ] ARIA labels for screen readers
-  - [ ] Keyboard navigation support
-  - [ ] Focus indicators
-  - [ ] Color contrast compliance (WCAG AA)
-- [ ] **Performance**
-  - [ ] Lazy loading for images
-  - [ ] Pagination for large lists
-  - [ ] Debounced search inputs
-  - [ ] Minified CSS and JS
+_**Instructions:**_
+- All UI work must respect the existing frontend boundary.
+- No new frontend tooling decisions unless explicitly planned.
+
+_**Checklist Items:**_
+- [x] **Loading States**
+  - [x] Spinner overlays for long operations
+  - [x] Skeleton screens for data loading
+  - [x] Disabled buttons during submission
+- [x] **Error Handling**
+  - [x] Toast notifications for errors
+  - [x] Inline form validation errors
+  - [x] 404 page for not found resources
+  - [x] 403 page for unauthorized access
+  - [x] 500 page for server errors
+- [x] **Success Feedback**
+  - [x] Toast notifications for successful actions
+  - [x] Confirmation modals for destructive actions
+  - [x] Progress indicators for multi-step flows
+- [x] **Accessibility**
+  - [x] Semantic HTML elements
+  - [x] ARIA labels for screen readers
+  - [x] Keyboard navigation support
+  - [x] Focus indicators
+  - [x] Color contrast compliance (WCAG AA)
+- [x] **Performance**
+  - [x] Lazy loading for images
+  - [x] Pagination for large lists
+  - [x] Debounced search inputs
+  - [x] Minified CSS and JS
 
 #### 7.11 E2E Testing
 - [ ] Set up E2E testing framework (Playwright or Cypress)

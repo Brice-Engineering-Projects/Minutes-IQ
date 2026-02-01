@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% from "components/card.html" import card, stat_card %}
+{% from "components/button.html" import button %}
+
+{% block title %}Dashboard - MinutesIQ{% endblock %}
+
+{% block content %}
+<div class="px-4 py-8">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
+        <p class="mt-2 text-gray-600">Welcome to MinutesIQ - Your meeting intelligence platform</p>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {{ stat_card("Total Meetings", "142", "+12%", "up") }}
+        {{ stat_card("Keywords Tracked", "28", "+3", "up") }}
+        {{ stat_card("Active Alerts", "5", "-2", "down") }}
+        {{ stat_card("Reports Generated", "89", "+18%", "up") }}
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Recent Meetings Card -->
+        {% call card(title="Recent Meetings", subtitle="Latest meeting records") %}
+            <div class="space-y-4">
+                <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                    <div>
+                        <p class="text-sm font-medium text-gray-900">City Council Meeting</p>
+                        <p class="text-xs text-gray-500">January 30, 2026</p>
+                    </div>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        Processed
+                    </span>
+                </div>
+                <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                    <div>
+                        <p class="text-sm font-medium text-gray-900">Planning Board</p>
+                        <p class="text-xs text-gray-500">January 28, 2026</p>
+                    </div>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                        Processing
+                    </span>
+                </div>
+                <div class="flex items-center justify-between py-3">
+                    <div>
+                        <p class="text-sm font-medium text-gray-900">Zoning Commission</p>
+                        <p class="text-xs text-gray-500">January 25, 2026</p>
+                    </div>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        Processed
+                    </span>
+                </div>
+            </div>
+            <div class="mt-4">
+                {{ button('View All Meetings', variant='outline', size='sm', href='/meetings') }}
+            </div>
+        {% endcall %}
+
+        <!-- Quick Actions Card -->
+        {% call card(title="Quick Actions", subtitle="Common tasks") %}
+            <div class="space-y-3">
+                {{ button('Run Scraper', variant='primary', size='md', htmx_post='/scraper/run', htmx_target='#scraper-status') }}
+                {{ button('Manage Keywords', variant='secondary', size='md', href='/keywords') }}
+                {{ button('Generate Report', variant='success', size='md', htmx_get='/reports/generate', htmx_target='#report-output') }}
+            </div>
+            <div id="scraper-status" class="mt-4"></div>
+            <div id="report-output" class="mt-4"></div>
+        {% endcall %}
+    </div>
+</div>
+{% endblock %}

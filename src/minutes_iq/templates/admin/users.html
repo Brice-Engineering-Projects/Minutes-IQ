@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}User Management - MinutesIQ{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <a href="/admin" class="text-sm text-blue-600 hover:text-blue-800 mb-4 inline-flex items-center">
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Back to Admin Dashboard
+        </a>
+        <h1 class="text-3xl font-bold text-gray-900 mt-2">User Management</h1>
+        <p class="mt-2 text-sm text-gray-600">Manage system users and permissions</p>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="mb-6 bg-white shadow-sm rounded-lg border border-gray-200 p-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Search -->
+            <div>
+                <label for="user-search" class="block text-sm font-medium text-gray-700 mb-1">
+                    Search
+                </label>
+                <input
+                    type="text"
+                    id="user-search"
+                    name="search"
+                    placeholder="Username or email..."
+                    hx-get="/api/admin/users/list"
+                    hx-trigger="keyup changed delay:300ms"
+                    hx-target="#users-table"
+                    hx-include="[name='role_filter'], [name='status_filter'], [name='page']"
+                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                />
+            </div>
+
+            <!-- Role Filter -->
+            <div>
+                <label for="role-filter" class="block text-sm font-medium text-gray-700 mb-1">
+                    Role
+                </label>
+                <select
+                    id="role-filter"
+                    name="role_filter"
+                    hx-get="/api/admin/users/list"
+                    hx-trigger="change"
+                    hx-target="#users-table"
+                    hx-include="[name='search'], [name='status_filter'], [name='page']"
+                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                >
+                    <option value="">All Roles</option>
+                    <option value="1">Admin</option>
+                    <option value="2">User</option>
+                </select>
+            </div>
+
+            <!-- Status Filter -->
+            <div>
+                <label for="status-filter" class="block text-sm font-medium text-gray-700 mb-1">
+                    Status
+                </label>
+                <select
+                    id="status-filter"
+                    name="status_filter"
+                    hx-get="/api/admin/users/list"
+                    hx-trigger="change"
+                    hx-target="#users-table"
+                    hx-include="[name='search'], [name='role_filter'], [name='page']"
+                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                >
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
+        <div
+            id="users-table"
+            hx-get="/api/admin/users/list?page=1"
+            hx-trigger="load"
+            hx-swap="innerHTML"
+        >
+            <!-- Loading skeleton -->
+            <div class="p-12 text-center">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <p class="mt-2 text-sm text-gray-500">Loading users...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit User Modal (loaded via htmx when edit button clicked) -->
+<div id="edit-modal"></div>
+{% endblock %}

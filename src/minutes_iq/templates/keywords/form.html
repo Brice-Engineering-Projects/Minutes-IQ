@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}{% if keyword %}Edit{% else %}New{% endif %} Keyword - MinutesIQ{% endblock %}
+
+{% block content %}
+<div class="px-4 py-8 max-w-3xl mx-auto">
+    <!-- Header -->
+    <div class="mb-6">
+        <div class="flex items-center space-x-4">
+            <a href="{% if keyword %}/keywords/{{ keyword.keyword_id }}{% else %}/keywords{% endif %}" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </a>
+            <h1 class="text-3xl font-bold text-gray-900">
+                {% if keyword %}Edit Keyword{% else %}New Keyword{% endif %}
+            </h1>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+        <form
+            id="keyword-form"
+            hx-{% if keyword %}put{% else %}post{% endif %}="{% if keyword %}/api/keywords/{{ keyword.keyword_id }}{% else %}/api/keywords{% endif %}"
+            hx-target="#form-messages"
+            hx-swap="innerHTML"
+        >
+            <!-- Messages -->
+            <div id="form-messages" class="mb-4"></div>
+
+            <!-- Keyword -->
+            <div class="mb-6">
+                <label for="keyword" class="block text-sm font-medium text-gray-700 mb-2">
+                    Keyword <span class="text-red-500">*</span>
+                </label>
+                <input
+                    type="text"
+                    id="keyword"
+                    name="keyword"
+                    value="{{ keyword.keyword if keyword else '' }}"
+                    required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter keyword or phrase"
+                >
+                <p class="mt-1 text-xs text-gray-500">The term or phrase to track in meeting minutes</p>
+                <p class="mt-1 text-sm text-red-600 hidden" id="keyword-error"></p>
+            </div>
+
+            <!-- Category -->
+            <div class="mb-6">
+                <label for="category" class="block text-sm font-medium text-gray-700 mb-2">
+                    Category
+                </label>
+                <div class="relative">
+                    <input
+                        type="text"
+                        id="category"
+                        name="category"
+                        value="{{ keyword.category if keyword else '' }}"
+                        list="category-suggestions"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter or select a category"
+                    >
+                    <datalist id="category-suggestions">
+                        <!-- Categories loaded via htmx -->
+                    </datalist>
+                </div>
+                <p class="mt-1 text-xs text-gray-500">Select existing or create new category</p>
+            </div>
+
+            <!-- Description -->
+            <div class="mb-6">
+                <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+                    Description
+                </label>
+                <textarea
+                    id="description"
+                    name="description"
+                    rows="3"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Brief description of what this keyword tracks"
+                >{{ keyword.description if keyword else '' }}</textarea>
+            </div>
+
+            <!-- Related Keywords (if editing and same category) -->
+            {% if keyword and keyword.category %}
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Related Keywords
+                </label>
+                <div
+                    hx-get="/api/keywords/related?category={{ keyword.category }}&exclude={{ keyword.keyword_id }}"
+                    hx-trigger="load"
+                    hx-swap="innerHTML"
+                    class="border border-gray-200 rounded-lg p-4 bg-gray-50"
+                >
+                    <div class="animate-pulse">
+                        <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Actions -->
+            <div class="flex items-center justify-end space-x-3 pt-6 border-t border-gray-200">
+                <button
+                    type="button"
+                    onclick="window.history.back()"
+                    class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                    Cancel
+                </button>
+                <button
+                    type="submit"
+                    class="px-4 py-2 bg-blue-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-blue-700"
+                >
+                    {% if keyword %}Update{% else %}Create{% endif %} Keyword
+                    <span class="htmx-indicator ml-2">
+                        <span class="spinner"></span>
+                    </span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Load existing categories for datalist
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/api/keywords/categories')
+        .then(response => response.json())
+        .then(categories => {
+            const datalist = document.getElementById('category-suggestions');
+            categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat.category;
+                datalist.appendChild(option);
+            });
+        });
+});
+
+// Form validation
+document.getElementById('keyword-form').addEventListener('submit', function(e) {
+    const keyword = document.getElementById('keyword');
+    const keywordError = document.getElementById('keyword-error');
+
+    keywordError.classList.add('hidden');
+    keyword.classList.remove('border-red-500');
+
+    if (!keyword.value.trim()) {
+        keywordError.textContent = 'Keyword is required';
+        keywordError.classList.remove('hidden');
+        keyword.classList.add('border-red-500');
+        e.preventDefault();
+    }
+});
+
+// Handle successful submission
+document.body.addEventListener('htmx:afterRequest', function(event) {
+    if (event.detail.elt.id === 'keyword-form' && event.detail.successful) {
+        showToast('Keyword saved successfully!', 'success');
+        setTimeout(() => {
+            window.location.href = '/keywords';
+        }, 1000);
+    }
+});
+</script>
+{% endblock %}

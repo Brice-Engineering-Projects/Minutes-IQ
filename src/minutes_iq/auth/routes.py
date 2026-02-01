@@ -6,7 +6,8 @@ Handles HTTP requests for login, logout, and registration.
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordRequestForm
 
 from minutes_iq.auth.dependencies import (
@@ -29,10 +30,41 @@ from minutes_iq.config.settings import settings
 from minutes_iq.db.auth_code_service import AuthCodeService
 from minutes_iq.db.password_reset_service import PasswordResetService
 from minutes_iq.db.user_service import UserService
+from minutes_iq.templates_config import templates
 
 router = APIRouter(tags=["Authentication"])
 
 
+# HTML Page Routes
+@router.get("/login", response_class=HTMLResponse)
+async def login_page(request: Request):
+    """Render the login page."""
+    return templates.TemplateResponse("auth/login.html", {"request": request})
+
+
+@router.get("/register", response_class=HTMLResponse)
+async def register_page(request: Request):
+    """Render the registration page."""
+    return templates.TemplateResponse("auth/register.html", {"request": request})
+
+
+@router.get("/password-reset/request", response_class=HTMLResponse)
+async def password_reset_request_page(request: Request):
+    """Render the password reset request page."""
+    return templates.TemplateResponse(
+        "auth/password_reset_request.html", {"request": request}
+    )
+
+
+@router.get("/password-reset/{token}", response_class=HTMLResponse)
+async def password_reset_confirm_page(request: Request, token: str):
+    """Render the password reset confirmation page."""
+    return templates.TemplateResponse(
+        "auth/password_reset_confirm.html", {"request": request, "token": token}
+    )
+
+
+# API Routes
 @router.post("/login")
 async def login(
     response: Response,
@@ -273,3 +305,15 @@ async def confirm_password_reset(
     return PasswordResetResponse(
         message="Password has been reset successfully. You can now log in with your new password."
     )
+
+
+@router.post("/logout")
+async def logout(response: Response):
+    """
+    Logout user by clearing the access token cookie.
+
+    Returns:
+        Success message
+    """
+    response.delete_cookie(key="access_token")
+    return {"message": "Successfully logged out"}

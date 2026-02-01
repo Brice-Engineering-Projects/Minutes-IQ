@@ -21,7 +21,7 @@ All scraping, NLP, and PDF annotation workflows are executed as **tracked asynch
 
 ## 📌 Versioning
 
-* **Current Version:** `v0.6.0`
+* **Current Version:** `v0.7.0`
 * **Phase Status:** Phase 6 – Scraper Orchestration **COMPLETE**
 * **Stability:** Backend feature-complete, UI & deployment pending
 

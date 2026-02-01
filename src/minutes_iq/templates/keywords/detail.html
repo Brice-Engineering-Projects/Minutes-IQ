@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}{{ keyword.keyword }} - MinutesIQ{% endblock %}
+
+{% block content %}
+<div class="px-4 py-8">
+    <!-- Header with Actions -->
+    <div class="mb-6">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <a href="/keywords" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                </a>
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">{{ keyword.keyword }}</h1>
+                    <p class="mt-1 text-sm text-gray-500">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {{ keyword.category or 'Uncategorized' }}
+                        </span>
+                    </p>
+                </div>
+            </div>
+            {% if current_user and current_user.role_id == 1 %}
+            <div class="flex items-center space-x-3">
+                <button
+                    onclick="window.location.href='/keywords/{{ keyword.keyword_id }}/edit'"
+                    class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                >
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                    Edit
+                </button>
+                <button
+                    hx-delete="/api/keywords/{{ keyword.keyword_id }}"
+                    hx-confirm="Are you sure you want to delete this keyword?"
+                    class="inline-flex items-center px-3 py-2 border border-red-300 shadow-sm text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50"
+                >
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                    Delete
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Main Content -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Keyword Info Card -->
+            <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Keyword Information</h2>
+                <dl class="space-y-3">
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Description</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ keyword.description or 'No description provided' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Category</dt>
+                        <dd class="mt-1">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                {{ keyword.category or 'Uncategorized' }}
+                            </span>
+                        </dd>
+                    </div>
+                </dl>
+            </div>
+
+            <!-- Associated Clients -->
+            <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Associated Clients</h2>
+                <div
+                    hx-get="/api/keywords/{{ keyword.keyword_id }}/clients"
+                    hx-trigger="load"
+                    hx-swap="innerHTML"
+                >
+                    <div class="animate-pulse space-y-2">
+                        <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                        <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="lg:col-span-1">
+            <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6 sticky top-6">
+                <h3 class="text-sm font-semibold text-gray-900 mb-4">Usage Statistics</h3>
+                <dl class="space-y-3">
+                    <div class="flex justify-between">
+                        <dt class="text-sm text-gray-500">Tracked by Clients</dt>
+                        <dd class="text-sm font-medium text-gray-900" id="client-count">--</dd>
+                    </div>
+                    <div class="flex justify-between">
+                        <dt class="text-sm text-gray-500">Mentions Found</dt>
+                        <dd class="text-sm font-medium text-gray-900" id="mention-count">--</dd>
+                    </div>
+                    <div class="flex justify-between">
+                        <dt class="text-sm text-gray-500">Last Found</dt>
+                        <dd class="text-sm font-medium text-gray-900" id="last-found">--</dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Load usage stats
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/api/keywords/{{ keyword.keyword_id }}/stats')
+        .then(response => response.json())
+        .then(stats => {
+            document.getElementById('client-count').textContent = stats.client_count || 0;
+            document.getElementById('mention-count').textContent = stats.mention_count || 0;
+            document.getElementById('last-found').textContent = stats.last_found || 'Never';
+        })
+        .catch(() => {
+            document.getElementById('client-count').textContent = '0';
+            document.getElementById('mention-count').textContent = '0';
+            document.getElementById('last-found').textContent = 'Never';
+        });
+});
+</script>
+{% endblock %}

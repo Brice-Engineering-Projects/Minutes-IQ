@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Keyword Categories - MinutesIQ{% endblock %}
+
+{% block content %}
+<div class="px-4 py-8">
+    <!-- Header -->
+    <div class="mb-6">
+        <div class="flex items-center space-x-4">
+            <a href="/keywords" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </a>
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Keyword Categories</h1>
+                <p class="mt-2 text-sm text-gray-600">Browse keywords organized by category</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Categories Grid -->
+    <div
+        id="categories-grid"
+        hx-get="/api/keywords/categories-grid"
+        hx-trigger="load"
+        hx-swap="innerHTML"
+    >
+        <!-- Loading state -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+                <div class="animate-pulse">
+                    <div class="h-4 bg-gray-200 rounded w-1/2 mb-3"></div>
+                    <div class="h-6 bg-gray-200 rounded w-1/4"></div>
+                </div>
+            </div>
+            <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+                <div class="animate-pulse">
+                    <div class="h-4 bg-gray-200 rounded w-1/2 mb-3"></div>
+                    <div class="h-6 bg-gray-200 rounded w-1/4"></div>
+                </div>
+            </div>
+            <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+                <div class="animate-pulse">
+                    <div class="h-4 bg-gray-200 rounded w-1/2 mb-3"></div>
+                    <div class="h-6 bg-gray-200 rounded w-1/4"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

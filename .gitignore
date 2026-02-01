@@ -1,48 +1,275 @@
-# Conda environment
-/env/
-/venv/
-*.pyc
+# =============================================================================
+# Python - Byte-compiled / optimized / DLL files
+# =============================================================================
 __pycache__/
-
-# JetBrains IDE
-.idea/
-*.iml
-*.iws
-*.ipr
-.idea_modules/
-
-# VS Code IDE
-.vscode/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-*/.ipynb_checkpoints/*
-
-# Distribution / packaging
-dist/
-build/
-*.egg-info/
-*.egg
-
-# Compiled Python files
 *.py[cod]
 *$py.class
+*.so
+*.pyc
+*.pyo
+*.pyd
 
-# Local development settings
-.env
-.env.local
-*.log
+# =============================================================================
+# Python - Distribution / Packaging
+# =============================================================================
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+*.egg
+.installed.cfg
+MANIFEST
 
-# OS specific files
-.DS_Store
-Thumbs.db
-
-# Conda specific
+# =============================================================================
+# Python - Virtual Environments
+# =============================================================================
+# UV virtual environment
+.venv/
+venv/
+ENV/
+env/
+# Conda environments
 conda-env/
 conda-bld/
 .conda/
 .condarc
 
-data/
+# =============================================================================
+# Python - Testing & Coverage
+# =============================================================================
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+*.cover
+*.log
+.hypothesis/
+pytest_debug.log
 
+# =============================================================================
+# Python - Type Checking
+# =============================================================================
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+
+# =============================================================================
+# Python - Linting
+# =============================================================================
+.ruff_cache/
+
+# =============================================================================
+# Jupyter Notebook
+# =============================================================================
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+*.ipynb_checkpoints
+
+# =============================================================================
+# Frontend - Node.js / npm
+# =============================================================================
+# Dependencies
+frontend/node_modules/
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Production build output
+frontend/dist/
+frontend/build/
+
+# Package manager lock files (optional - uncomment if you want to ignore)
+# frontend/package-lock.json
+# frontend/yarn.lock
+
+# Frontend cache and temp files
+.cache/
+.parcel-cache/
+.npm/
+.eslintcache
+.stylelintcache
+
+# =============================================================================
+# Frontend - CSS Build Output
+# =============================================================================
+# Generated Tailwind CSS (if rebuilt from source)
+# Uncomment if you want to regenerate on each deployment
+# src/minutes_iq/static/css/tailwind.css
+
+# =============================================================================
+# Environment Variables & Secrets
+# =============================================================================
+.env
+.env.local
+.env.*.local
+.env.development
+.env.test
+.env.production
+*.pem
+*.key
+secrets.json
+credentials.json
+
+# =============================================================================
+# Database Files
+# =============================================================================
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+data/
+migrations/versions/*.pyc
+
+# =============================================================================
+# IDE - JetBrains (PyCharm, WebStorm, IntelliJ IDEA)
+# =============================================================================
+.idea/
+*.iml
+*.iws
+*.ipr
+.idea_modules/
+out/
+
+# =============================================================================
+# IDE - Visual Studio Code
+# =============================================================================
+.vscode/
+*.code-workspace
+.history/
+
+# =============================================================================
+# IDE - Other
+# =============================================================================
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+.vim/
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# =============================================================================
+# Operating System Files
+# =============================================================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+.directory
+.Trash-*
+.nfs*
+
+# =============================================================================
+# Logs & Temporary Files
+# =============================================================================
+*.log
+logs/
+*.tmp
+*.temp
+tmp/
+temp/
+
+# =============================================================================
+# Application Specific
+# =============================================================================
+# Python version specification (if using pyenv)
 .python-version
+
+# UV lock file (optional - uncomment if you want to regenerate)
+# uv.lock
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Static file uploads (user-generated content)
+# Adjust path based on your upload directory
+# uploads/
+# media/
+
+# =============================================================================
+# CI/CD & Deployment
+# =============================================================================
+.github/workflows/secrets/
+.gitlab-ci-local/
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# =============================================================================
+# Documentation Build Output
+# =============================================================================
+docs/_build/
+docs/.doctrees/
+site/
+
+# =============================================================================
+# Miscellaneous
+# =============================================================================
+# Editor backup files
+*~
+*.orig
+
+# Compressed archives
+*.zip
+*.tar.gz
+*.rar
+
+# System files
+*.class

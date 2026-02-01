@@ -1,0 +1,197 @@
+<!--
+  Loading Overlay Component
+
+  Usage:
+    {% from "components/loading_overlay.html" import loading_overlay, loading_spinner %}
+
+    Add to any htmx element:
+    <div hx-get="/api/data" hx-indicator="#loading-overlay">
+      {{ loading_overlay() }}
+      Content here...
+    </div>
+
+    Or use globally in base template for all htmx requests
+-->
+
+<!-- Full-screen loading overlay -->
+{% macro loading_overlay(id="loading-overlay", message="Loading...") %}
+<div id="{{ id }}" class="htmx-indicator fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center" role="status" aria-live="polite">
+    <div class="bg-white rounded-lg p-6 shadow-xl flex flex-col items-center">
+        <div class="spinner-large mb-4"></div>
+        <p class="text-gray-700 font-medium">{{ message }}</p>
+    </div>
+</div>
+{% endmacro %}
+
+
+<!-- Inline loading spinner (small) -->
+{% macro loading_spinner(size="small", color="blue") %}
+<div class="htmx-indicator inline-flex items-center" role="status" aria-label="Loading">
+    <div class="spinner-{{ size }} {% if color == 'white' %}spinner-white{% else %}spinner-blue{% endif %}"></div>
+    <span class="sr-only">Loading...</span>
+</div>
+{% endmacro %}
+
+
+<!-- Loading button state -->
+{% macro loading_button(
+    text="Submit",
+    loading_text="Processing...",
+    type="submit",
+    class="bg-blue-600 hover:bg-blue-700 text-white",
+    hx_attrs=""
+) %}
+<button
+    type="{{ type }}"
+    {{ hx_attrs|safe }}
+    class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md {{ class }} focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+>
+    <span class="htmx-request:hidden">{{ text }}</span>
+    <span class="hidden htmx-request:inline-flex items-center">
+        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        {{ loading_text }}
+    </span>
+</button>
+{% endmacro %}
+
+
+<!-- Loading skeleton for content replacement -->
+{% macro content_loading_skeleton() %}
+<div class="htmx-indicator p-6 space-y-4 animate-pulse" role="status" aria-label="Loading content">
+    <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+    <div class="h-4 bg-gray-200 rounded w-full"></div>
+    <div class="h-4 bg-gray-200 rounded w-5/6"></div>
+    <span class="sr-only">Loading...</span>
+</div>
+{% endmacro %}
+
+
+<!-- CSS for spinners (add to styles.css or include here) -->
+<style>
+/* Small spinner */
+.spinner-small {
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #3b82f6;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    animation: spin 0.8s linear infinite;
+}
+
+/* Medium spinner */
+.spinner-medium {
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #3b82f6;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    animation: spin 0.8s linear infinite;
+}
+
+/* Large spinner */
+.spinner-large {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3b82f6;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    animation: spin 1s linear infinite;
+}
+
+/* White spinner variant */
+.spinner-white {
+    border-color: rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+}
+
+/* Spin animation */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* htmx-request class utilities */
+.htmx-request\.hidden\:hidden {
+    display: none;
+}
+
+.htmx-request\.inline-flex\:inline-flex {
+    display: inline-flex;
+}
+</style>
+
+
+<!-- JavaScript helper for programmatic loading states -->
+<script>
+/**
+ * Show loading overlay
+ * @param {string} message - Loading message (optional)
+ */
+function showLoading(message = 'Loading...') {
+    let overlay = document.getElementById('global-loading-overlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'global-loading-overlay';
+        overlay.className = 'fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center';
+        overlay.setAttribute('role', 'status');
+        overlay.setAttribute('aria-live', 'polite');
+        overlay.innerHTML = `
+            <div class="bg-white rounded-lg p-6 shadow-xl flex flex-col items-center">
+                <div class="spinner-large mb-4"></div>
+                <p class="text-gray-700 font-medium" id="loading-message">${message}</p>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+    } else {
+        overlay.classList.remove('hidden');
+        const messageEl = overlay.querySelector('#loading-message');
+        if (messageEl) {
+            messageEl.textContent = message;
+        }
+    }
+}
+
+/**
+ * Hide loading overlay
+ */
+function hideLoading() {
+    const overlay = document.getElementById('global-loading-overlay');
+    if (overlay) {
+        overlay.classList.add('hidden');
+    }
+}
+
+/**
+ * Disable button and show loading state
+ * @param {HTMLElement} button - The button element
+ */
+function setButtonLoading(button) {
+    button.disabled = true;
+    button.classList.add('htmx-request');
+    const originalText = button.textContent;
+    button.dataset.originalText = originalText;
+
+    button.innerHTML = `
+        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-current inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Processing...
+    `;
+}
+
+/**
+ * Reset button to normal state
+ * @param {HTMLElement} button - The button element
+ */
+function resetButton(button) {
+    button.disabled = false;
+    button.classList.remove('htmx-request');
+    if (button.dataset.originalText) {
+        button.textContent = button.dataset.originalText;
+    }
+}
+</script>

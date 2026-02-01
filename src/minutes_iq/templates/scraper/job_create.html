@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+
+{% block title %}New Scrape Job - MinutesIQ{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <a href="/scraper/jobs" class="text-sm text-blue-600 hover:text-blue-800 mb-4 inline-flex items-center">
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Back to Jobs
+        </a>
+        <h1 class="text-3xl font-bold text-gray-900 mt-2">Create Scrape Job</h1>
+        <p class="mt-2 text-sm text-gray-600">Configure and start a new scraping job</p>
+    </div>
+
+    <!-- Form -->
+    <form
+        hx-post="/api/scraper/jobs"
+        hx-target="#form-messages"
+        hx-swap="innerHTML"
+        class="space-y-6"
+    >
+        <!-- Messages Area -->
+        <div id="form-messages"></div>
+
+        <!-- Client Selection -->
+        <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Client Selection</h2>
+
+            <div>
+                <label for="client_id" class="block text-sm font-medium text-gray-700 mb-1">
+                    Client <span class="text-red-500">*</span>
+                </label>
+                <select
+                    id="client_id"
+                    name="client_id"
+                    required
+                    hx-get="/api/scraper/jobs/preview-keywords"
+                    hx-trigger="change"
+                    hx-target="#keyword-preview"
+                    hx-swap="innerHTML"
+                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                >
+                    <option value="">Select a client...</option>
+                    <optgroup label="Favorites">
+                        <!-- Favorites loaded via script -->
+                    </optgroup>
+                    <optgroup label="All Clients">
+                        <!-- All clients loaded via script -->
+                    </optgroup>
+                </select>
+                <p class="mt-1 text-xs text-gray-500">Choose the client to scrape for</p>
+            </div>
+
+            <!-- Keyword Preview -->
+            <div id="keyword-preview" class="mt-4">
+                <p class="text-sm text-gray-500">Select a client to preview keywords</p>
+            </div>
+        </div>
+
+        <!-- Date Range -->
+        <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Date Range</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">
+                        Start Date <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                        type="date"
+                        id="start_date"
+                        name="start_date"
+                        required
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                    />
+                </div>
+
+                <div>
+                    <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1">
+                        End Date <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                        type="date"
+                        id="end_date"
+                        name="end_date"
+                        required
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                    />
+                </div>
+            </div>
+            <p class="mt-2 text-xs text-gray-500">Specify the date range for documents to scrape</p>
+        </div>
+
+        <!-- Advanced Options (Collapsible) -->
+        <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+            <details>
+                <summary class="text-lg font-semibold text-gray-900 cursor-pointer select-none">
+                    Advanced Options
+                    <span class="text-sm font-normal text-gray-500 ml-2">(Optional)</span>
+                </summary>
+
+                <div class="mt-4 space-y-4">
+                    <!-- Max Scan Pages -->
+                    <div>
+                        <label for="max_scan_pages" class="block text-sm font-medium text-gray-700 mb-1">
+                            Max Scan Pages
+                        </label>
+                        <input
+                            type="number"
+                            id="max_scan_pages"
+                            name="max_scan_pages"
+                            value="15"
+                            min="1"
+                            max="100"
+                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        />
+                        <p class="mt-1 text-xs text-gray-500">Maximum number of pages to scan (default: 15)</p>
+                    </div>
+
+                    <!-- Document Type Options -->
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700">
+                            Document Types to Include
+                        </label>
+
+                        <div class="flex items-center">
+                            <input
+                                type="checkbox"
+                                id="include_board_minutes"
+                                name="include_board_minutes"
+                                checked
+                                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            />
+                            <label for="include_board_minutes" class="ml-2 text-sm text-gray-700">
+                                Board Minutes
+                            </label>
+                        </div>
+
+                        <div class="flex items-center">
+                            <input
+                                type="checkbox"
+                                id="include_packages"
+                                name="include_packages"
+                                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            />
+                            <label for="include_packages" class="ml-2 text-sm text-gray-700">
+                                Packages
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </details>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex justify-end space-x-3">
+            <a
+                href="/scraper/jobs"
+                class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+                Cancel
+            </a>
+            <button
+                type="submit"
+                class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+                <svg class="inline-block -ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                Start Scrape
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Load clients for dropdown -->
+<script>
+// Load clients and organize into favorites and all
+Promise.all([
+    fetch('/api/clients/all').then(r => r.json()),
+    fetch('/api/clients/favorites').then(r => r.json()).catch(() => [])
+])
+.then(([allClients, favorites]) => {
+    const select = document.getElementById('client_id');
+    const favoritesOptgroup = select.querySelector('optgroup[label="Favorites"]');
+    const allClientsOptgroup = select.querySelector('optgroup[label="All Clients"]');
+
+    const favoriteIds = new Set(favorites.map(f => f.client_id));
+
+    // Add favorites
+    favorites.forEach(client => {
+        const option = document.createElement('option');
+        option.value = client.client_id;
+        option.textContent = client.name;
+        favoritesOptgroup.appendChild(option);
+    });
+
+    // Add all clients
+    allClients.forEach(client => {
+        const option = document.createElement('option');
+        option.value = client.client_id;
+        option.textContent = client.name;
+        allClientsOptgroup.appendChild(option);
+    });
+
+    // Remove empty optgroups
+    if (favoritesOptgroup.children.length === 0) {
+        favoritesOptgroup.remove();
+    }
+})
+.catch(error => console.error('Error loading clients:', error));
+</script>
+{% endblock %}
