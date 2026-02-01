@@ -60,33 +60,33 @@ async def get_clients_list(
     rows_html = ""
     for client in paginated_clients:
         rows_html += f"""
-        <tr class="hover:bg-gray-50 cursor-pointer" onclick="window.location.href='/clients/{client['client_id']}'">
+        <tr class="hover:bg-gray-50 cursor-pointer" onclick="window.location.href='/clients/{client["client_id"]}'">
             <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center">
                     <div>
-                        <div class="text-sm font-medium text-gray-900">{client.get('name', 'N/A')}</div>
-                        <div class="text-sm text-gray-500">{client.get('description', '')[:50]}...</div>
+                        <div class="text-sm font-medium text-gray-900">{client.get("name", "N/A")}</div>
+                        <div class="text-sm text-gray-500">{client.get("description", "")[:50]}...</div>
                     </div>
                 </div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {client.get('keyword_count', 0)} keywords
+                {client.get("keyword_count", 0)} keywords
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
                 <button
-                    hx-post="/api/clients/{client['client_id']}/favorite"
+                    hx-post="/api/clients/{client["client_id"]}/favorite"
                     hx-swap="outerHTML"
                     onclick="event.stopPropagation()"
                     class="text-gray-400 hover:text-red-500"
                 >
-                    <svg class="w-5 h-5 {'fill-current text-red-500' if client.get('is_favorite') else ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 {"fill-current text-red-500" if client.get("is_favorite") else ""}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                     </svg>
                 </button>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {'bg-green-100 text-green-800' if client.get('is_active') else 'bg-gray-100 text-gray-800'}">
-                    {'Active' if client.get('is_active') else 'Inactive'}
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {"bg-green-100 text-green-800" if client.get("is_active") else "bg-gray-100 text-gray-800"}">
+                    {"Active" if client.get("is_active") else "Inactive"}
                 </span>
             </td>
         </tr>
@@ -98,8 +98,8 @@ async def get_clients_list(
         pagination_html = f"""
         <div class="px-6 py-4 flex items-center justify-between border-t border-gray-200">
             <div class="flex-1 flex justify-between sm:hidden">
-                {'<button hx-get="/api/clients/list?page=' + str(page - 1) + '&search=' + search + '" hx-target="#clients-table" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Previous</button>' if page > 1 else ''}
-                {'<button hx-get="/api/clients/list?page=' + str(page + 1) + '&search=' + search + '" hx-target="#clients-table" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Next</button>' if page < total_pages else ''}
+                {'<button hx-get="/api/clients/list?page=' + str(page - 1) + "&search=" + search + '" hx-target="#clients-table" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Previous</button>' if page > 1 else ""}
+                {'<button hx-get="/api/clients/list?page=' + str(page + 1) + "&search=" + search + '" hx-target="#clients-table" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Next</button>' if page < total_pages else ""}
             </div>
             <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                 <div>
@@ -109,11 +109,11 @@ async def get_clients_list(
                 </div>
                 <div>
                     <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                        {'<button hx-get="/api/clients/list?page=' + str(page - 1) + '&search=' + search + '" hx-target="#clients-table" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">Previous</button>' if page > 1 else ''}
+                        {'<button hx-get="/api/clients/list?page=' + str(page - 1) + "&search=" + search + '" hx-target="#clients-table" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">Previous</button>' if page > 1 else ""}
                         <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
                             Page {page} of {total_pages}
                         </span>
-                        {'<button hx-get="/api/clients/list?page=' + str(page + 1) + '&search=' + search + '" hx-target="#clients-table" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">Next</button>' if page < total_pages else ''}
+                        {'<button hx-get="/api/clients/list?page=' + str(page + 1) + "&search=" + search + '" hx-target="#clients-table" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">Next</button>' if page < total_pages else ""}
                     </nav>
                 </div>
             </div>
