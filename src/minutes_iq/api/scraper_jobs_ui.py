@@ -1,6 +1,8 @@
 """API endpoints for scraper job management UI fragments."""
 
+import re
 from datetime import datetime
+from html import escape
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -488,13 +490,44 @@ async def get_job_progress(
     return html
 
 
+def highlight_snippet(snippet: str, keyword: str) -> str:
+    """Highlight keyword matches in snippet with <mark> tags.
+
+    Args:
+        snippet: The text snippet to highlight
+        keyword: The keyword to highlight (case-insensitive)
+
+    Returns:
+        HTML-escaped snippet with matched keywords wrapped in <mark> tags
+    """
+    if not keyword:
+        return escape(snippet)
+
+    # Escape HTML first
+    escaped_snippet = escape(snippet)
+
+    # Use regex for case-insensitive replacement
+    # Escape special regex characters in keyword
+    keyword_escaped = re.escape(keyword)
+    pattern = re.compile(f"({keyword_escaped})", re.IGNORECASE)
+
+    # Replace with <mark> tags
+    highlighted = pattern.sub(r"<mark>\1</mark>", escaped_snippet)
+
+    return highlighted
+
+
 @router.get("/{job_id}/results", response_class=HTMLResponse)
 async def get_job_results(
     job_id: int,
     scraper_repo: Annotated[ScraperRepository, Depends(get_scraper_repository)],
     page: int = 1,
+    keyword_filter: str = "",
+    page_number_filter: str = "",
+    sort_by: str = "",
+    sort_order: str = "asc",
 ):
-    """Return paginated results table HTML."""
+    """Return paginated results table HTML with filtering, sorting, and highlighting."""
     results = scraper_repo.get_job_results(job_id)
 
     if not results:
@@ -508,14 +541,64 @@ async def get_job_results(
         </div>
         """
 
+    # Apply filters
+    filtered_results = results
+
+    # Filter by keyword (case-insensitive)
+    if keyword_filter:
+        filtered_results = [
+            r
+            for r in filtered_results
+            if keyword_filter.lower() in r.get("keyword_matched", "").lower()
+        ]
+
+    # Filter by page number (exact match)
+    if page_number_filter:
+        try:
+            page_num = int(page_number_filter)
+            filtered_results = [
+                r for r in filtered_results if r.get("page_number") == page_num
+            ]
+        except ValueError:
+            # Invalid page number, skip filter
+            pass
+
+    # Apply sorting
+    if sort_by == "pdf":
+        filtered_results.sort(
+            key=lambda x: x.get("pdf_filename", "").lower(),
+            reverse=(sort_order == "desc"),
+        )
+    elif sort_by == "page":
+        filtered_results.sort(
+            key=lambda x: x.get("page_number", 0), reverse=(sort_order == "desc")
+        )
+    elif sort_by == "keyword":
+        filtered_results.sort(
+            key=lambda x: x.get("keyword_matched", "").lower(),
+            reverse=(sort_order == "desc"),
+        )
+
     # Pagination
     per_page = 20
-    total = len(results)
+    total = len(filtered_results)
     total_pages = max(1, (total + per_page - 1) // per_page)
     page = max(1, min(page, total_pages))
     start = (page - 1) * per_page
     end = start + per_page
-    paginated_results = results[start:end]
+    paginated_results = filtered_results[start:end]
+
+    # Build query params string for pagination
+    query_params = []
+    if keyword_filter:
+        query_params.append(f"keyword_filter={escape(keyword_filter)}")
+    if page_number_filter:
+        query_params.append(f"page_number_filter={escape(page_number_filter)}")
+    if sort_by:
+        query_params.append(f"sort_by={escape(sort_by)}")
+    if sort_order:
+        query_params.append(f"sort_order={escape(sort_order)}")
+    query_string = "&" + "&".join(query_params) if query_params else ""
 
     # Build table rows
     rows_html = ""
@@ -525,26 +608,67 @@ async def get_job_results(
         keyword = result.get("keyword_matched", "")
         snippet = result.get("snippet", "")
 
-        # Truncate snippet
+        # Truncate snippet before highlighting
         if len(snippet) > 100:
             snippet = snippet[:97] + "..."
 
+        # Highlight snippet
+        highlighted_snippet = highlight_snippet(
+            snippet, keyword_filter if keyword_filter else ""
+        )
+
+        # Escape other fields
+        escaped_filename = escape(pdf_filename)
+        escaped_keyword = escape(keyword)
+
+        # Build PDF link
+        pdf_link = f"/api/scraper/jobs/{job_id}/pdfs/{escaped_filename}"
+
         rows_html += f"""
         <tr class="hover:bg-gray-50">
-            <td class="px-6 py-4 text-sm text-blue-600 hover:text-blue-800">
-                {pdf_filename}
+            <td class="px-6 py-4 text-sm">
+                <a href="{pdf_link}" target="_blank" class="text-blue-600 hover:text-blue-800">
+                    {escaped_filename}
+                </a>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {page_number}
+                {escape(str(page_number))}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                {keyword}
+                {escaped_keyword}
             </td>
             <td class="px-6 py-4 text-sm text-gray-500">
-                {snippet}
+                {highlighted_snippet}
             </td>
         </tr>
         """
+
+    # Determine sort icons for headers
+    def get_sort_icon(column: str) -> str:
+        """Get sort icon based on current sort state."""
+        if sort_by == column:
+            if sort_order == "asc":
+                return "↑"
+            else:
+                return "↓"
+        return "↕"
+
+    # Build query params for sorting (without page)
+    def get_sort_query_params(column: str) -> str:
+        """Build query params for sort toggle."""
+        params = []
+        if keyword_filter:
+            params.append(f"keyword_filter={escape(keyword_filter)}")
+        if page_number_filter:
+            params.append(f"page_number_filter={escape(page_number_filter)}")
+        params.append(f"sort_by={column}")
+        # Toggle order if same column, otherwise default to asc
+        if sort_by == column:
+            new_order = "desc" if sort_order == "asc" else "asc"
+        else:
+            new_order = "asc"
+        params.append(f"sort_order={new_order}")
+        return "&".join(params)
 
     # Pagination controls
     pagination_html = ""
@@ -570,7 +694,7 @@ async def get_job_results(
                 <div>
                     <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm">
                         <button
-                            hx-get="/api/scraper/jobs/{job_id}/results?page={page - 1}"
+                            hx-get="/api/scraper/jobs/{job_id}/results?page={page - 1}{query_string}"
                             hx-target="#results-table"
                             {prev_disabled}
                             class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
@@ -581,7 +705,7 @@ async def get_job_results(
                             {page} / {total_pages}
                         </span>
                         <button
-                            hx-get="/api/scraper/jobs/{job_id}/results?page={page + 1}"
+                            hx-get="/api/scraper/jobs/{job_id}/results?page={page + 1}{query_string}"
                             hx-target="#results-table"
                             {next_disabled}
                             class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
@@ -600,13 +724,31 @@ async def get_job_results(
             <thead class="bg-gray-50">
                 <tr>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        PDF Filename
+                        <button
+                            hx-get="/api/scraper/jobs/{job_id}/results?{get_sort_query_params('pdf')}"
+                            hx-target="#results-table"
+                            class="hover:text-gray-700 flex items-center gap-1"
+                        >
+                            PDF Filename <span>{get_sort_icon('pdf')}</span>
+                        </button>
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Page
+                        <button
+                            hx-get="/api/scraper/jobs/{job_id}/results?{get_sort_query_params('page')}"
+                            hx-target="#results-table"
+                            class="hover:text-gray-700 flex items-center gap-1"
+                        >
+                            Page <span>{get_sort_icon('page')}</span>
+                        </button>
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Keyword
+                        <button
+                            hx-get="/api/scraper/jobs/{job_id}/results?{get_sort_query_params('keyword')}"
+                            hx-target="#results-table"
+                            class="hover:text-gray-700 flex items-center gap-1"
+                        >
+                            Keyword <span>{get_sort_icon('keyword')}</span>
+                        </button>
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Snippet
@@ -767,16 +909,26 @@ async def export_csv(
     output = io.StringIO()
     writer = csv.DictWriter(
         output,
-        fieldnames=["pdf_filename", "page_number", "keyword_matched", "snippet"],
+        fieldnames=[
+            "pdf_filename",
+            "page_number",
+            "keyword_matched",
+            "snippet",
+            "entities",
+        ],
     )
     writer.writeheader()
     for result in results:
+        # Get entities if they exist, otherwise empty string
+        entities = result.get("entities_json", "") or ""
+
         writer.writerow(
             {
                 "pdf_filename": result.get("pdf_filename", ""),
                 "page_number": result.get("page_number", ""),
                 "keyword_matched": result.get("keyword_matched", ""),
                 "snippet": result.get("snippet", ""),
+                "entities": entities,
             }
         )
 
@@ -791,4 +943,49 @@ async def export_csv(
         headers={
             "Content-Disposition": f"attachment; filename=job_{job_id}_results.csv"
         },
+    )
+
+
+@router.get("/{job_id}/pdfs/{filename}", response_class=HTMLResponse)
+async def serve_pdf(
+    job_id: int,
+    filename: str,
+    scraper_repo: Annotated[ScraperRepository, Depends(get_scraper_repository)],
+):
+    """Serve PDF file for viewing (with authentication and ownership validation)."""
+    from pathlib import Path
+
+    from fastapi.responses import FileResponse
+
+    # Validate job exists
+    job = scraper_repo.get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    # TODO: Validate user owns this job when auth is integrated
+    # if current_user.user_id != job["created_by"]:
+    #     raise HTTPException(status_code=403, detail="Access denied")
+
+    # Construct PDF path
+    # PDFs are stored in: data/scraper_output/{job_id}/pdfs/{filename}
+    base_dir = Path(__file__).resolve().parent.parent.parent.parent  # Project root
+    pdf_path = base_dir / "data" / "scraper_output" / str(job_id) / "pdfs" / filename
+
+    # Verify file exists
+    if not pdf_path.exists() or not pdf_path.is_file():
+        raise HTTPException(status_code=404, detail="PDF file not found")
+
+    # Verify it's actually in the job's directory (prevent path traversal)
+    try:
+        pdf_path.resolve().relative_to(
+            (base_dir / "data" / "scraper_output" / str(job_id)).resolve()
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=403, detail="Access denied") from e
+
+    # Serve the PDF
+    return FileResponse(
+        path=str(pdf_path),
+        media_type="application/pdf",
+        filename=filename,
     )
