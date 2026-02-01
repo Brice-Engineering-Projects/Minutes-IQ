@@ -1,0 +1,51 @@
+<!-- Card Component -->
+
+{% macro card(title=None, subtitle=None, footer=None) %}
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+    {% if title or subtitle %}
+    <div class="px-6 py-4 border-b border-gray-200">
+        {% if title %}
+        <h3 class="text-lg font-semibold text-gray-900">{{ title }}</h3>
+        {% endif %}
+        {% if subtitle %}
+        <p class="mt-1 text-sm text-gray-500">{{ subtitle }}</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="px-6 py-4">
+        {{ caller() }}
+    </div>
+
+    {% if footer %}
+    <div class="px-6 py-3 bg-gray-50 border-t border-gray-200">
+        {{ footer }}
+    </div>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{% macro stat_card(title, value, change=None, trend=None) %}
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <p class="text-sm font-medium text-gray-600">{{ title }}</p>
+            <p class="mt-2 text-3xl font-semibold text-gray-900">{{ value }}</p>
+        </div>
+        {% if change and trend %}
+        <div class="flex items-center {% if trend == 'up' %}text-green-600{% elif trend == 'down' %}text-red-600{% else %}text-gray-600{% endif %}">
+            <span class="text-sm font-medium">{{ change }}</span>
+            {% if trend == 'up' %}
+            <svg class="w-5 h-5 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+            </svg>
+            {% elif trend == 'down' %}
+            <svg class="w-5 h-5 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M14.707 10.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 12.586V5a1 1 0 012 0v7.586l2.293-2.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+            </svg>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endmacro %}

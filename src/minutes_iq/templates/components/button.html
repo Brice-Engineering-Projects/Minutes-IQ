@@ -1,0 +1,46 @@
+<!-- Button Component -->
+<!-- Usage: {% include 'components/button.html' with context %} -->
+
+{% macro button(text, type='button', variant='primary', size='md', href=None, htmx_get=None, htmx_post=None, htmx_target=None, disabled=False, icon=None) %}
+    {% set base_classes = 'inline-flex items-center justify-center font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors' %}
+
+    {% set variant_classes = {
+        'primary': 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
+        'secondary': 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500',
+        'success': 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500',
+        'danger': 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
+        'outline': 'border border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-blue-500',
+        'ghost': 'text-gray-700 hover:bg-gray-100 focus:ring-gray-500'
+    } %}
+
+    {% set size_classes = {
+        'sm': 'px-3 py-1.5 text-sm',
+        'md': 'px-4 py-2 text-base',
+        'lg': 'px-6 py-3 text-lg'
+    } %}
+
+    {% set disabled_classes = 'opacity-50 cursor-not-allowed' if disabled else '' %}
+    {% set classes = [base_classes, variant_classes[variant], size_classes[size], disabled_classes] | join(' ') %}
+
+    {% if href %}
+        <a href="{{ href }}" class="{{ classes }}">
+            {% if icon %}<span class="mr-2">{{ icon }}</span>{% endif %}
+            {{ text }}
+        </a>
+    {% else %}
+        <button
+            type="{{ type }}"
+            class="{{ classes }}"
+            {% if htmx_get %}hx-get="{{ htmx_get }}"{% endif %}
+            {% if htmx_post %}hx-post="{{ htmx_post }}"{% endif %}
+            {% if htmx_target %}hx-target="{{ htmx_target }}"{% endif %}
+            {% if disabled %}disabled{% endif %}
+        >
+            {% if icon %}<span class="mr-2">{{ icon }}</span>{% endif %}
+            {{ text }}
+            <span class="htmx-indicator ml-2">
+                <span class="spinner"></span>
+            </span>
+        </button>
+    {% endif %}
+{% endmacro %}
