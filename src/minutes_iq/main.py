@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from fastapi import APIRouter, FastAPI, Request
+from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -17,7 +17,6 @@ from minutes_iq.auth import routes
 from minutes_iq.scraper import routes as scraper_routes
 
 app = FastAPI()
-router = APIRouter()
 
 # Set up templates and static files
 BASE_DIR = Path(__file__).resolve().parent
@@ -31,7 +30,6 @@ app.include_router(client_routes.router)
 app.include_router(keyword_routes.router)
 app.include_router(clients.router)
 app.include_router(scraper_routes.router)
-# nlp = router.include_router(APIRouter(), prefix="/nlp")
 
 
 @app.get("/", response_class=HTMLResponse)
