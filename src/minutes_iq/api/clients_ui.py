@@ -188,8 +188,8 @@ async def get_client_keywords(
     for kw in keywords:
         items_html += f"""
         <li class="py-2">
-            <a href="/keywords/{kw['keyword_id']}" class="text-sm text-blue-600 hover:text-blue-800">
-                {kw.get('keyword', '')}
+            <a href="/keywords/{kw["keyword_id"]}" class="text-sm text-blue-600 hover:text-blue-800">
+                {kw.get("keyword", "")}
             </a>
         </li>
         """
