@@ -61,6 +61,32 @@ document.body.addEventListener('htmx:afterRequest', (event) => {
     }
 });
 
+// Mobile menu toggle
+document.addEventListener('DOMContentLoaded', function() {
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const menuIconOpen = document.getElementById('menu-icon-open');
+    const menuIconClose = document.getElementById('menu-icon-close');
+
+    if (mobileMenuButton && mobileMenu) {
+        mobileMenuButton.addEventListener('click', function() {
+            const isExpanded = mobileMenuButton.getAttribute('aria-expanded') === 'true';
+
+            // Toggle menu visibility
+            mobileMenu.classList.toggle('hidden');
+
+            // Toggle icons
+            menuIconOpen.classList.toggle('hidden');
+            menuIconOpen.classList.toggle('block');
+            menuIconClose.classList.toggle('hidden');
+            menuIconClose.classList.toggle('block');
+
+            // Update aria-expanded
+            mobileMenuButton.setAttribute('aria-expanded', !isExpanded);
+        });
+    }
+});
+
 // Export functions for global use
 window.showToast = showToast;
 window.validateForm = validateForm;

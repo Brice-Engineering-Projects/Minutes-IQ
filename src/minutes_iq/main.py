@@ -32,9 +32,17 @@ app.include_router(scraper_routes.router)
 
 
 @app.get("/", response_class=HTMLResponse)
-async def index(request: Request):
+async def landing(request: Request):
+    """Render the landing page."""
+    return templates.TemplateResponse("landing.html", {"request": request})
+
+
+@app.get("/dashboard", response_class=HTMLResponse)
+async def dashboard(request: Request):
     """Render the dashboard page."""
-    return templates.TemplateResponse("index.html", {"request": request})
+    # TODO: Get current user from session/auth
+    # For now, passing None - will be populated by auth middleware
+    return templates.TemplateResponse("dashboard.html", {"request": request})
 
 
 @app.get("/health")
