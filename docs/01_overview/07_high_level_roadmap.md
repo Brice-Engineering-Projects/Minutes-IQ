@@ -610,26 +610,26 @@ _**Instructions:**_
 - No new frontend tooling decisions unless explicitly planned.
 
 _**Checklist Items:**_
-- [ ] **Keyword List Page** (`/keywords`)
-  - [ ] Table view of all keywords
-  - [ ] Columns: Keyword, Category, Description, Usage count
-  - [ ] Search bar for filtering
-  - [ ] Filter by category dropdown
-  - [ ] Pagination controls
-  - [ ] "New Keyword" button (admin only)
-- [ ] **Keyword Detail Page** (`/keywords/{id}`)
-  - [ ] Keyword info (term, category, description)
-  - [ ] Associated clients list
-  - [ ] Usage statistics (scrape results count)
-  - [ ] "Edit" and "Delete" buttons (admin only)
-- [ ] **Create/Edit Keyword Page** (`/keywords/new`, `/keywords/{id}/edit`) - Admin only
-  - [ ] Form with keyword, category, description
-  - [ ] Category dropdown or free text
-  - [ ] Related keywords suggestions
-  - [ ] Validation and error messages
-- [ ] **Keyword Categories Page** (`/keywords/categories`)
-  - [ ] List of all categories with keyword counts
-  - [ ] Click to filter keywords by category
+- [x] **Keyword List Page** (`/keywords`)
+  - [x] Table view of all keywords
+  - [x] Columns: Keyword, Category, Description, Usage count
+  - [x] Search bar for filtering
+  - [x] Filter by category dropdown
+  - [x] Pagination controls
+  - [x] "New Keyword" button (admin only)
+- [x] **Keyword Detail Page** (`/keywords/{id}`)
+  - [x] Keyword info (term, category, description)
+  - [x] Associated clients list
+  - [x] Usage statistics (scrape results count)
+  - [x] "Edit" and "Delete" buttons (admin only)
+- [x] **Create/Edit Keyword Page** (`/keywords/new`, `/keywords/{id}/edit`) - Admin only
+  - [x] Form with keyword, category, description
+  - [x] Category dropdown or free text
+  - [x] Related keywords suggestions
+  - [x] Validation and error messages
+- [x] **Keyword Categories Page** (`/keywords/categories`)
+  - [x] List of all categories with keyword counts
+  - [x] Click to filter keywords by category
 
 #### 7.6 Scrape Job Management UI
 _**Instructions:**_

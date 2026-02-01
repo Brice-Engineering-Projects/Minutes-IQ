@@ -15,11 +15,13 @@ from minutes_iq.api import clients
 from minutes_iq.api import clients_ui as clients_ui_api
 from minutes_iq.api import dashboard as dashboard_api
 from minutes_iq.api import keywords_ui as keywords_ui_api
+from minutes_iq.api import scraper_jobs_ui as scraper_jobs_ui_api
 from minutes_iq.auth import routes as auth_routes
 from minutes_iq.scraper import routes as scraper_routes
 from minutes_iq.templates_config import templates
 from minutes_iq.ui import client_routes as client_ui_routes
 from minutes_iq.ui import keyword_routes as keyword_ui_routes
+from minutes_iq.ui import scraper_job_routes as scraper_job_ui_routes
 
 app = FastAPI()
 
@@ -39,6 +41,8 @@ app.include_router(client_ui_routes.router)
 app.include_router(clients_ui_api.router)
 app.include_router(keyword_ui_routes.router)
 app.include_router(keywords_ui_api.router)
+app.include_router(scraper_job_ui_routes.router)
+app.include_router(scraper_jobs_ui_api.router)
 
 
 @app.get("/", response_class=HTMLResponse)

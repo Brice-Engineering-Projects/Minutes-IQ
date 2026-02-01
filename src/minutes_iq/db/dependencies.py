@@ -23,6 +23,7 @@ from minutes_iq.db.password_reset_repository import (
     PasswordResetRepository,
 )
 from minutes_iq.db.password_reset_service import PasswordResetService
+from minutes_iq.db.scraper_repository import ScraperRepository
 from minutes_iq.db.user_repository import UserRepository
 
 
@@ -94,3 +95,9 @@ def get_keyword_service(
 ) -> KeywordService:
     """Get KeywordService instance with injected repositories."""
     return KeywordService(keyword_repo)
+
+
+def get_scraper_repository() -> Generator[ScraperRepository, None, None]:
+    """Get ScraperRepository instance with database connection."""
+    with get_db_connection() as conn:
+        yield ScraperRepository(conn)
