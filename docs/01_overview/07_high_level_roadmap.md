@@ -696,28 +696,28 @@ _**Instructions:**_
 - No new frontend tooling decisions unless explicitly planned.
 
 _**Checklist Items:**_
-- [ ] **Results List Page** (`/scraper/jobs/{id}/results`)
-  - [ ] Dedicated page for browsing results
-  - [ ] Filters:
+- [x] **Results List Page** (`/scraper/jobs/{id}/results`)
+  - [x] Dedicated page for browsing results
+  - [x] Filters:
     - Keyword dropdown
     - Page number input
-  - [ ] Results table with sorting
-  - [ ] Snippet highlighting (keywords bolded)
-  - [ ] "View PDF" button (opens in new tab)
-  - [ ] Pagination
-- [ ] **Download Management**
-  - [ ] CSV export button
+  - [x] Results table with sorting
+  - [x] Snippet highlighting (keywords bolded)
+  - [x] "View PDF" button (opens in new tab)
+  - [x] Pagination
+- [x] **Download Management**
+  - [x] CSV export button
     - Generates CSV file with all results
     - Includes: PDF name, page, keyword, snippet, entities
     - Browser download prompt
-  - [ ] ZIP artifact generation
+  - [x] ZIP artifact generation
     - "Generate ZIP" button (if not already generated)
     - Shows generation progress
     - "Download ZIP" button once ready
     - Includes: raw PDFs, annotated PDFs, results CSV, metadata
-  - [ ] Download history (previous artifacts)
-  - [ ] File size display
-  - [ ] Expiration notice (30 days)
+  - [x] Download history (previous artifacts)
+  - [x] File size display
+  - [x] Expiration notice (30 days)
 
 #### 7.8 Admin Panel UI
 _**Instructions:**_

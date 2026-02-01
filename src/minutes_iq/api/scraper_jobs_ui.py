@@ -725,29 +725,29 @@ async def get_job_results(
                 <tr>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         <button
-                            hx-get="/api/scraper/jobs/{job_id}/results?{get_sort_query_params('pdf')}"
+                            hx-get="/api/scraper/jobs/{job_id}/results?{get_sort_query_params("pdf")}"
                             hx-target="#results-table"
                             class="hover:text-gray-700 flex items-center gap-1"
                         >
-                            PDF Filename <span>{get_sort_icon('pdf')}</span>
+                            PDF Filename <span>{get_sort_icon("pdf")}</span>
                         </button>
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         <button
-                            hx-get="/api/scraper/jobs/{job_id}/results?{get_sort_query_params('page')}"
+                            hx-get="/api/scraper/jobs/{job_id}/results?{get_sort_query_params("page")}"
                             hx-target="#results-table"
                             class="hover:text-gray-700 flex items-center gap-1"
                         >
-                            Page <span>{get_sort_icon('page')}</span>
+                            Page <span>{get_sort_icon("page")}</span>
                         </button>
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         <button
-                            hx-get="/api/scraper/jobs/{job_id}/results?{get_sort_query_params('keyword')}"
+                            hx-get="/api/scraper/jobs/{job_id}/results?{get_sort_query_params("keyword")}"
                             hx-target="#results-table"
                             class="hover:text-gray-700 flex items-center gap-1"
                         >
-                            Keyword <span>{get_sort_icon('keyword')}</span>
+                            Keyword <span>{get_sort_icon("keyword")}</span>
                         </button>
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
