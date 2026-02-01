@@ -129,7 +129,7 @@ async def get_jobs_list(
         client_name = clients.get(job.get("client_id"), "Unknown")
 
         rows_html += f"""
-        <tr class="hover:bg-gray-50 cursor-pointer" onclick="window.location='/scraper/jobs/{job['job_id']}'">
+        <tr class="hover:bg-gray-50 cursor-pointer" onclick="window.location='/scraper/jobs/{job["job_id"]}'">
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                 {client_name}
             </td>
@@ -183,7 +183,7 @@ async def get_jobs_list(
             <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
                 <div>
                     <p class="text-sm text-gray-700">
-                        Showing <span class="font-medium">{start + 1}</span> to <span class="font-medium">{min(end, total)}</span> of{' '}
+                        Showing <span class="font-medium">{start + 1}</span> to <span class="font-medium">{min(end, total)}</span> of{" "}
                         <span class="font-medium">{total}</span> results
                     </p>
                 </div>
@@ -388,7 +388,9 @@ async def get_job_status(
             <div>
                 <dt class="text-sm font-medium text-gray-500">Client</dt>
                 <dd class="mt-1 text-sm text-gray-900">
-                    <a href="/clients/{job['client_id']}" class="text-blue-600 hover:text-blue-800">
+                    <a href="/clients/{
+        job["client_id"]
+    }" class="text-blue-600 hover:text-blue-800">
                         {client_name}
                     </a>
                 </dd>
@@ -406,26 +408,42 @@ async def get_job_status(
                 <dd class="mt-1 text-sm text-gray-900">{created_at_formatted}</dd>
             </div>
 
-            {"" if not started_at_formatted else f'''<div>
+            {
+        ""
+        if not started_at_formatted
+        else f'''<div>
                 <dt class="text-sm font-medium text-gray-500">Started</dt>
                 <dd class="mt-1 text-sm text-gray-900">{started_at_formatted}</dd>
-            </div>'''}
+            </div>'''
+    }
 
-            {"" if not completed_at_formatted else f'''<div>
+            {
+        ""
+        if not completed_at_formatted
+        else f'''<div>
                 <dt class="text-sm font-medium text-gray-500">Completed</dt>
                 <dd class="mt-1 text-sm text-gray-900">{completed_at_formatted}</dd>
-            </div>'''}
+            </div>'''
+    }
 
-            {"" if not duration else f'''<div>
+            {
+        ""
+        if not duration
+        else f'''<div>
                 <dt class="text-sm font-medium text-gray-500">Duration</dt>
                 <dd class="mt-1 text-sm text-gray-900">{duration}</dd>
-            </div>'''}
+            </div>'''
+    }
         </dl>
 
-        {"" if not job.get("error_message") else f'''<div class="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
+        {
+        ""
+        if not job.get("error_message")
+        else f'''<div class="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
             <h3 class="text-sm font-medium text-red-800 mb-1">Error</h3>
             <p class="text-sm text-red-700">{job["error_message"]}</p>
-        </div>'''}
+        </div>'''
+    }
     </div>
     """
 
@@ -545,7 +563,7 @@ async def get_job_results(
             <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
                 <div>
                     <p class="text-sm text-gray-700">
-                        Showing <span class="font-medium">{start + 1}</span> to <span class="font-medium">{min(end, total)}</span> of{' '}
+                        Showing <span class="font-medium">{start + 1}</span> to <span class="font-medium">{min(end, total)}</span> of{" "}
                         <span class="font-medium">{total}</span> results
                     </p>
                 </div>
@@ -624,8 +642,8 @@ async def get_job_summary(
     for kw in top_keywords:
         keywords_html += f"""
         <li class="flex justify-between py-2">
-            <span class="text-sm text-gray-900">{kw.get('keyword', '')}</span>
-            <span class="text-sm font-medium text-gray-600">{kw.get('match_count', 0)}</span>
+            <span class="text-sm text-gray-900">{kw.get("keyword", "")}</span>
+            <span class="text-sm font-medium text-gray-600">{kw.get("match_count", 0)}</span>
         </li>
         """
 
@@ -640,17 +658,23 @@ async def get_job_summary(
 
         <div>
             <dt class="text-sm font-medium text-gray-500">Keywords Found</dt>
-            <dd class="mt-1 text-2xl font-semibold text-gray-900">{len(keyword_stats)}</dd>
+            <dd class="mt-1 text-2xl font-semibold text-gray-900">{
+        len(keyword_stats)
+    }</dd>
         </div>
 
-        {"" if not top_keywords else f'''<div>
+        {
+        ""
+        if not top_keywords
+        else f'''<div>
             <dt class="text-sm font-medium text-gray-500 mb-2">Top Keywords</dt>
             <dd>
                 <ul class="divide-y divide-gray-200">
                     {keywords_html}
                 </ul>
             </dd>
-        </div>'''}
+        </div>'''
+    }
     </dl>
     """
 

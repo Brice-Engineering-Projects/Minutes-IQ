@@ -637,58 +637,58 @@ _**Instructions:**_
 - No new frontend tooling decisions unless explicitly planned.
 
 _**Checklist Items:**_
-- [ ] **Job List Page** (`/scraper/jobs`)
-  - [ ] Table view of user's scrape jobs
-  - [ ] Columns: Client, Status, Created, Duration, Results count
-  - [ ] Status badges (pending, running, completed, failed)
-  - [ ] Filter by status and client
-  - [ ] Sort by date (newest first)
-  - [ ] Click row to view details
-  - [ ] "New Scrape Job" button
-- [ ] **Create Job Page** (`/scraper/jobs/new`)
-  - [ ] Client selection dropdown (favorites at top)
-  - [ ] Date range picker (start and end dates)
-  - [ ] Advanced options (collapsible):
+- [x] **Job List Page** (`/scraper/jobs`)
+  - [x] Table view of user's scrape jobs
+  - [x] Columns: Client, Status, Created, Duration, Results count
+  - [x] Status badges (pending, running, completed, failed)
+  - [x] Filter by status and client
+  - [x] Sort by date (newest first)
+  - [x] Click row to view details
+  - [x] "New Scrape Job" button
+- [x] **Create Job Page** (`/scraper/jobs/new`)
+  - [x] Client selection dropdown (favorites at top)
+  - [x] Date range picker (start and end dates)
+  - [x] Advanced options (collapsible):
     - Max scan pages (default: 15)
     - Include board minutes checkbox (default: true)
     - Include packages checkbox (default: false)
-  - [ ] Keyword preview (shows keywords for selected client)
-  - [ ] "Start Scrape" button
-  - [ ] Validation and error messages
-- [ ] **Job Detail Page** (`/scraper/jobs/{id}`)
-  - [ ] Job info card:
+  - [x] Keyword preview (shows keywords for selected client)
+  - [x] "Start Scrape" button
+  - [x] Validation and error messages
+- [x] **Job Detail Page** (`/scraper/jobs/{id}`)
+  - [x] Job info card:
     - Client name (link to client page)
     - Status badge with color coding
     - Created timestamp
     - Started/completed timestamps
     - Duration
     - Error message (if failed)
-  - [ ] Job configuration display:
+  - [x] Job configuration display:
     - Date range
     - Max scan pages
     - Document types included
-  - [ ] Progress indicator (if running):
+  - [x] Progress indicator (if running):
     - Pages scanned
     - Matches found
     - Current PDF being processed
-  - [ ] Results summary card:
+  - [x] Results summary card:
     - Total matches
     - Keywords found
     - Top 5 keywords by frequency
-  - [ ] Results table (paginated):
+  - [x] Results table (paginated):
     - PDF filename (link to download)
     - Page number
     - Keyword matched
     - Snippet preview (truncated)
-  - [ ] Action buttons:
+  - [x] Action buttons:
     - "Download CSV" (export all results)
     - "Generate Artifact" (create ZIP with PDFs)
     - "Cancel Job" (if pending/running)
     - "Delete Job" (if completed/failed)
-- [ ] **Job Status Polling**
-  - [ ] Auto-refresh status every 5 seconds (if running)
-  - [ ] Update progress bar in real-time
-  - [ ] Show notification on completion
+- [x] **Job Status Polling**
+  - [x] Auto-refresh status every 5 seconds (if running)
+  - [x] Update progress bar in real-time
+  - [x] Show notification on completion
 
 #### 7.7 Results & Downloads UI
 _**Instructions:**_
