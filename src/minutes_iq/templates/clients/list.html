@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% from "components/empty_state.html" import empty_state %}
+
+{% block title %}Clients - MinutesIQ{% endblock %}
+
+{% block content %}
+<div class="px-4 py-8">
+    <!-- Header -->
+    <div class="sm:flex sm:items-center sm:justify-between mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Clients</h1>
+            <p class="mt-2 text-sm text-gray-600">Manage your client accounts and their keyword tracking</p>
+        </div>
+        {% if current_user and current_user.role_id == 1 %}
+        <div class="mt-4 sm:mt-0">
+            <button
+                onclick="window.location.href='/clients/new'"
+                class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+            >
+                <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                New Client
+            </button>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Search Bar -->
+    <div class="mb-6">
+        <div class="max-w-lg">
+            <label for="client-search" class="sr-only">Search clients</label>
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
+                <input
+                    type="text"
+                    id="client-search"
+                    name="search"
+                    hx-get="/api/clients/search"
+                    hx-trigger="keyup changed delay:300ms"
+                    hx-target="#clients-table"
+                    hx-include="[name='page']"
+                    class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    placeholder="Search by client name..."
+                >
+            </div>
+        </div>
+    </div>
+
+    <!-- Clients Table -->
+    <div
+        id="clients-table"
+        hx-get="/api/clients/list?page=1"
+        hx-trigger="load"
+        hx-swap="innerHTML"
+    >
+        <!-- Loading state -->
+        <div class="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
+            <div class="animate-pulse p-6 space-y-4">
+                <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                <div class="h-4 bg-gray-200 rounded w-5/6"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

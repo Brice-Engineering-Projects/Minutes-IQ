@@ -580,29 +580,29 @@ _**Instructions:**_
 - No new frontend tooling decisions unless explicitly planned.
 
 _**Checklist Items:**_
-- [ ] **Client List Page** (`/clients`)
-  - [ ] Table/card view of all active clients
-  - [ ] Columns: Name, Description, Keywords, Favorite status
-  - [ ] Search bar for filtering by name
-  - [ ] Pagination controls (20 per page)
-  - [ ] "Add to Favorites" button (heart icon)
-  - [ ] Click row to view details
-  - [ ] "New Client" button (admin only)
-- [ ] **Client Detail Page** (`/clients/{id}`)
-  - [ ] Client info display (name, description, website link)
-  - [ ] Associated keywords table with categories
-  - [ ] Recent scrape jobs for this client
-  - [ ] "Start New Scrape" button
-  - [ ] "Edit" and "Delete" buttons (admin only)
-- [ ] **Create/Edit Client Page** (`/clients/new`, `/clients/{id}/edit`) - Admin only
-  - [ ] Form with name, description, website URL
-  - [ ] Keyword selection (multi-select with search)
-  - [ ] Validation and error messages
-  - [ ] "Save" and "Cancel" buttons
-- [ ] **My Favorites Page** (`/clients/favorites`)
-  - [ ] Filtered view of user's favorite clients
-  - [ ] Same layout as client list
-  - [ ] "Remove from Favorites" button
+- [x] **Client List Page** (`/clients`)
+  - [x] Table/card view of all active clients
+  - [x] Columns: Name, Description, Keywords, Favorite status
+  - [x] Search bar for filtering by name
+  - [x] Pagination controls (20 per page)
+  - [x] "Add to Favorites" button (heart icon)
+  - [x] Click row to view details
+  - [x] "New Client" button (admin only)
+- [x] **Client Detail Page** (`/clients/{id}`)
+  - [x] Client info display (name, description, website link)
+  - [x] Associated keywords table with categories
+  - [x] Recent scrape jobs for this client
+  - [x] "Start New Scrape" button
+  - [x] "Edit" and "Delete" buttons (admin only)
+- [x] **Create/Edit Client Page** (`/clients/new`, `/clients/{id}/edit`) - Admin only
+  - [x] Form with name, description, website URL
+  - [x] Keyword selection (multi-select with search)
+  - [x] Validation and error messages
+  - [x] "Save" and "Cancel" buttons
+- [x] **My Favorites Page** (`/clients/favorites`)
+  - [x] Filtered view of user's favorite clients
+  - [x] Same layout as client list
+  - [x] "Remove from Favorites" button
 
 #### 7.5 Keyword Management UI
 _**Instructions:**_
