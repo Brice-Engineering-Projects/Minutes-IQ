@@ -2,7 +2,8 @@
 
 from pathlib import Path
 
-from fastapi import APIRouter, FastAPI
+from fastapi import APIRouter, FastAPI, Request
+from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -31,6 +32,12 @@ app.include_router(keyword_routes.router)
 app.include_router(clients.router)
 app.include_router(scraper_routes.router)
 # nlp = router.include_router(APIRouter(), prefix="/nlp")
+
+
+@app.get("/", response_class=HTMLResponse)
+async def index(request: Request):
+    """Render the dashboard page."""
+    return templates.TemplateResponse("index.html", {"request": request})
 
 
 @app.get("/health")

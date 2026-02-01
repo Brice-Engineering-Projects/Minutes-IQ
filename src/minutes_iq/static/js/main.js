@@ -48,6 +48,19 @@ function validateForm(formId) {
     return isValid;
 }
 
+// Handle logout
+document.body.addEventListener('htmx:afterRequest', (event) => {
+    // Check if this is a logout request
+    if (event.detail.xhr.responseURL && event.detail.xhr.responseURL.includes('/auth/logout')) {
+        if (event.detail.successful) {
+            showToast('Logged out successfully', 'success');
+            setTimeout(() => {
+                window.location.href = '/auth/login';
+            }, 500);
+        }
+    }
+});
+
 // Export functions for global use
 window.showToast = showToast;
 window.validateForm = validateForm;

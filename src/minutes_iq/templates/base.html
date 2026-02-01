@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}MinutesIQ{% endblock %}</title>
 
-    <!-- Tailwind CSS CDN (will be replaced with build process later) -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS (compiled) -->
+    <link rel="stylesheet" href="{{ url_for('static', path='css/tailwind.css') }}">
 
-    <!-- htmx -->
+    <!-- htmx (CDN acceptable during development) -->
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>
 
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', path='/css/styles.css') }}">
+    <!-- Custom CSS (temporary - will migrate to Tailwind layers) -->
+    <link rel="stylesheet" href="{{ url_for('static', path='css/styles.css') }}">
 
     {% block extra_head %}{% endblock %}
 </head>
@@ -41,9 +41,24 @@
                 </div>
                 <div class="hidden sm:ml-6 sm:flex sm:items-center">
                     {% block nav_actions %}
+                    {% if current_user %}
+                    <!-- Authenticated User Actions -->
+                    <span class="text-gray-700 px-3 py-2 text-sm font-medium">
+                        {{ current_user.username }}
+                    </span>
+                    <button
+                        hx-post="/auth/logout"
+                        hx-swap="none"
+                        class="text-gray-500 hover:text-gray-700 px-3 py-2 text-sm font-medium"
+                    >
+                        Logout
+                    </button>
+                    {% else %}
+                    <!-- Guest Actions -->
                     <a href="/auth/login" class="text-gray-500 hover:text-gray-700 px-3 py-2 text-sm font-medium">
                         Login
                     </a>
+                    {% endif %}
                     {% endblock %}
                 </div>
             </div>

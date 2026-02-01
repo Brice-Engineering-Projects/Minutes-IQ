@@ -485,53 +485,65 @@ This phase builds a web-based UI for the FastAPI application, allowing non-techn
 ### Completed Work
 
 #### 7.1 Frontend Technology Stack
-- [ ] Choose UI approach
+- [x] Choose UI approach
   - Option A: Server-rendered (Jinja2 + htmx + Tailwind) - Simple, no build step
   - Option B: SPA (React/Vue + API) - Modern, better interactivity
   - Decision: Start with server-rendered for simplicity, migrate if needed
-- [ ] Set up template system
-  - [ ] Configure Jinja2 templates in FastAPI
-  - [ ] Create base template with layout, navigation, footer
-  - [ ] Set up static file serving for CSS, JS, images
-- [ ] Add CSS framework
-  - [ ] Install Tailwind CSS (or Bootstrap)
-  - [ ] Configure build process for CSS compilation
-  - [ ] Create component library (buttons, forms, cards, tables)
-- [ ] Add interactivity library
-  - [ ] Install htmx (or Alpine.js)
-  - [ ] Configure for AJAX requests and partial page updates
-  - [ ] Add loading states and error handling
+- [x] Set up template system
+  - [x] Configure Jinja2 templates in FastAPI
+  - [x] Create base template with layout, navigation, footer
+  - [x] Set up static file serving for CSS, JS, images
+- [x] Add CSS framework
+  - [x] Install Tailwind CSS (or Bootstrap)
+  - [x] Configure build process for CSS compilation
+  - [x] Create component library (buttons, forms, cards, tables)
+- [x] Add interactivity library
+  - [x] Install htmx (or Alpine.js)
+  - [x] Configure for AJAX requests and partial page updates
+  - [x] Add loading states and error handling
 
 #### 7.2 Authentication UI
-- [ ] **Login Page** (`/login`)
-  - [ ] Create login form template
-  - [ ] Email and password inputs with validation
-  - [ ] "Remember me" checkbox
-  - [ ] Error messages for invalid credentials
-  - [ ] Redirect to dashboard after successful login
-  - [ ] "Forgot password?" link
-- [ ] **Registration Page** (`/register`)
-  - [ ] Create registration form template
-  - [ ] Fields: username, email, password, confirm password
-  - [ ] Admin authorization code input
-  - [ ] Client-side password strength indicator
-  - [ ] Form validation with error messages
-  - [ ] Success message and redirect to login
-  - [ ] "Already have an account?" link to login
-- [ ] **Password Reset Flow**
-  - [ ] Request reset page (`/password-reset/request`)
+_**Instructions:**_
+- All UI work must respect the existing frontend boundary.
+- No new frontend tooling decisions unless explicitly planned.
+
+_**Checklist Items:**_
+
+- [x] **Login Page** (`/login`)
+  - [x] Create login form template
+  - [x] Email and password inputs with validation
+  - [x] "Remember me" checkbox
+  - [x] Error messages for invalid credentials
+  - [x] Redirect to dashboard after successful login
+  - [x] "Forgot password?" link
+- [x] **Registration Page** (`/register`)
+  - [x] Create registration form template
+  - [x] Fields: username, email, password, confirm password
+  - [x] Admin authorization code input
+  - [x] Client-side password strength indicator
+  - [x] Form validation with error messages
+  - [x] Success message and redirect to login
+  - [x] "Already have an account?" link to login
+- [x] **Password Reset Flow**
+  - [x] Request reset page (`/password-reset/request`)
     - Email input form
     - Success message after request
-  - [ ] Reset password page (`/password-reset/{token}`)
+  - [x] Reset password page (`/password-reset/{token}`)
     - New password and confirm password inputs
     - Token validation and error handling
     - Success message and redirect to login
-- [ ] **Logout**
-  - [ ] Logout button in navigation
-  - [ ] Clear session/cookies
-  - [ ] Redirect to login page
+- [x] **Logout**
+  - [x] Logout button in navigation
+  - [x] Clear session/cookies
+  - [x] Redirect to login page
 
 #### 7.3 Dashboard & Navigation
+_**Instructions:**_
+- All UI work must respect the existing frontend boundary.
+- No new frontend tooling decisions unless explicitly planned.
+
+_**Checklist Items:**_
+
 - [ ] **Main Dashboard** (`/dashboard`)
   - [ ] Welcome message with user's name
   - [ ] Quick stats cards:
@@ -563,6 +575,11 @@ This phase builds a web-based UI for the FastAPI application, allowing non-techn
   - [ ] Consistent spacing and typography
 
 #### 7.4 Client Management UI
+_**Instructions:**_
+- All UI work must respect the existing frontend boundary.
+- No new frontend tooling decisions unless explicitly planned.
+
+_**Checklist Items:**_
 - [ ] **Client List Page** (`/clients`)
   - [ ] Table/card view of all active clients
   - [ ] Columns: Name, Description, Keywords, Favorite status
@@ -588,6 +605,11 @@ This phase builds a web-based UI for the FastAPI application, allowing non-techn
   - [ ] "Remove from Favorites" button
 
 #### 7.5 Keyword Management UI
+_**Instructions:**_
+- All UI work must respect the existing frontend boundary.
+- No new frontend tooling decisions unless explicitly planned.
+
+_**Checklist Items:**_
 - [ ] **Keyword List Page** (`/keywords`)
   - [ ] Table view of all keywords
   - [ ] Columns: Keyword, Category, Description, Usage count
@@ -610,6 +632,11 @@ This phase builds a web-based UI for the FastAPI application, allowing non-techn
   - [ ] Click to filter keywords by category
 
 #### 7.6 Scrape Job Management UI
+_**Instructions:**_
+- All UI work must respect the existing frontend boundary.
+- No new frontend tooling decisions unless explicitly planned.
+
+_**Checklist Items:**_
 - [ ] **Job List Page** (`/scraper/jobs`)
   - [ ] Table view of user's scrape jobs
   - [ ] Columns: Client, Status, Created, Duration, Results count
@@ -664,6 +691,11 @@ This phase builds a web-based UI for the FastAPI application, allowing non-techn
   - [ ] Show notification on completion
 
 #### 7.7 Results & Downloads UI
+_**Instructions:**_
+- All UI work must respect the existing frontend boundary.
+- No new frontend tooling decisions unless explicitly planned.
+
+_**Checklist Items:**_
 - [ ] **Results List Page** (`/scraper/jobs/{id}/results`)
   - [ ] Dedicated page for browsing results
   - [ ] Filters:
@@ -688,6 +720,11 @@ This phase builds a web-based UI for the FastAPI application, allowing non-techn
   - [ ] Expiration notice (30 days)
 
 #### 7.8 Admin Panel UI
+_**Instructions:**_
+- All UI work must respect the existing frontend boundary.
+- No new frontend tooling decisions unless explicitly planned.
+
+_**Checklist Items:**_
 - [ ] **Admin Dashboard** (`/admin`)
   - [ ] System statistics:
     - Total users
@@ -716,6 +753,11 @@ This phase builds a web-based UI for the FastAPI application, allowing non-techn
   - [ ] Confirmation dialog
 
 #### 7.9 User Profile & Settings
+_**Instructions:**_
+- All UI work must respect the existing frontend boundary.
+- No new frontend tooling decisions unless explicitly planned.
+
+_**Checklist Items:**_
 - [ ] **Profile Page** (`/profile`)
   - [ ] User info display (username, email, role)
   - [ ] Account created date
@@ -731,6 +773,11 @@ This phase builds a web-based UI for the FastAPI application, allowing non-techn
   - [ ] Results per page preference
 
 #### 7.10 UX Enhancements
+_**Instructions:**_
+- All UI work must respect the existing frontend boundary.
+- No new frontend tooling decisions unless explicitly planned.
+
+_**Checklist Items:**_
 - [ ] **Loading States**
   - [ ] Spinner overlays for long operations
   - [ ] Skeleton screens for data loading

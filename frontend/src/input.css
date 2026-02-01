@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+NOTE:
+Custom styles (spinners, toasts, cards) will be migrated here later
+using @layer components or @layer utilities.
+
+Current custom styles exist temporarily in:
+  src/minutes_iq/static/css/styles.css
+
+These will be refactored into Tailwind layers during the migration phase.
+*/
