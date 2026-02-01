@@ -141,8 +141,8 @@ async def get_failed_jobs(
         <li class="py-3">
             <div class="flex items-center justify-between">
                 <div class="flex-1">
-                    <a href="/scraper/jobs/{job['job_id']}" class="text-sm font-medium text-blue-600 hover:text-blue-800">
-                        Job #{job['job_id']}
+                    <a href="/scraper/jobs/{job["job_id"]}" class="text-sm font-medium text-blue-600 hover:text-blue-800">
+                        Job #{job["job_id"]}
                     </a>
                     <p class="text-xs text-gray-500">{created_at}</p>
                     <p class="text-xs text-red-600 mt-1">{error_msg}</p>
@@ -253,10 +253,10 @@ async def get_users_list(
         rows_html += f"""
         <tr class="hover:bg-gray-50">
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                {escape(user.get('username', 'Unknown'))}
+                {escape(user.get("username", "Unknown"))}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {escape(user.get('email', 'Unknown'))}
+                {escape(user.get("email", "Unknown"))}
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
                 {role_badge}
@@ -269,14 +269,14 @@ async def get_users_list(
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <button
-                    hx-get="/api/admin/users/{user['user_id']}/edit-modal"
+                    hx-get="/api/admin/users/{user["user_id"]}/edit-modal"
                     hx-target="#edit-modal"
                     class="text-blue-600 hover:text-blue-900 mr-3"
                 >
                     Edit
                 </button>
-                {"" if user.get('is_active', True) else '<button class="text-green-600 hover:text-green-900" hx-post="/api/admin/users/' + str(user['user_id']) + '/activate" hx-target="closest tr" hx-swap="outerHTML">Activate</button>'}
-                {"" if not user.get('is_active', True) else '<button class="text-gray-600 hover:text-gray-900" hx-post="/api/admin/users/' + str(user['user_id']) + '/deactivate" hx-target="closest tr" hx-swap="outerHTML">Deactivate</button>'}
+                {"" if user.get("is_active", True) else '<button class="text-green-600 hover:text-green-900" hx-post="/api/admin/users/' + str(user["user_id"]) + '/activate" hx-target="closest tr" hx-swap="outerHTML">Activate</button>'}
+                {"" if not user.get("is_active", True) else '<button class="text-gray-600 hover:text-gray-900" hx-post="/api/admin/users/' + str(user["user_id"]) + '/deactivate" hx-target="closest tr" hx-swap="outerHTML">Deactivate</button>'}
             </td>
         </tr>
         """
@@ -303,7 +303,7 @@ async def get_users_list(
             <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
                 <div>
                     <p class="text-sm text-gray-700">
-                        Showing <span class="font-medium">{start + 1}</span> to <span class="font-medium">{min(end, total)}</span> of{' '}
+                        Showing <span class="font-medium">{start + 1}</span> to <span class="font-medium">{min(end, total)}</span> of{" "}
                         <span class="font-medium">{total}</span> results
                     </p>
                 </div>
@@ -396,17 +396,17 @@ async def get_edit_user_modal(
                 <div class="px-6 py-4 space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
-                        <input type="text" value="{escape(user.get('username', ''))}" disabled class="block w-full rounded-md border-gray-300 bg-gray-50 sm:text-sm"/>
+                        <input type="text" value="{escape(user.get("username", ""))}" disabled class="block w-full rounded-md border-gray-300 bg-gray-50 sm:text-sm"/>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                        <input type="email" value="{escape(user.get('email', ''))}" disabled class="block w-full rounded-md border-gray-300 bg-gray-50 sm:text-sm"/>
+                        <input type="email" value="{escape(user.get("email", ""))}" disabled class="block w-full rounded-md border-gray-300 bg-gray-50 sm:text-sm"/>
                     </div>
                     <div>
                         <label for="role_id" class="block text-sm font-medium text-gray-700 mb-1">Role</label>
                         <select name="role_id" id="role_id" class="block w-full rounded-md border-gray-300 sm:text-sm">
-                            <option value="2" {"selected" if user.get('role_id') == 2 else ""}>User</option>
-                            <option value="1" {"selected" if user.get('role_id') == 1 else ""}>Admin</option>
+                            <option value="2" {"selected" if user.get("role_id") == 2 else ""}>User</option>
+                            <option value="1" {"selected" if user.get("role_id") == 1 else ""}>Admin</option>
                         </select>
                     </div>
                 </div>
@@ -586,10 +586,10 @@ async def get_auth_codes_list(
                 <div class="flex-1">
                     <div class="flex items-center">
                         <code class="text-lg font-mono font-semibold text-gray-900 select-all">
-                            {escape(code.get('code', ''))}
+                            {escape(code.get("code", ""))}
                         </code>
                         <button
-                            onclick="navigator.clipboard.writeText('{escape(code.get('code', ''))}'); this.textContent='Copied!'; setTimeout(() => this.textContent='Copy', 2000)"
+                            onclick="navigator.clipboard.writeText('{escape(code.get("code", ""))}'); this.textContent='Copied!'; setTimeout(() => this.textContent='Copy', 2000)"
                             class="ml-3 text-sm text-blue-600 hover:text-blue-800"
                         >
                             Copy
@@ -605,7 +605,7 @@ async def get_auth_codes_list(
                 </div>
                 <div>
                     <button
-                        hx-delete="/api/admin/auth-codes/{code['code_id']}"
+                        hx-delete="/api/admin/auth-codes/{code["code_id"]}"
                         hx-confirm="Are you sure you want to delete this authorization code?"
                         hx-target="closest div.bg-white"
                         hx-swap="outerHTML"
@@ -658,7 +658,7 @@ async def generate_auth_code(
 
     # Return HTML for the new code card (to be prepended to list)
     html = f"""
-    <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6 border-green-500" id="code-{code_record['code_id']}">
+    <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6 border-green-500" id="code-{code_record["code_id"]}">
         <div class="flex items-start justify-between">
             <div class="flex-1">
                 <div class="flex items-center">
@@ -803,11 +803,11 @@ async def get_old_jobs(
         rows_html += f"""
         <tr class="hover:bg-gray-50">
             <td class="px-6 py-4 whitespace-nowrap">
-                <input type="checkbox" name="selected_jobs" value="{job['job_id']}" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                <input type="checkbox" name="selected_jobs" value="{job["job_id"]}" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                <a href="/scraper/jobs/{job['job_id']}" class="text-blue-600 hover:text-blue-800">
-                    Job #{job['job_id']}
+                <a href="/scraper/jobs/{job["job_id"]}" class="text-blue-600 hover:text-blue-800">
+                    Job #{job["job_id"]}
                 </a>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -815,7 +815,7 @@ async def get_old_jobs(
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {status_class}">
-                    {job.get('status', 'unknown').capitalize()}
+                    {job.get("status", "unknown").capitalize()}
                 </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
