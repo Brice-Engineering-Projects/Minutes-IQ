@@ -12,6 +12,7 @@ from minutes_iq.admin import (
     keyword_routes,
 )
 from minutes_iq.api import clients
+from minutes_iq.api import dashboard as dashboard_api
 from minutes_iq.auth import routes as auth_routes
 from minutes_iq.scraper import routes as scraper_routes
 from minutes_iq.templates_config import templates
@@ -29,6 +30,7 @@ app.include_router(client_routes.router)
 app.include_router(keyword_routes.router)
 app.include_router(clients.router)
 app.include_router(scraper_routes.router)
+app.include_router(dashboard_api.router)
 
 
 @app.get("/", response_class=HTMLResponse)
