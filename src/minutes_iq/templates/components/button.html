@@ -1,5 +1,5 @@
 <!-- Button Component -->
-<!-- Usage: {% include 'components/button.html' with context %} -->
+<!-- Usage: Use the button macro by importing it: {% raw %}{% from "components/button.html" import button %}{% endraw %} -->
 
 {% macro button(text, type='button', variant='primary', size='md', href=None, htmx_get=None, htmx_post=None, htmx_target=None, disabled=False, icon=None) %}
     {% set base_classes = 'inline-flex items-center justify-center font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors' %}

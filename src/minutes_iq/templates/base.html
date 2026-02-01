@@ -17,6 +17,15 @@
     <!-- Custom CSS (temporary - will migrate to Tailwind layers) -->
     <link rel="stylesheet" href="{{ url_for('static', path='css/styles.css') }}">
 
+    <!-- Toast Notifications -->
+    <script defer src="{{ url_for('static', path='js/toast.js') }}"></script>
+
+    <!-- Accessibility Enhancements -->
+    <script defer src="{{ url_for('static', path='js/accessibility.js') }}"></script>
+
+    <!-- Lazy Loading for Images -->
+    <script defer src="{{ url_for('static', path='js/lazy-loading.js') }}"></script>
+
     {% block extra_head %}{% endblock %}
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col">

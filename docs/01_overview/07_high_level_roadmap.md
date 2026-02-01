@@ -758,19 +758,19 @@ _**Instructions:**_
 - No new frontend tooling decisions unless explicitly planned.
 
 _**Checklist Items:**_
-- [ ] **Profile Page** (`/profile`)
-  - [ ] User info display (username, email, role)
-  - [ ] Account created date
-  - [ ] "Edit Profile" button
-- [ ] **Edit Profile Page** (`/profile/edit`)
-  - [ ] Update email (with verification)
-  - [ ] Update username
-  - [ ] Change password section
-  - [ ] Validation and error messages
-- [ ] **Preferences** (future)
-  - [ ] Email notifications toggle
-  - [ ] Default client selection
-  - [ ] Results per page preference
+- [x] **Profile Page** (`/profile`)
+  - [x] User info display (username, email, role)
+  - [x] Account created date
+  - [x] "Edit Profile" button
+- [x] **Edit Profile Page** (`/profile/edit`)
+  - [x] Update email (with verification)
+  - [x] Update username
+  - [x] Change password section
+  - [x] Validation and error messages
+- [x] **Preferences** (future)
+  - [x] Email notifications toggle
+  - [x] Default client selection
+  - [x] Results per page preference
 
 #### 7.10 UX Enhancements
 _**Instructions:**_
@@ -778,31 +778,31 @@ _**Instructions:**_
 - No new frontend tooling decisions unless explicitly planned.
 
 _**Checklist Items:**_
-- [ ] **Loading States**
-  - [ ] Spinner overlays for long operations
-  - [ ] Skeleton screens for data loading
-  - [ ] Disabled buttons during submission
-- [ ] **Error Handling**
-  - [ ] Toast notifications for errors
-  - [ ] Inline form validation errors
-  - [ ] 404 page for not found resources
-  - [ ] 403 page for unauthorized access
-  - [ ] 500 page for server errors
-- [ ] **Success Feedback**
-  - [ ] Toast notifications for successful actions
-  - [ ] Confirmation modals for destructive actions
-  - [ ] Progress indicators for multi-step flows
-- [ ] **Accessibility**
-  - [ ] Semantic HTML elements
-  - [ ] ARIA labels for screen readers
-  - [ ] Keyboard navigation support
-  - [ ] Focus indicators
-  - [ ] Color contrast compliance (WCAG AA)
-- [ ] **Performance**
-  - [ ] Lazy loading for images
-  - [ ] Pagination for large lists
-  - [ ] Debounced search inputs
-  - [ ] Minified CSS and JS
+- [x] **Loading States**
+  - [x] Spinner overlays for long operations
+  - [x] Skeleton screens for data loading
+  - [x] Disabled buttons during submission
+- [x] **Error Handling**
+  - [x] Toast notifications for errors
+  - [x] Inline form validation errors
+  - [x] 404 page for not found resources
+  - [x] 403 page for unauthorized access
+  - [x] 500 page for server errors
+- [x] **Success Feedback**
+  - [x] Toast notifications for successful actions
+  - [x] Confirmation modals for destructive actions
+  - [x] Progress indicators for multi-step flows
+- [x] **Accessibility**
+  - [x] Semantic HTML elements
+  - [x] ARIA labels for screen readers
+  - [x] Keyboard navigation support
+  - [x] Focus indicators
+  - [x] Color contrast compliance (WCAG AA)
+- [x] **Performance**
+  - [x] Lazy loading for images
+  - [x] Pagination for large lists
+  - [x] Debounced search inputs
+  - [x] Minified CSS and JS
 
 #### 7.11 E2E Testing
 - [ ] Set up E2E testing framework (Playwright or Cypress)
