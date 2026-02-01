@@ -98,8 +98,8 @@ async def get_keywords_list(
         rows_html += f"""
         <tr class="hover:bg-gray-50">
             <td class="px-6 py-4 whitespace-nowrap">
-                <a href="/keywords/{kw['keyword_id']}" class="text-sm font-medium text-blue-600 hover:text-blue-800">
-                    {kw.get('keyword', '')}
+                <a href="/keywords/{kw["keyword_id"]}" class="text-sm font-medium text-blue-600 hover:text-blue-800">
+                    {kw.get("keyword", "")}
                 </a>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
@@ -109,8 +109,8 @@ async def get_keywords_list(
                 {description or '<span class="text-gray-400">No description</span>'}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <a href="/keywords/{kw['keyword_id']}" class="text-blue-600 hover:text-blue-900 mr-3">View</a>
-                <a href="/keywords/{kw['keyword_id']}/edit" class="text-gray-600 hover:text-gray-900">Edit</a>
+                <a href="/keywords/{kw["keyword_id"]}" class="text-blue-600 hover:text-blue-900 mr-3">View</a>
+                <a href="/keywords/{kw["keyword_id"]}/edit" class="text-gray-600 hover:text-gray-900">Edit</a>
             </td>
         </tr>
         """
@@ -150,7 +150,7 @@ async def get_keywords_list(
             <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
                 <div>
                     <p class="text-sm text-gray-700">
-                        Showing <span class="font-medium">{start + 1}</span> to <span class="font-medium">{min(end, total)}</span> of{' '}
+                        Showing <span class="font-medium">{start + 1}</span> to <span class="font-medium">{min(end, total)}</span> of{" "}
                         <span class="font-medium">{total}</span> results
                     </p>
                 </div>
@@ -277,7 +277,7 @@ async def get_categories_grid(
         cards_html += f"""
         <a href="/keywords?category={category}" class="bg-white shadow-sm rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
             <h3 class="text-lg font-semibold text-gray-900 mb-2">{category}</h3>
-            <p class="text-2xl font-bold text-blue-600">{count} keyword{'s' if count != 1 else ''}</p>
+            <p class="text-2xl font-bold text-blue-600">{count} keyword{"s" if count != 1 else ""}</p>
         </a>
         """
 
@@ -337,10 +337,10 @@ async def get_keyword_clients(
         <li class="py-3">
             <div class="flex items-center justify-between">
                 <div class="flex-1">
-                    <a href="/clients/{client['client_id']}" class="text-sm font-medium text-blue-600 hover:text-blue-800">
-                        {client.get('name', 'Unknown')}
+                    <a href="/clients/{client["client_id"]}" class="text-sm font-medium text-blue-600 hover:text-blue-800">
+                        {client.get("name", "Unknown")}
                     </a>
-                    <p class="text-xs text-gray-500">{client.get('jurisdiction', 'Unknown')}</p>
+                    <p class="text-xs text-gray-500">{client.get("jurisdiction", "Unknown")}</p>
                 </div>
                 <div>
                     {active_badge}
@@ -420,8 +420,8 @@ async def get_related_keywords(
     for kw in related[:5]:  # Limit to 5 related keywords
         items_html += f"""
         <li class="py-2">
-            <a href="/keywords/{kw['keyword_id']}" class="text-sm text-blue-600 hover:text-blue-800">
-                {kw.get('keyword', '')}
+            <a href="/keywords/{kw["keyword_id"]}" class="text-sm text-blue-600 hover:text-blue-800">
+                {kw.get("keyword", "")}
             </a>
         </li>
         """
