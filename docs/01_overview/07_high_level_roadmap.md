@@ -604,6 +604,52 @@ _**Checklist Items:**_
   - [x] Same layout as client list
   - [x] "Remove from Favorites" button
 
+#### 7.4.1 Client List Edit Actions (🚧 In Progress)
+_**Goal:** Allow admins to quickly edit clients directly from the client list page without navigating to a separate edit page._
+
+_**Backend Checklist:**_
+- [ ] **API Endpoints**
+  - [x] POST `/api/clients` - Create client (already implemented)
+  - [x] PUT `/api/clients/{id}` - Update client (already implemented)
+  - [x] GET `/api/keywords/list-all` - Get all keywords for form (already implemented)
+  - [ ] GET `/api/clients/{id}/edit-form` - Return pre-populated edit form HTML
+  - [ ] PATCH `/api/clients/{id}/quick-edit` - Update specific client fields (optional, for inline editing)
+
+_**UI/UX Checklist:**_
+**Goal:** Allow admins to quickly edit clients directly from the client list page without navigating to a separate edit page.
+
+Constraints:
+- UI-only implementation
+- Reuse existing API endpoints
+- No new backend routes or schema changes
+
+**UI/UX Checklist Items:**
+- [ ] **Client List Page Enhancements**
+  - [ ] Add "Edit" button/icon next to each client row (admin only)
+  - [x] Edit action implemented via modal popup with edit form
+  - [ ] Show loading state during form submission
+  - [ ] Display success message after save
+  - [ ] Handle validation errors inline
+  - [ ] Refresh client list after successful edit
+
+- [ ] **Edit Form Features**
+  - [ ] Pre-populate form fields with current client data
+  - [ ] Allow editing: name, description, website URL, active status
+  - [ ] Show current keyword associations with ability to modify
+  - [ ] Add/remove keywords with live preview
+  - [ ] "Save" and "Cancel" buttons
+  - [ ] Keyboard shortcuts (Esc to cancel, Ctrl+Enter to save)
+
+- [ ] **Access Control**
+  - [ ] Hide edit buttons from non-admin users
+  - [ ] Return 403 error if non-admin attempts to edit via API
+  - [ ] Display appropriate error message for unauthorized attempts
+
+- [ ] **Mobile Responsiveness**
+  - [ ] Ensure edit UI works on mobile devices
+  - [ ] Touch-friendly edit buttons
+  - [ ] Responsive modal layout for small screens
+
 #### 7.5 Keyword Management UI
 _**Instructions:**_
 - All UI work must respect the existing frontend boundary.
