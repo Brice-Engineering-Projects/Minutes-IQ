@@ -122,7 +122,7 @@ class FavoritesRepository:
             SELECT c.client_id, c.name, c.description, c.website_url,
                    c.is_active, c.created_at, c.created_by, c.updated_at,
                    f.favorited_at
-            FROM clients c
+            FROM client c
             INNER JOIN user_client_favorites f ON c.client_id = f.client_id
             WHERE f.user_id = ?
             ORDER BY f.favorited_at DESC;

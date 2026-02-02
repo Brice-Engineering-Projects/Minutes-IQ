@@ -356,7 +356,7 @@ class ScraperRepository:
                    j.status, j.created_by, j.created_at,
                    j.started_at, j.completed_at, j.error_message
             FROM scrape_jobs j
-            JOIN clients c ON j.client_id = c.client_id
+            JOIN client c ON j.client_id = c.client_id
             WHERE 1=1
         """
         params: list[Any] = []

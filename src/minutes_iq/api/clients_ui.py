@@ -210,3 +210,118 @@ async def get_client_scrape_jobs(client_id: int):
         <p class="text-sm text-gray-500">No scrape jobs yet</p>
     </div>
     """
+
+
+@router.post("", response_class=HTMLResponse)
+async def create_client(
+    request: Request,
+    client_repo: Annotated[ClientRepository, Depends(get_client_repository)],
+    keyword_repo: Annotated[KeywordRepository, Depends(get_keyword_repository)],
+):
+    """Create a new client."""
+    from fastapi.responses import Response
+
+    # Get form data
+    form_data = await request.form()
+    name = str(form_data.get("name", "")).strip()
+    description_raw = form_data.get("description", "")
+    description = str(description_raw).strip() or None if description_raw else None
+    website_url_raw = form_data.get("website_url", "")
+    website_url = str(website_url_raw).strip() or None if website_url_raw else None
+    is_active = form_data.get("is_active") == "on"
+    keyword_ids = form_data.getlist("keyword_ids")
+
+    if not name:
+        return '<div class="p-4 bg-red-50 border border-red-200 rounded-md"><p class="text-sm text-red-800">Client name is required</p></div>'
+
+    # Create client
+    # TODO: Get created_by from current_user when auth is integrated
+    created_by_user = 1  # Temporary: use admin user ID
+    client = client_repo.create_client(
+        name=name,
+        description=description,
+        website_url=website_url,
+        is_active=is_active,
+        created_by=created_by_user,
+    )
+    client_id = client["client_id"]
+
+    # Add keywords to client
+    if keyword_ids:
+        for keyword_id_raw in keyword_ids:
+            try:
+                keyword_id = int(str(keyword_id_raw))
+                keyword_repo.add_keyword_to_client(
+                    client_id, keyword_id, created_by_user
+                )
+            except (ValueError, TypeError):
+                pass  # Skip invalid keyword IDs
+
+    # Return success with redirect header
+    response = Response(
+        content='<div class="p-4 bg-green-50 border border-green-200 rounded-md"><p class="text-sm text-green-800">Client created successfully!</p></div>',
+        status_code=200,
+    )
+    response.headers["HX-Redirect"] = f"/clients/{client_id}"
+    return response
+
+
+@router.put("/{client_id}", response_class=HTMLResponse)
+async def update_client(
+    client_id: int,
+    request: Request,
+    client_repo: Annotated[ClientRepository, Depends(get_client_repository)],
+    keyword_repo: Annotated[KeywordRepository, Depends(get_keyword_repository)],
+):
+    """Update an existing client."""
+    from fastapi.responses import Response
+
+    # Get form data
+    form_data = await request.form()
+    name = str(form_data.get("name", "")).strip()
+    description_raw = form_data.get("description", "")
+    description = str(description_raw).strip() or None if description_raw else None
+    website_url_raw = form_data.get("website_url", "")
+    website_url = str(website_url_raw).strip() or None if website_url_raw else None
+    is_active = form_data.get("is_active") == "on"
+    keyword_ids = form_data.getlist("keyword_ids")
+
+    if not name:
+        return '<div class="p-4 bg-red-50 border border-red-200 rounded-md"><p class="text-sm text-red-800">Client name is required</p></div>'
+
+    # Update client
+    client_repo.update_client(
+        client_id=client_id,
+        name=name,
+        description=description,
+        website_url=website_url,
+        is_active=is_active,
+    )
+
+    # Update keywords - remove all and re-add
+    # TODO: Get updated_by from current_user when auth is integrated
+    updated_by_user = 1  # Temporary: use admin user ID
+
+    # First, get current keywords and remove them
+    current_keywords = keyword_repo.get_client_keywords(client_id)
+    for kw in current_keywords:
+        keyword_repo.remove_keyword_from_client(kw["keyword_id"], client_id)
+
+    # Add new keywords
+    if keyword_ids:
+        for keyword_id_raw in keyword_ids:
+            try:
+                keyword_id = int(str(keyword_id_raw))
+                keyword_repo.add_keyword_to_client(
+                    client_id, keyword_id, updated_by_user
+                )
+            except (ValueError, TypeError):
+                pass
+
+    # Return success with redirect header
+    response = Response(
+        content='<div class="p-4 bg-green-50 border border-green-200 rounded-md"><p class="text-sm text-green-800">Client updated successfully!</p></div>',
+        status_code=200,
+    )
+    response.headers["HX-Redirect"] = f"/clients/{client_id}"
+    return response

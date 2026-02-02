@@ -210,6 +210,42 @@ async def get_keywords_list(
     return html
 
 
+@router.get("/list-all", response_class=HTMLResponse)
+async def get_keywords_list_all(
+    keyword_repo: Annotated[KeywordRepository, Depends(get_keyword_repository)],
+):
+    """Return HTML checkboxes for all keywords (for client form)."""
+    keywords = keyword_repo.list_keywords()
+
+    if not keywords:
+        return '<p class="text-sm text-gray-500">No keywords available. Create keywords first.</p>'
+
+    # Group by category
+    by_category: dict[str, list] = {}
+    for kw in keywords:
+        category = kw.get("category") or "Uncategorized"
+        if category not in by_category:
+            by_category[category] = []
+        by_category[category].append(kw)
+
+    # Build HTML
+    html = '<div class="space-y-4">'
+    for category in sorted(by_category.keys()):
+        html += f'<div><h4 class="text-sm font-medium text-gray-700 mb-2">{category}</h4><div class="space-y-1">'
+        for kw in by_category[category]:
+            html += f"""
+            <label class="flex items-center py-1">
+                <input type="checkbox" name="keyword_ids" value="{kw["keyword_id"]}"
+                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                <span class="ml-2 text-sm text-gray-900">{kw["keyword"]}</span>
+            </label>
+            """
+        html += "</div></div>"
+    html += "</div>"
+
+    return html
+
+
 @router.get("/categories", response_class=HTMLResponse)
 async def get_categories(
     keyword_repo: Annotated[KeywordRepository, Depends(get_keyword_repository)],
@@ -421,24 +457,33 @@ async def get_related_keywords(
 
 @router.post("", response_class=HTMLResponse)
 async def create_keyword(
-    keyword_data: KeywordCreate,
+    request: Request,
     keyword_repo: Annotated[KeywordRepository, Depends(get_keyword_repository)],
 ):
     """Create a new keyword."""
+    # Get form data
+    form_data = await request.form()
+    keyword_text = str(form_data.get("keyword", "")).strip()
+    category_raw = form_data.get("category", "")
+    category = str(category_raw).strip() or None if category_raw else None
+    description_raw = form_data.get("description", "")
+    description = str(description_raw).strip() or None if description_raw else None
+
+    if not keyword_text:
+        raise HTTPException(status_code=400, detail="Keyword is required")
+
     # Check if keyword already exists
     existing = keyword_repo.list_keywords()
-    if any(
-        k.get("keyword", "").lower() == keyword_data.keyword.lower() for k in existing
-    ):
+    if any(k.get("keyword", "").lower() == keyword_text.lower() for k in existing):
         raise HTTPException(status_code=400, detail="Keyword already exists")
 
     # Create keyword
     # TODO: Get created_by from current_user when auth is integrated
     keyword_repo.create_keyword(
-        keyword=keyword_data.keyword,
+        keyword=keyword_text,
         created_by=1,  # Temporary: use admin user ID
-        category=keyword_data.category,
-        description=keyword_data.description,
+        category=category,
+        description=description,
     )
 
     return """

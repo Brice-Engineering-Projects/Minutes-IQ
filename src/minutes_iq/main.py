@@ -52,19 +52,22 @@ BASE_DIR = Path(__file__).resolve().parent
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
 # Register and mount routers from other modules (e.g., auth, meetings, nlp)
+# IMPORTANT: Register UI routes before API routes when they share the same prefix
+# to ensure HTML pages are served instead of JSON responses
 app.include_router(auth_routes.router, prefix="/auth")
 app.include_router(auth_code_routes.router)
 app.include_router(client_routes.router)
 app.include_router(keyword_routes.router)
-app.include_router(clients.router)
-app.include_router(scraper_routes.router)
 app.include_router(dashboard_api.router)
+# Register UI routes before API routes to avoid path conflicts
 app.include_router(client_ui_routes.router)
 app.include_router(clients_ui_api.router)
+app.include_router(clients.router)
 app.include_router(keyword_ui_routes.router)
 app.include_router(keywords_ui_api.router)
 app.include_router(scraper_job_ui_routes.router)
 app.include_router(scraper_jobs_ui_api.router)
+app.include_router(scraper_routes.router)
 app.include_router(admin_ui_routes.router)
 app.include_router(admin_ui_api.router)
 app.include_router(profile_ui_routes.router)

@@ -16,7 +16,7 @@ from fastapi import (
 from fastapi.responses import Response
 
 from minutes_iq.auth.dependencies import get_current_user
-from minutes_iq.db.client import get_db_connection
+from minutes_iq.db.dependencies import get_scraper_repository
 from minutes_iq.db.highlighter_service import HighlighterService
 from minutes_iq.db.results_service import ResultsService
 from minutes_iq.db.scraper_repository import ScraperRepository
@@ -50,26 +50,23 @@ router = APIRouter(prefix="/scraper", tags=["scraper"])
 
 
 def get_scraper_service(
-    conn: Annotated[object, Depends(get_db_connection)],
+    repository: Annotated[ScraperRepository, Depends(get_scraper_repository)],
 ) -> ScraperService:
     """Get ScraperService instance."""
-    repository = ScraperRepository(conn)
     return ScraperService(repository)
 
 
 def get_results_service(
-    conn: Annotated[object, Depends(get_db_connection)],
+    repository: Annotated[ScraperRepository, Depends(get_scraper_repository)],
 ) -> ResultsService:
     """Get ResultsService instance."""
-    repository = ScraperRepository(conn)
     return ResultsService(repository)
 
 
 def get_highlighter_service(
-    conn: Annotated[object, Depends(get_db_connection)],
+    repository: Annotated[ScraperRepository, Depends(get_scraper_repository)],
 ) -> HighlighterService:
     """Get HighlighterService instance."""
-    repository = ScraperRepository(conn)
     return HighlighterService(repository)
 
 
