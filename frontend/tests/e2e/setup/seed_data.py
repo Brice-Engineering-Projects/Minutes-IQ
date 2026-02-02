@@ -20,8 +20,8 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from src.auth.crypto import hash_password  # noqa: E402
-from src.db.connection import get_db_connection  # noqa: E402
+from src.minutes_iq.auth.crypto import hash_password  # noqa: E402
+from src.minutes_iq.db.dependencies import get_db_connection  # noqa: E402
 
 
 async def seed_baseline_data():
