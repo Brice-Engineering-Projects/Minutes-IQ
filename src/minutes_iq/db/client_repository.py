@@ -54,7 +54,7 @@ class ClientRepository:
         try:
             cursor = self.db.execute(
                 """
-                INSERT INTO clients (name, description, website_url, is_active, created_at, created_by)
+                INSERT INTO client (name, description, website_url, is_active, created_at, created_by)
                 VALUES (?, ?, ?, ?, ?, ?)
                 RETURNING client_id, name, description, website_url, is_active, created_at, created_by, updated_at;
                 """,
@@ -97,7 +97,7 @@ class ClientRepository:
         cursor = self.db.execute(
             """
             SELECT client_id, name, description, website_url, is_active, created_at, created_by, updated_at
-            FROM clients
+            FROM client
             WHERE client_id = ?;
             """,
             (client_id,),
@@ -132,7 +132,7 @@ class ClientRepository:
         cursor = self.db.execute(
             """
             SELECT client_id, name, description, website_url, is_active, created_at, created_by, updated_at
-            FROM clients
+            FROM client
             WHERE name = ?;
             """,
             (name,),
@@ -170,7 +170,7 @@ class ClientRepository:
         """
         query = """
             SELECT client_id, name, description, website_url, is_active, created_at, created_by, updated_at
-            FROM clients
+            FROM client
         """
         params: list[int] = []
 
@@ -251,7 +251,7 @@ class ClientRepository:
         params.append(int(time.time()))
 
         query = f"""
-            UPDATE clients
+            UPDATE client
             SET {", ".join(updates)}
             WHERE client_id = ?
             RETURNING client_id, name, description, website_url, is_active, created_at, created_by, updated_at;
@@ -298,7 +298,7 @@ class ClientRepository:
 
         cursor = self.db.execute(
             """
-            UPDATE clients
+            UPDATE client
             SET is_active = 0, updated_at = ?
             WHERE client_id = ?;
             """,
@@ -322,10 +322,10 @@ class ClientRepository:
             Total number of clients
         """
         if is_active is None:
-            query = "SELECT COUNT(*) FROM clients;"
+            query = "SELECT COUNT(*) FROM client;"
             cursor = self.db.execute(query)
         else:
-            query = "SELECT COUNT(*) FROM clients WHERE is_active = ?;"
+            query = "SELECT COUNT(*) FROM client WHERE is_active = ?;"
             cursor = self.db.execute(query, (1 if is_active else 0,))
 
         count = cursor.fetchone()[0]

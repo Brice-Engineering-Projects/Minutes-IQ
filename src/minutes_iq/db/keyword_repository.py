@@ -424,7 +424,7 @@ class KeywordRepository:
         cursor = self.db.execute(
             """
             SELECT c.client_id, c.name
-            FROM clients c
+            FROM client c
             INNER JOIN client_keywords ck ON c.client_id = ck.client_id
             WHERE ck.keyword_id = ?
             ORDER BY c.name ASC;
