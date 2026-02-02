@@ -463,9 +463,11 @@ async def create_keyword(
     """Create a new keyword."""
     # Get form data
     form_data = await request.form()
-    keyword_text = form_data.get("keyword", "").strip()
-    category = form_data.get("category", "").strip() or None
-    description = form_data.get("description", "").strip() or None
+    keyword_text = str(form_data.get("keyword", "")).strip()
+    category_raw = form_data.get("category", "")
+    category = str(category_raw).strip() or None if category_raw else None
+    description_raw = form_data.get("description", "")
+    description = str(description_raw).strip() or None if description_raw else None
 
     if not keyword_text:
         raise HTTPException(status_code=400, detail="Keyword is required")

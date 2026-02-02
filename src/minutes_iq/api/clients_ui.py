@@ -223,9 +223,11 @@ async def create_client(
 
     # Get form data
     form_data = await request.form()
-    name = form_data.get("name", "").strip()
-    description = form_data.get("description", "").strip() or None
-    website_url = form_data.get("website_url", "").strip() or None
+    name = str(form_data.get("name", "")).strip()
+    description_raw = form_data.get("description", "")
+    description = str(description_raw).strip() or None if description_raw else None
+    website_url_raw = form_data.get("website_url", "")
+    website_url = str(website_url_raw).strip() or None if website_url_raw else None
     is_active = form_data.get("is_active") == "on"
     keyword_ids = form_data.getlist("keyword_ids")
 
@@ -234,21 +236,25 @@ async def create_client(
 
     # Create client
     # TODO: Get created_by from current_user when auth is integrated
+    created_by_user = 1  # Temporary: use admin user ID
     client = client_repo.create_client(
         name=name,
         description=description,
         website_url=website_url,
         is_active=is_active,
-        created_by=1,  # Temporary: use admin user ID
+        created_by=created_by_user,
     )
     client_id = client["client_id"]
 
     # Add keywords to client
     if keyword_ids:
-        for keyword_id in keyword_ids:
+        for keyword_id_raw in keyword_ids:
             try:
-                keyword_repo.add_keyword_to_client(int(keyword_id), client_id)
-            except Exception:
+                keyword_id = int(str(keyword_id_raw))
+                keyword_repo.add_keyword_to_client(
+                    client_id, keyword_id, created_by_user
+                )
+            except (ValueError, TypeError):
                 pass  # Skip invalid keyword IDs
 
     # Return success with redirect header
@@ -272,9 +278,11 @@ async def update_client(
 
     # Get form data
     form_data = await request.form()
-    name = form_data.get("name", "").strip()
-    description = form_data.get("description", "").strip() or None
-    website_url = form_data.get("website_url", "").strip() or None
+    name = str(form_data.get("name", "")).strip()
+    description_raw = form_data.get("description", "")
+    description = str(description_raw).strip() or None if description_raw else None
+    website_url_raw = form_data.get("website_url", "")
+    website_url = str(website_url_raw).strip() or None if website_url_raw else None
     is_active = form_data.get("is_active") == "on"
     keyword_ids = form_data.getlist("keyword_ids")
 
@@ -291,6 +299,9 @@ async def update_client(
     )
 
     # Update keywords - remove all and re-add
+    # TODO: Get updated_by from current_user when auth is integrated
+    updated_by_user = 1  # Temporary: use admin user ID
+
     # First, get current keywords and remove them
     current_keywords = keyword_repo.get_client_keywords(client_id)
     for kw in current_keywords:
@@ -298,10 +309,13 @@ async def update_client(
 
     # Add new keywords
     if keyword_ids:
-        for keyword_id in keyword_ids:
+        for keyword_id_raw in keyword_ids:
             try:
-                keyword_repo.add_keyword_to_client(int(keyword_id), client_id)
-            except Exception:
+                keyword_id = int(str(keyword_id_raw))
+                keyword_repo.add_keyword_to_client(
+                    client_id, keyword_id, updated_by_user
+                )
+            except (ValueError, TypeError):
                 pass
 
     # Return success with redirect header
