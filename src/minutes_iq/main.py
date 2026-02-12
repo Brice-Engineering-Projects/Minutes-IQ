@@ -3,6 +3,7 @@
 from pathlib import Path
 from typing import Annotated
 
+import uvicorn
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -99,3 +100,12 @@ def health_check():
 @app.get("/nlp_demo")
 def nlp_demo():
     return {"message": "NLP demo endpoint"}
+
+
+def run_dev():
+    uvicorn.run(
+        "minutes_iq.main:app",
+        host="127.0.0.1",
+        port=8000,
+        reload=True,
+    )

@@ -84,3 +84,6 @@ disallow_untyped_defs = false
 check_untyped_defs = true
 # Ignore missing library stubs for third-party packages
 ignore_missing_imports = true
+
+[project.scripts]
+minutes-iq-dev = "minutes_iq.main:run_dev"
