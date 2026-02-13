@@ -31,7 +31,6 @@ class ClientService:
         name: str,
         created_by: int,
         description: str | None = None,
-        website_url: str | None = None,
     ) -> tuple[bool, str | None, dict[str, Any] | None]:
         """
         Create a new client with validation.
@@ -40,10 +39,12 @@ class ClientService:
             name: Client organization name
             created_by: User ID of admin creating the client
             description: Optional description
-            website_url: Optional official website
 
         Returns:
             Tuple of (success, error_message, client_data)
+
+        Note:
+            URLs should be added separately using ClientUrlRepository
         """
         # Validate name
         name = name.strip()
@@ -60,16 +61,6 @@ class ClientService:
             if len(description) > 1000:
                 return False, "Description cannot exceed 1000 characters", None
 
-        # Validate website URL if provided
-        if website_url is not None:
-            website_url = website_url.strip()
-            if website_url and not (
-                website_url.startswith("http://") or website_url.startswith("https://")
-            ):
-                return False, "Website URL must start with http:// or https://", None
-            if len(website_url) > 500:
-                return False, "Website URL cannot exceed 500 characters", None
-
         # Check if client already exists
         existing = self.client_repo.get_client_by_name(name)
         if existing:
@@ -81,7 +72,6 @@ class ClientService:
                 name=name,
                 created_by=created_by,
                 description=description if description else None,
-                website_url=website_url if website_url else None,
             )
             return True, None, client
         except ValueError as e:
@@ -146,7 +136,6 @@ class ClientService:
         client_id: int,
         name: str | None = None,
         description: str | None = None,
-        website_url: str | None = None,
         is_active: bool | None = None,
     ) -> tuple[bool, str | None, dict[str, Any] | None]:
         """
@@ -156,11 +145,13 @@ class ClientService:
             client_id: Client ID
             name: New name (optional)
             description: New description (optional)
-            website_url: New website URL (optional)
             is_active: New active status (optional)
 
         Returns:
             Tuple of (success, error_message, client_data)
+
+        Note:
+            URLs should be managed separately using ClientUrlRepository
         """
         # Validate name if provided
         if name is not None:
@@ -183,23 +174,12 @@ class ClientService:
             if len(description) > 1000:
                 return False, "Description cannot exceed 1000 characters", None
 
-        # Validate website URL if provided
-        if website_url is not None:
-            website_url = website_url.strip()
-            if website_url and not (
-                website_url.startswith("http://") or website_url.startswith("https://")
-            ):
-                return False, "Website URL must start with http:// or https://", None
-            if len(website_url) > 500:
-                return False, "Website URL cannot exceed 500 characters", None
-
         # Update client
         try:
             client = self.client_repo.update_client(
                 client_id=client_id,
                 name=name if name else None,
                 description=description if description else None,
-                website_url=website_url if website_url else None,
                 is_active=is_active,
             )
             if not client:
