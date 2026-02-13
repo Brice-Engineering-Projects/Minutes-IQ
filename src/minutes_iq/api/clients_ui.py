@@ -18,6 +18,21 @@ from minutes_iq.db.keyword_repository import KeywordRepository
 router = APIRouter(prefix="/api/clients", tags=["Client API"])
 
 
+@router.get("/all")
+async def get_all_clients(
+    client_repo: Annotated[ClientRepository, Depends(get_client_repository)],
+):
+    """Get all active clients as JSON for dropdowns."""
+    clients = client_repo.list_clients(is_active=True, limit=1000)
+    return [
+        {
+            "client_id": c["client_id"],
+            "name": c["name"],
+        }
+        for c in clients
+    ]
+
+
 @router.get("/list", response_class=HTMLResponse)
 async def get_clients_list(
     request: Request,
@@ -232,21 +247,18 @@ async def create_client(
     name = str(form_data.get("name", "")).strip()
     description_raw = form_data.get("description", "")
     description = str(description_raw).strip() or None if description_raw else None
-    website_url_raw = form_data.get("website_url", "")
-    website_url = str(website_url_raw).strip() or None if website_url_raw else None
     is_active = form_data.get("is_active") == "on"
     keyword_ids = form_data.getlist("keyword_ids")
 
     if not name:
         return '<div class="p-4 bg-red-50 border border-red-200 rounded-md"><p class="text-sm text-red-800">Client name is required</p></div>'
 
-    # Create client
+    # Create client (website_url is ignored - use ClientUrlRepository for URLs)
     # TODO: Get created_by from current_user when auth is integrated
     created_by_user = 1  # Temporary: use admin user ID
     client = client_repo.create_client(
         name=name,
         description=description,
-        website_url=website_url,
         is_active=is_active,
         created_by=created_by_user,
     )
@@ -287,20 +299,17 @@ async def update_client(
     name = str(form_data.get("name", "")).strip()
     description_raw = form_data.get("description", "")
     description = str(description_raw).strip() or None if description_raw else None
-    website_url_raw = form_data.get("website_url", "")
-    website_url = str(website_url_raw).strip() or None if website_url_raw else None
     is_active = form_data.get("is_active") == "on"
     keyword_ids = form_data.getlist("keyword_ids")
 
     if not name:
         return '<div class="p-4 bg-red-50 border border-red-200 rounded-md"><p class="text-sm text-red-800">Client name is required</p></div>'
 
-    # Update client
+    # Update client (website_url is ignored - use ClientUrlRepository for URLs)
     client_repo.update_client(
         client_id=client_id,
         name=name,
         description=description,
-        website_url=website_url,
         is_active=is_active,
     )
 
@@ -342,7 +351,7 @@ async def toggle_favorite(
 ):
     """Toggle favorite status for a client."""
     # Verify client exists and is active
-    client = client_repo.get_client(client_id)
+    client = client_repo.get_client_by_id(client_id)
     if not client or not client.get("is_active"):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Client not found"

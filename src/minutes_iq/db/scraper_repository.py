@@ -352,11 +352,13 @@ class ScraperRepository:
             List of job dicts
         """
         query = """
-            SELECT j.job_id, j.client_id, c.name as client_name,
+            SELECT j.job_id, j.client_url_id, cu.client_id, c.name as client_name,
+                   cu.alias as url_alias, cu.url,
                    j.status, j.created_by, j.created_at,
                    j.started_at, j.completed_at, j.error_message
             FROM scrape_jobs j
-            JOIN client c ON j.client_id = c.client_id
+            JOIN client_urls cu ON j.client_url_id = cu.id
+            JOIN client c ON cu.client_id = c.client_id
             WHERE 1=1
         """
         params: list[Any] = []
@@ -366,7 +368,7 @@ class ScraperRepository:
             params.append(user_id)
 
         if client_id is not None:
-            query += " AND j.client_id = ?"
+            query += " AND cu.client_id = ?"
             params.append(client_id)
 
         if status is not None:
@@ -385,14 +387,17 @@ class ScraperRepository:
             jobs.append(
                 {
                     "job_id": row[0],
-                    "client_id": row[1],
-                    "client_name": row[2],
-                    "status": row[3],
-                    "created_by": row[4],
-                    "created_at": row[5],
-                    "started_at": row[6],
-                    "completed_at": row[7],
-                    "error_message": row[8],
+                    "client_url_id": row[1],
+                    "client_id": row[2],
+                    "client_name": row[3],
+                    "url_alias": row[4],
+                    "url": row[5],
+                    "status": row[6],
+                    "created_by": row[7],
+                    "created_at": row[8],
+                    "started_at": row[9],
+                    "completed_at": row[10],
+                    "error_message": row[11],
                 }
             )
 
