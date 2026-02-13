@@ -641,7 +641,134 @@ _**Checklist Items:**
   - [x] Same layout as client list
   - [x] "Remove from Favorites" button
 
-#### 7.4.1 Client List Edit Actions (🚧 In Progress)
+#### 7.4.1 Multi-URL Client Architecture (🚧 In Progress - Phase 1 Complete)
+
+_**Goal:** Enable clients to have multiple scraping URLs with aliases (e.g., "current", "archive") instead of a single website_url field._
+
+_**Status:** Phase 1 (Stabilization) Complete ✅ | Phase 2 (Audit) Pending | Phase 3 (UI) Pending
+
+##### Phase 1 — Critical API Stabilization ✅
+
+**Priority: P0 (Blocking) - COMPLETED**
+
+- [x] **Database Migration**
+  - [x] Create `client_urls` table (id, client_id, alias, url, is_active, last_scraped_at, created_at, updated_at)
+  - [x] Migrate existing `website_url` data to `client_urls` table
+  - [x] Drop `client_sources` table (old schema)
+  - [x] Remove `website_url` column from `client` table
+  - [x] Update `scrape_jobs` to reference `client_url_id` instead of `client_id`
+  - [x] Migration file: `20260212_120000_refactor_client_urls.sql`
+
+- [x] **Repository Layer**
+  - [x] Create `ClientUrlRepository` with full CRUD operations
+  - [x] Update `ClientRepository` - Remove all `website_url` parameters
+  - [x] Update `FavoritesRepository` - Remove `website_url` from queries
+  - [x] Update `ScraperRepository` - Use `client_urls` join, return `client_url_id`, `url_alias`, `url`
+
+- [x] **Service Layer**
+  - [x] Update `ClientService` - Remove `website_url` from create/update methods
+  - [x] Add `get_client_url_repository()` to dependencies
+
+- [x] **Critical API Endpoints**
+  - [x] Fix `clients_ui.py` - Remove `website_url` from create/update handlers
+  - [x] Add `/api/clients/all` endpoint for dropdown population
+  - [x] Fix `clients_ui.py` - Correct method name `get_client_by_id()`
+  - [x] Fix `client_routes.py` - Add `current_user` to template context
+
+- [x] **Template Fixes (Minimal)**
+  - [x] Remove `website_url` display from `clients/detail.html`
+  - [x] Edit button now visible for admins
+
+- [x] **Project Organization**
+  - [x] Move 9 loose Python scripts to organized `scripts/` directory
+  - [x] Create professional migration runner with error handling
+  - [x] Create `scripts/README.md` documentation
+
+**Exit Criteria: ✅ ACHIEVED**
+- Application boots without 500 errors
+- Client CRUD operations functional
+- Scraper job listing works
+- Edit functionality operational
+- JEA has 3 URLs configured: default, current, archive
+
+##### Phase 2 — Refactor Audit Checklist
+
+**Priority: P1 (High) - NEXT**
+
+- [x] **Audit Remaining website_url References**
+  - [x] Search all Pydantic models for `website_url` fields
+    - `api/clients.py` - `ClientResponse`, `FavoriteResponse`
+  - [x] Search all SQL queries for `website_url` references
+  - [x] Search all templates for `client.website_url` usage
+    - `clients/form.html` - Still has input field (ignored but should be removed)
+  - [x] Search test files for `website_url` assertions
+  - [x] Check `admin/client_routes.py` for admin-specific forms
+  - [x] Document all findings in audit report
+
+- [x] **Create Phase 3 Implementation Plan**
+  - [x] List all files requiring updates
+  - [x] Prioritize by user impact
+  - [x] Estimate effort per change
+  - [x] Define acceptance criteria
+
+##### Phase 3 — Complete UI Refactor
+
+**Priority: P1 (High) - AFTER PHASE 2**
+
+- [ ] **API Models**
+  - [ ] Update `ClientResponse` - Change `website_url: str | None` → `urls: list[ClientUrl]`
+  - [ ] Update `FavoriteResponse` - Remove `website_url`
+  - [ ] Create `ClientUrl` Pydantic model (id, alias, url, is_active, last_scraped_at)
+  - [ ] Update all endpoints returning client data
+
+- [ ] **Client Management UI**
+  - [ ] Remove `website_url` field from `clients/form.html`
+  - [ ] Add URL management section to client forms:
+    - [ ] List existing URLs (table: alias, url, active status, last scraped)
+    - [ ] "Add URL" button (opens modal or inline form)
+    - [ ] Edit URL (inline or modal)
+    - [ ] Delete URL (confirmation required)
+    - [ ] Drag-and-drop reordering (optional)
+  - [ ] Add URL display to `clients/detail.html`:
+    - [ ] Show all URLs in card/table format
+    - [ ] Display alias prominently
+    - [ ] Show last_scraped_at timestamp
+    - [ ] Link to scrape job history per URL
+    - [ ] "Quick Scrape" action per URL
+
+- [ ] **Scraper Job Creation UI**
+  - [ ] Update `/scraper/jobs/new` form:
+    - [ ] After selecting client, show URL dropdown
+    - [ ] Display format: `[alias] url`
+    - [ ] Only show active URLs
+    - [ ] Default to first active URL
+  - [ ] Update job creation API to accept `client_url_id`
+  - [ ] Update job list to display URL alias alongside client name
+
+- [ ] **Admin Routes**
+  - [ ] Audit `admin/client_routes.py` for `website_url` usage
+  - [ ] Update admin forms to use URL management UI
+  - [ ] Add bulk URL management for admins (optional)
+
+**Exit Criteria:**
+- No `website_url` references remaining in codebase
+- UI fully supports multiple URLs per client
+- Users can add/edit/delete URLs through forms
+- Scraper jobs reference specific URLs
+- All tests passing
+- Documentation updated
+
+##### Phase 4 — URL-Level Features (Optional - Future)
+
+**Priority: P2 (Nice-to-Have)**
+
+- [ ] URL-level scheduling (e.g., scrape "current" daily, "archive" monthly)
+- [ ] URL-level success/failure tracking
+- [ ] URL health monitoring (check if URL is accessible)
+- [ ] URL change detection (notify if URL structure changes)
+- [ ] Per-URL keyword associations (different keywords per URL)
+
+#### 7.4.2 Client List Edit Actions (⏳ Planned)
 
 _**Goal:** Allow admins to quickly edit clients directly from the client list page without navigating to a separate edit page._
 
