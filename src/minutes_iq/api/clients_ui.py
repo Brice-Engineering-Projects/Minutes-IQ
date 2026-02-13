@@ -35,6 +35,35 @@ async def get_all_clients(
     ]
 
 
+@router.get("/all-urls")
+async def get_all_client_urls(
+    client_repo: Annotated[ClientRepository, Depends(get_client_repository)],
+    client_url_repo: Annotated[ClientUrlRepository, Depends(get_client_url_repository)],
+):
+    """Get all active client URLs as JSON for scraper job dropdowns."""
+    clients = client_repo.list_clients(is_active=True, limit=1000)
+    result = []
+
+    for client in clients:
+        urls = client_url_repo.get_client_urls(client["client_id"])
+        # Only include active URLs
+        active_urls = [url for url in urls if url.get("is_active", 0) == 1]
+
+        for url in active_urls:
+            result.append(
+                {
+                    "client_url_id": url["id"],
+                    "client_id": client["client_id"],
+                    "client_name": client["name"],
+                    "alias": url["alias"],
+                    "url": url["url"],
+                    "display_name": f"{client['name']} - {url['alias']}",
+                }
+            )
+
+    return result
+
+
 @router.get("/list", response_class=HTMLResponse)
 async def get_clients_list(
     request: Request,

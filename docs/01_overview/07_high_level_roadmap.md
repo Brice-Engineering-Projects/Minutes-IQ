@@ -891,7 +891,7 @@ Constraints:
 **UI/UX Checklist Items:**
 
 - [ ] **Client List Page Enhancements**
-  - [ ] Add "Edit" button/icon next to each client row (admin only)
+  - [x] Add "Edit" button/icon next to each client row (admin only)
   - [x] Edit action implemented via modal popup with edit form
   - [ ] Show loading state during form submission
   - [ ] Display success message after save

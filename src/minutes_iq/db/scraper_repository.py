@@ -20,7 +20,7 @@ class ScraperRepository:
 
     def create_job(
         self,
-        client_id: int,
+        client_url_id: int,
         created_by: int,
         status: str = "pending",
     ) -> int:
@@ -28,7 +28,7 @@ class ScraperRepository:
         Create a new scrape job.
 
         Args:
-            client_id: The client ID to scrape for
+            client_url_id: The client URL ID to scrape
             created_by: The user ID who created the job
             status: Initial job status (default: pending)
 
@@ -37,14 +37,15 @@ class ScraperRepository:
         """
         cursor = self.conn.execute(
             """
-            INSERT INTO scrape_jobs (client_id, status, created_by, created_at)
+            INSERT INTO scrape_jobs (client_url_id, status, created_by, created_at)
             VALUES (?, ?, ?, ?)
             RETURNING job_id
             """,
-            (client_id, status, created_by, int(datetime.now().timestamp())),
+            (client_url_id, status, created_by, int(datetime.now().timestamp())),
         )
         result = cursor.fetchone()
         cursor.close()
+        self.conn.commit()
         return result[0] if result else 0
 
     def create_job_config(
@@ -90,6 +91,7 @@ class ScraperRepository:
         )
         result = cursor.fetchone()
         cursor.close()
+        self.conn.commit()
         return result[0] if result else 0
 
     def update_job_status(
@@ -204,7 +206,7 @@ class ScraperRepository:
         """
         cursor = self.conn.execute(
             """
-            SELECT job_id, client_id, status, created_by,
+            SELECT job_id, client_url_id, status, created_by,
                    created_at, started_at, completed_at, error_message
             FROM scrape_jobs
             WHERE job_id = ?
@@ -219,7 +221,7 @@ class ScraperRepository:
 
         return {
             "job_id": row[0],
-            "client_id": row[1],
+            "client_url_id": row[1],
             "status": row[2],
             "created_by": row[3],
             "created_at": row[4],
