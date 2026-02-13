@@ -279,8 +279,8 @@ async def create_client(
             try:
                 client_url_repo.create_url(
                     client_id=client_id,
-                    alias=alias,
-                    url=url_value,
+                    alias=str(alias),
+                    url=str(url_value),
                     is_active=url_active,
                 )
             except Exception:
@@ -353,15 +353,18 @@ async def update_client(
     ):
         if alias and url_value:
             url_active = i < len(url_is_active_list)
+            url_id_str = str(url_id)
+            alias_str = str(alias)
+            url_value_str = str(url_value)
 
-            if url_id and url_id.strip():  # Existing URL
-                url_id_int = int(url_id)
+            if url_id_str and url_id_str.strip():  # Existing URL
+                url_id_int = int(url_id_str)
                 submitted_url_ids.add(url_id_int)
                 try:
                     client_url_repo.update_url(
                         url_id=url_id_int,
-                        alias=alias,
-                        url=url_value,
+                        alias=alias_str,
+                        url=url_value_str,
                         is_active=url_active,
                     )
                 except Exception:
@@ -370,8 +373,8 @@ async def update_client(
                 try:
                     client_url_repo.create_url(
                         client_id=client_id,
-                        alias=alias,
-                        url=url_value,
+                        alias=alias_str,
+                        url=url_value_str,
                         is_active=url_active,
                     )
                 except Exception:

@@ -178,8 +178,8 @@ class ClientUrlRepository:
         Returns:
             True if updated, False if URL not found
         """
-        updates = []
-        params = []
+        updates: list[str] = []
+        params: list[str | int] = []
 
         if alias is not None:
             updates.append("alias = ?")
