@@ -830,21 +830,21 @@ _**Implementation Guide:** See `docs/10_instructions/11_phase3_implementation_pl
 
 **Effort:** 1 hour | **Risk:** Low
 
-- [ ] **Update API Documentation** (30 min)
-  - [ ] Document `ClientUrl` model
-  - [ ] Document URL management endpoints
-  - [ ] Mark `website_url` as DEPRECATED
-  - [ ] Update examples to show `urls` array
+- [x] **Update API Documentation** (30 min)
+  - [x] Document `ClientUrl` model
+  - [x] Document URL management endpoints
+  - [x] Mark `website_url` as DEPRECATED
+  - [x] Update examples to show `urls` array
 
-- [ ] **Remove Comments & Backwards Compatibility** (5 min)
-  - [ ] `api/clients_ui.py:256,308` - Remove or update comments
-  - [ ] Remove `website_url` field from response models (remove backwards compat)
+- [x] **Remove Comments & Backwards Compatibility** (5 min)
+  - [x] `api/clients_ui.py:256,308` - Remove or update comments
+  - [x] Remove `website_url` field from response models (remove backwards compat)
 
-- [ ] **Final Cleanup** (25 min)
-  - [ ] Update CHANGELOG
-  - [ ] Run full test suite
-  - [ ] Manual testing checklist
-  - [ ] Code review
+- [x] **Final Cleanup** (25 min)
+  - [x] Update CHANGELOG
+  - [x] Run full test suite
+  - [x] Manual testing checklist
+  - [x] Code review
 
 **Exit Criteria:**
 - ✅ No `website_url` parameters passed to service methods

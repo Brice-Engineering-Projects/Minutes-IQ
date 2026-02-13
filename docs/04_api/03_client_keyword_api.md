@@ -25,8 +25,7 @@ Create a new client (government agency to track).
 ```json
 {
   "name": "City of Jacksonville",
-  "description": "Municipal government of Jacksonville, FL",
-  "website_url": "https://www.coj.net"
+  "description": "Municipal government of Jacksonville, FL"
 }
 ```
 
@@ -36,19 +35,20 @@ Create a new client (government agency to track).
   "client_id": 1,
   "name": "City of Jacksonville",
   "description": "Municipal government of Jacksonville, FL",
-  "website_url": "https://www.coj.net",
   "is_active": true,
   "created_at": 1706198400,
   "created_by": 1,
   "updated_at": null,
-  "keywords": null
+  "keywords": null,
+  "urls": []
 }
 ```
 
 **Validation Rules:**
 - `name`: Required, 3-200 characters, must be unique
 - `description`: Optional, max 1000 characters
-- `website_url`: Optional, must start with http:// or https://, max 500 characters
+
+**Note:** URLs are managed separately via the Client URL Management endpoints. See [Client URL Management](#client-url-management) section below.
 
 ---
 
@@ -153,7 +153,6 @@ Update a client's information.
 {
   "name": "JEA - Jacksonville Electric Authority",
   "description": "Updated description",
-  "website_url": "https://www.jea.com",
   "is_active": false
 }
 ```
@@ -164,12 +163,27 @@ Update a client's information.
   "client_id": 1,
   "name": "JEA - Jacksonville Electric Authority",
   "description": "Updated description",
-  "website_url": "https://www.jea.com",
   "is_active": false,
   "created_at": 1706198400,
   "created_by": 1,
   "updated_at": 1706284800,
-  "keywords": null
+  "keywords": null,
+  "urls": [
+    {
+      "id": 1,
+      "alias": "current",
+      "url": "https://www.jea.com/meetings/current",
+      "is_active": true,
+      "last_scraped_at": 1706284800
+    },
+    {
+      "id": 2,
+      "alias": "archive",
+      "url": "https://www.jea.com/meetings/archive",
+      "is_active": true,
+      "last_scraped_at": null
+    }
+  ]
 }
 ```
 
@@ -190,6 +204,37 @@ Soft delete a client (sets `is_active` to false).
 
 **Error Responses:**
 - `404 Not Found`: Client does not exist
+
+---
+
+### Client URL Management
+
+Clients can have multiple URLs for scraping (e.g., current meetings vs. archived meetings). Each URL has an alias for identification and can be individually activated/deactivated.
+
+#### ClientUrl Model
+
+```json
+{
+  "id": 1,
+  "alias": "current",
+  "url": "https://www.jea.com/meetings/current",
+  "is_active": true,
+  "last_scraped_at": 1706284800,
+  "created_at": 1706198400,
+  "updated_at": null
+}
+```
+
+**Fields:**
+- `id` (integer): Unique URL identifier
+- `alias` (string): Descriptive name for the URL (e.g., "current", "archive", "main")
+- `url` (string): Full URL to scrape
+- `is_active` (boolean): Whether this URL should be scraped
+- `last_scraped_at` (integer|null): Unix timestamp of last successful scrape
+- `created_at` (integer): Unix timestamp of creation
+- `updated_at` (integer|null): Unix timestamp of last update
+
+**Note:** URLs are managed through the UI when creating/editing clients. Direct API endpoints for URL management are internal and used by the client form.
 
 ---
 
