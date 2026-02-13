@@ -76,6 +76,28 @@
                 </dl>
             </div>
 
+            <!-- Client URLs Card -->
+            <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold text-gray-900">Client URLs</h2>
+                    {% if current_user and current_user.role_id == 1 %}
+                    <a href="/clients/{{ client.client_id }}/edit" class="text-sm text-blue-600 hover:text-blue-800">
+                        Edit URLs
+                    </a>
+                    {% endif %}
+                </div>
+                <div
+                    hx-get="/api/clients/{{ client.client_id }}/urls"
+                    hx-trigger="load"
+                    hx-swap="innerHTML"
+                >
+                    <div class="animate-pulse space-y-2">
+                        <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                        <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Keywords Card -->
             <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
                 <h2 class="text-lg font-semibold text-gray-900 mb-4">Associated Keywords</h2>

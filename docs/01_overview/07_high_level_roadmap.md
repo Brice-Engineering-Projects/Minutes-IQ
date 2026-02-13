@@ -784,47 +784,47 @@ _**Implementation Guide:** See `docs/10_instructions/11_phase3_implementation_pl
 
 **Effort:** 6 hours | **Risk:** High
 
-- [ ] **Remove website_url from Client Form** (15 min)
-  - [ ] `templates/clients/form.html:64-77` - Delete entire "Website URL" section
+- [x] **Remove website_url from Client Form** (15 min)
+  - [x] `templates/clients/form.html:64-77` - Delete entire "Website URL" section
 
-- [ ] **Add URL Management UI to Client Form** (4 hours)
-  - [ ] Add "Client URLs" section to form
-  - [ ] Display existing URLs (if editing client):
-    - [ ] Show alias input field
-    - [ ] Show URL input field
-    - [ ] Show "Active" checkbox
-    - [ ] Show "Delete" button per URL
-  - [ ] Add "Add URL" button
-  - [ ] Implement JavaScript for dynamic add/remove URL rows
-  - [ ] Handle hidden input fields for URL IDs (to track existing vs new)
-  - [ ] Style with Tailwind CSS to match existing form design
+- [x] **Add URL Management UI to Client Form** (4 hours)
+  - [x] Add "Client URLs" section to form
+  - [x] Display existing URLs (if editing client):
+    - [x] Show alias input field
+    - [x] Show URL input field
+    - [x] Show "Active" checkbox
+    - [x] Show "Delete" button per URL
+  - [x] Add "Add URL" button
+  - [x] Implement JavaScript for dynamic add/remove URL rows
+  - [x] Handle hidden input fields for URL IDs (to track existing vs new)
+  - [x] Style with Tailwind CSS to match existing form design
 
-- [ ] **Update Form Submission Handler** (1 hour)
-  - [ ] `api/clients_ui.py:236-287` - Update `create_client` endpoint
-    - [ ] Parse new URL data from form (aliases, urls, active status)
-    - [ ] Use `ClientUrlRepository` to create URLs after client creation
-  - [ ] `api/clients_ui.py:290-334` - Update `update_client` endpoint
-    - [ ] Parse existing URL IDs and updates
-    - [ ] Parse new URL data
-    - [ ] Handle URL updates, creates, and deletes
-  - [ ] Add error handling for URL creation/update failures
+- [x] **Update Form Submission Handler** (1 hour)
+  - [x] `api/clients_ui.py:236-287` - Update `create_client` endpoint
+    - [x] Parse new URL data from form (aliases, urls, active status)
+    - [x] Use `ClientUrlRepository` to create URLs after client creation
+  - [x] `api/clients_ui.py:290-334` - Update `update_client` endpoint
+    - [x] Parse existing URL IDs and updates
+    - [x] Parse new URL data
+    - [x] Handle URL updates, creates, and deletes
+  - [x] Add error handling for URL creation/update failures
 
-- [ ] **Add URL Display to Client Detail Page** (45 min)
-  - [ ] `templates/clients/detail.html` - Insert "Client URLs" card after Client Info
-  - [ ] Use htmx to load URL data dynamically
-  - [ ] Create endpoint `GET /api/clients/{id}/urls` - Return HTML fragment
-  - [ ] Display each URL with:
-    - [ ] Alias (prominent)
-    - [ ] URL (clickable link)
-    - [ ] Active/Inactive badge
-    - [ ] Last scraped timestamp
-  - [ ] Add "Edit URLs" link for admins
+- [x] **Add URL Display to Client Detail Page** (45 min)
+  - [x] `templates/clients/detail.html` - Insert "Client URLs" card after Client Info
+  - [x] Use htmx to load URL data dynamically
+  - [x] Create endpoint `GET /api/clients/{id}/urls` - Return HTML fragment
+  - [x] Display each URL with:
+    - [x] Alias (prominent)
+    - [x] URL (clickable link)
+    - [x] Active/Inactive badge
+    - [x] Last scraped timestamp
+  - [x] Add "Edit URLs" link for admins
 
-- [ ] **Update Scraper Job Creation UI** (Optional - Phase 4)
-  - [ ] Update `/scraper/jobs/new` form to show URL dropdown after client selection
-  - [ ] Display format: `[alias] url`
-  - [ ] Only show active URLs
-  - [ ] Update job creation to use `client_url_id`
+- [x] **Update Scraper Job Creation UI** (Optional - Phase 4)
+  - [x] Update `/scraper/jobs/new` form to show URL dropdown after client selection
+  - [x] Display format: `[alias] url`
+  - [x] Only show active URLs
+  - [x] Update job creation to use `client_url_id`
 
 ##### Phase 3E — Documentation & Cleanup (P2)
 

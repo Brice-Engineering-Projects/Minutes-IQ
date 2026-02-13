@@ -224,6 +224,71 @@ async def get_client_keywords(
     """
 
 
+@router.get("/{client_id}/urls", response_class=HTMLResponse)
+async def get_client_urls(
+    client_id: int,
+    client_url_repo: Annotated[ClientUrlRepository, Depends(get_client_url_repository)],
+):
+    """Get client's URLs as HTML."""
+    from datetime import datetime
+
+    # Get URLs for this client
+    urls = client_url_repo.get_client_urls(client_id)
+
+    if not urls:
+        return """
+        <div class="text-center py-8">
+            <p class="text-sm text-gray-500">No URLs configured yet</p>
+            <p class="text-xs text-gray-400 mt-1">URLs can be added when editing this client</p>
+        </div>
+        """
+
+    # Build URL list HTML
+    items_html = ""
+    for url in urls:
+        is_active = url.get("is_active", 0) == 1
+        last_scraped = url.get("last_scraped_at")
+
+        # Format timestamp if available
+        last_scraped_str = ""
+        if last_scraped:
+            try:
+                dt = datetime.fromtimestamp(last_scraped)
+                last_scraped_str = dt.strftime("%b %d, %Y at %I:%M %p")
+            except (ValueError, OSError, OverflowError):
+                last_scraped_str = "Unknown"
+
+        status_badge = f"""<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {'bg-green-100 text-green-800' if is_active else 'bg-gray-100 text-gray-600'}">
+            {'Active' if is_active else 'Inactive'}
+        </span>"""
+
+        items_html += f"""
+        <div class="py-3 border-b border-gray-200 last:border-0">
+            <div class="flex items-start justify-between">
+                <div class="flex-1">
+                    <div class="flex items-center space-x-2 mb-1">
+                        <span class="text-sm font-medium text-gray-900">{url.get("alias", "")}</span>
+                        {status_badge}
+                    </div>
+                    <a href="{url.get("url", "")}" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 break-all">
+                        {url.get("url", "")}
+                        <svg class="inline w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                        </svg>
+                    </a>
+                    {f'<p class="text-xs text-gray-500 mt-1">Last scraped: {last_scraped_str}</p>' if last_scraped else '<p class="text-xs text-gray-400 mt-1">Never scraped</p>'}
+                </div>
+            </div>
+        </div>
+        """
+
+    return f"""
+    <div class="space-y-0">
+        {items_html}
+    </div>
+    """
+
+
 @router.get("/{client_id}/scrape-jobs", response_class=HTMLResponse)
 async def get_client_scrape_jobs(client_id: int):
     """Get client's recent scrape jobs as HTML."""
