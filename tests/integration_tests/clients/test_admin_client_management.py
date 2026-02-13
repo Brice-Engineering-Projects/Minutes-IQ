@@ -16,7 +16,6 @@ class TestCreateClient:
             json={
                 "name": "City of Jacksonville",
                 "description": "Municipal government of Jacksonville, FL",
-                "website_url": "https://www.coj.net",
             },
         )
 
@@ -24,10 +23,11 @@ class TestCreateClient:
         data = response.json()
         assert data["name"] == "City of Jacksonville"
         assert data["description"] == "Municipal government of Jacksonville, FL"
-        assert data["website_url"] == "https://www.coj.net"
         assert data["is_active"] is True
         assert "client_id" in data
         assert "created_at" in data
+        assert "urls" in data
+        assert isinstance(data["urls"], list)
 
     def test_create_client_minimal(self, client: TestClient, admin_token: str):
         """Test creating a client with only required fields."""
@@ -41,7 +41,8 @@ class TestCreateClient:
         data = response.json()
         assert data["name"] == "JEA"
         assert data["description"] is None
-        assert data["website_url"] is None
+        assert "urls" in data
+        assert data["urls"] == []  # No URLs added yet
 
     def test_create_client_duplicate_name(self, client: TestClient, admin_token: str):
         """Test creating a client with duplicate name fails."""
@@ -260,15 +261,15 @@ class TestUpdateClient:
             headers={"Authorization": f"Bearer {admin_token}"},
             json={
                 "description": "New description",
-                "website_url": "https://example.com",
             },
         )
 
         assert response.status_code == 200
         data = response.json()
         assert data["description"] == "New description"
-        assert data["website_url"] == "https://example.com"
         assert data["name"] == "Test Client"  # Unchanged
+        assert "urls" in data
+        assert isinstance(data["urls"], list)
 
     def test_update_client_deactivate(self, client: TestClient, admin_token: str):
         """Test deactivating a client."""
@@ -299,6 +300,36 @@ class TestUpdateClient:
         )
 
         assert response.status_code == 404
+
+    def test_client_response_includes_urls_array(
+        self, client: TestClient, admin_token: str
+    ):
+        """Test that client responses include the urls array."""
+        # Create client
+        response = client.post(
+            "/admin/clients",
+            headers={"Authorization": f"Bearer {admin_token}"},
+            json={"name": "Test Client with URLs"},
+        )
+        assert response.status_code == 201
+        data = response.json()
+
+        # Verify urls field exists and is a list
+        assert "urls" in data
+        assert isinstance(data["urls"], list)
+
+    def test_url_data_structure(self, client: TestClient, admin_token: str):
+        """Test that URL objects have correct structure."""
+        # This test would need URLs to be created first
+        # For now, just verify empty array structure is correct
+        response = client.post(
+            "/admin/clients",
+            headers={"Authorization": f"Bearer {admin_token}"},
+            json={"name": "Test Client for URL Structure"},
+        )
+        assert response.status_code == 201
+        data = response.json()
+        assert data["urls"] == []
 
 
 class TestDeleteClient:

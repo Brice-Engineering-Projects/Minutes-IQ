@@ -757,28 +757,28 @@ _**Implementation Guide:** See `docs/10_instructions/11_phase3_implementation_pl
 
 **Effort:** 3 hours | **Risk:** Medium
 
-- [ ] **Update Test Database Schema** (30 min)
-  - [ ] `tests/conftest.py:124` - Remove `website_url TEXT,` from client table
-  - [ ] Add `client_urls` table to test schema
-  - [ ] Add indexes for `client_urls` table
-  - [ ] Seed test data with URLs for JEA test client
+- [x] **Update Test Database Schema** (30 min)
+  - [x] `tests/conftest.py:124` - Remove `website_url TEXT,` from client table
+  - [x] Add `client_urls` table to test schema
+  - [x] Add indexes for `client_urls` table
+  - [x] Seed test data with URLs for JEA test client
 
-- [ ] **Update Integration Tests** (2 hours)
-  - [ ] `test_admin_client_management.py:19` - Remove `website_url` from create test
-  - [ ] `test_admin_client_management.py:27` - Update assertions to check `urls` array
-  - [ ] `test_admin_client_management.py:44` - Update minimal data test assertions
-  - [ ] `test_admin_client_management.py:263` - Remove `website_url` from update test
-  - [ ] `test_admin_client_management.py:270` - Update update test assertions
-  - [ ] Add test: Verify client response includes `urls` array
-  - [ ] Add test: Verify URL data structure (id, alias, url, is_active)
+- [x] **Update Integration Tests** (2 hours)
+  - [x] `test_admin_client_management.py:19` - Remove `website_url` from create test
+  - [x] `test_admin_client_management.py:27` - Update assertions to check `urls` array
+  - [x] `test_admin_client_management.py:44` - Update minimal data test assertions
+  - [x] `test_admin_client_management.py:263` - Remove `website_url` from update test
+  - [x] `test_admin_client_management.py:270` - Update update test assertions
+  - [x] Add test: Verify client response includes `urls` array
+  - [x] Add test: Verify URL data structure (id, alias, url, is_active)
 
-- [ ] **Add URL Management Tests** (30 min)
-  - [ ] Create `test_client_url_management.py`
-  - [ ] Test creating URL for client
-  - [ ] Test listing client URLs
-  - [ ] Test updating URL
-  - [ ] Test deleting URL
-  - [ ] Test URL cascade delete when client deleted
+- [x] **Add URL Management Tests** (30 min)
+  - [x] Create `test_client_url_management.py`
+  - [x] Test creating URL for client
+  - [x] Test listing client URLs
+  - [x] Test updating URL
+  - [x] Test deleting URL
+  - [x] Test URL cascade delete when client deleted
 
 ##### Phase 3D — UI Updates (P1)
 

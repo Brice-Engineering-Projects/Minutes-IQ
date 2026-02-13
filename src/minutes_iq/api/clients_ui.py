@@ -7,8 +7,10 @@ from fastapi.responses import HTMLResponse
 
 from minutes_iq.auth.dependencies import get_current_user
 from minutes_iq.db.client_repository import ClientRepository
+from minutes_iq.db.client_url_repository import ClientUrlRepository
 from minutes_iq.db.dependencies import (
     get_client_repository,
+    get_client_url_repository,
     get_favorites_repository,
     get_keyword_repository,
 )
@@ -237,6 +239,7 @@ async def get_client_scrape_jobs(client_id: int):
 async def create_client(
     request: Request,
     client_repo: Annotated[ClientRepository, Depends(get_client_repository)],
+    client_url_repo: Annotated[ClientUrlRepository, Depends(get_client_url_repository)],
     keyword_repo: Annotated[KeywordRepository, Depends(get_keyword_repository)],
 ):
     """Create a new client."""
@@ -250,10 +253,15 @@ async def create_client(
     is_active = form_data.get("is_active") == "on"
     keyword_ids = form_data.getlist("keyword_ids")
 
+    # Get URL data
+    url_aliases = form_data.getlist("url_alias[]")
+    url_values = form_data.getlist("url_value[]")
+    url_is_active = form_data.getlist("url_is_active[]")
+
     if not name:
         return '<div class="p-4 bg-red-50 border border-red-200 rounded-md"><p class="text-sm text-red-800">Client name is required</p></div>'
 
-    # Create client (website_url is ignored - use ClientUrlRepository for URLs)
+    # Create client
     # TODO: Get created_by from current_user when auth is integrated
     created_by_user = 1  # Temporary: use admin user ID
     client = client_repo.create_client(
@@ -263,6 +271,20 @@ async def create_client(
         created_by=created_by_user,
     )
     client_id = client["client_id"]
+
+    # Add URLs to client
+    for i, (alias, url_value) in enumerate(zip(url_aliases, url_values, strict=False)):
+        if alias and url_value:
+            url_active = i < len(url_is_active)
+            try:
+                client_url_repo.create_url(
+                    client_id=client_id,
+                    alias=alias,
+                    url=url_value,
+                    is_active=url_active,
+                )
+            except Exception:
+                pass  # Skip invalid URLs
 
     # Add keywords to client
     if keyword_ids:
@@ -289,6 +311,7 @@ async def update_client(
     client_id: int,
     request: Request,
     client_repo: Annotated[ClientRepository, Depends(get_client_repository)],
+    client_url_repo: Annotated[ClientUrlRepository, Depends(get_client_url_repository)],
     keyword_repo: Annotated[KeywordRepository, Depends(get_keyword_repository)],
 ):
     """Update an existing client."""
@@ -302,16 +325,65 @@ async def update_client(
     is_active = form_data.get("is_active") == "on"
     keyword_ids = form_data.getlist("keyword_ids")
 
+    # Get URL data
+    url_ids = form_data.getlist("url_id[]")
+    url_aliases = form_data.getlist("url_alias[]")
+    url_values = form_data.getlist("url_value[]")
+    url_is_active_list = form_data.getlist("url_is_active[]")
+
     if not name:
         return '<div class="p-4 bg-red-50 border border-red-200 rounded-md"><p class="text-sm text-red-800">Client name is required</p></div>'
 
-    # Update client (website_url is ignored - use ClientUrlRepository for URLs)
+    # Update client
     client_repo.update_client(
         client_id=client_id,
         name=name,
         description=description,
         is_active=is_active,
     )
+
+    # Update URLs - get existing URLs, update/delete/create as needed
+    existing_urls = {
+        url["id"]: url for url in client_url_repo.get_client_urls(client_id)
+    }
+    submitted_url_ids = set()
+
+    for i, (url_id, alias, url_value) in enumerate(
+        zip(url_ids, url_aliases, url_values, strict=False)
+    ):
+        if alias and url_value:
+            url_active = i < len(url_is_active_list)
+
+            if url_id and url_id.strip():  # Existing URL
+                url_id_int = int(url_id)
+                submitted_url_ids.add(url_id_int)
+                try:
+                    client_url_repo.update_url(
+                        url_id=url_id_int,
+                        alias=alias,
+                        url=url_value,
+                        is_active=url_active,
+                    )
+                except Exception:
+                    pass  # Skip invalid updates
+            else:  # New URL
+                try:
+                    client_url_repo.create_url(
+                        client_id=client_id,
+                        alias=alias,
+                        url=url_value,
+                        is_active=url_active,
+                    )
+                except Exception:
+                    pass  # Skip invalid URLs
+
+    # Delete URLs that were removed from form
+    for existing_url_id in existing_urls.keys():
+        if existing_url_id not in submitted_url_ids:
+            try:
+                client_url_repo.delete_url(existing_url_id)
+            except Exception:
+                pass
 
     # Update keywords - remove all and re-add
     # TODO: Get updated_by from current_user when auth is integrated
