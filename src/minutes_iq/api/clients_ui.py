@@ -2,11 +2,17 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import HTMLResponse
 
+from minutes_iq.auth.dependencies import get_current_user
 from minutes_iq.db.client_repository import ClientRepository
-from minutes_iq.db.dependencies import get_client_repository, get_keyword_repository
+from minutes_iq.db.dependencies import (
+    get_client_repository,
+    get_favorites_repository,
+    get_keyword_repository,
+)
+from minutes_iq.db.favorites_repository import FavoritesRepository
 from minutes_iq.db.keyword_repository import KeywordRepository
 
 router = APIRouter(prefix="/api/clients", tags=["Client API"])
@@ -325,3 +331,44 @@ async def update_client(
     )
     response.headers["HX-Redirect"] = f"/clients/{client_id}"
     return response
+
+
+@router.post("/{client_id}/favorite", response_class=HTMLResponse)
+async def toggle_favorite(
+    client_id: int,
+    current_user: Annotated[dict, Depends(get_current_user)],
+    client_repo: Annotated[ClientRepository, Depends(get_client_repository)],
+    favorites_repo: Annotated[FavoritesRepository, Depends(get_favorites_repository)],
+):
+    """Toggle favorite status for a client."""
+    # Verify client exists and is active
+    client = client_repo.get_client(client_id)
+    if not client or not client.get("is_active"):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Client not found"
+        )
+
+    user_id = current_user["user_id"]
+    is_favorited = favorites_repo.is_favorite(user_id, client_id)
+
+    # Toggle favorite status
+    if is_favorited:
+        favorites_repo.remove_favorite(user_id, client_id)
+        is_favorited = False
+    else:
+        favorites_repo.add_favorite(user_id, client_id)
+        is_favorited = True
+
+    # Return updated heart icon
+    return f"""
+    <button
+        hx-post="/api/clients/{client_id}/favorite"
+        hx-swap="outerHTML"
+        onclick="event.stopPropagation()"
+        class="text-gray-400 hover:text-red-500"
+    >
+        <svg class="w-5 h-5 {'fill-current text-red-500' if is_favorited else ''}" fill="{'currentColor' if is_favorited else 'none'}" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+        </svg>
+    </button>
+    """
