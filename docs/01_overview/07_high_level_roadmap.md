@@ -715,48 +715,146 @@ _**Status:** Phase 1 (Stabilization) Complete ✅ | Phase 2 (Audit) Pending | Ph
 
 **Priority: P1 (High) - AFTER PHASE 2**
 
-- [ ] **API Models**
-  - [ ] Update `ClientResponse` - Change `website_url: str | None` → `urls: list[ClientUrl]`
-  - [ ] Update `FavoriteResponse` - Remove `website_url`
-  - [ ] Create `ClientUrl` Pydantic model (id, alias, url, is_active, last_scraped_at)
-  - [ ] Update all endpoints returning client data
+_**Implementation Guide:** See `docs/10_instructions/11_phase3_implementation_plan.md` for detailed step-by-step instructions_
 
-- [ ] **Client Management UI**
-  - [ ] Remove `website_url` field from `clients/form.html`
-  - [ ] Add URL management section to client forms:
-    - [ ] List existing URLs (table: alias, url, active status, last scraped)
-    - [ ] "Add URL" button (opens modal or inline form)
-    - [ ] Edit URL (inline or modal)
-    - [ ] Delete URL (confirmation required)
-    - [ ] Drag-and-drop reordering (optional)
-  - [ ] Add URL display to `clients/detail.html`:
-    - [ ] Show all URLs in card/table format
-    - [ ] Display alias prominently
-    - [ ] Show last_scraped_at timestamp
-    - [ ] Link to scrape job history per URL
-    - [ ] "Quick Scrape" action per URL
+**Estimated Effort:** ~10 hours | **Risk:** Medium
 
-- [ ] **Scraper Job Creation UI**
-  - [ ] Update `/scraper/jobs/new` form:
-    - [ ] After selecting client, show URL dropdown
-    - [ ] Display format: `[alias] url`
-    - [ ] Only show active URLs
-    - [ ] Default to first active URL
-  - [ ] Update job creation API to accept `client_url_id`
-  - [ ] Update job list to display URL alias alongside client name
+##### Phase 3A — Critical Fixes (P0 - Blocking) ⚠️
 
-- [ ] **Admin Routes**
-  - [ ] Audit `admin/client_routes.py` for `website_url` usage
-  - [ ] Update admin forms to use URL management UI
-  - [ ] Add bulk URL management for admins (optional)
+**Effort:** 35 minutes | **Risk:** Low | **MUST DO FIRST**
+
+- [x] **Fix Admin Endpoint Service Calls** (5 min)
+  - [x] `admin/client_routes.py:82` - Remove `website_url` parameter from `create_client()` call
+  - [x] `admin/client_routes.py:154` - Remove `website_url` parameter from `update_client()` call
+  - [x] **Critical:** These lines currently cause TypeErrors and 500 responses
+
+- [x] **Update Admin Pydantic Request Models** (10 min)
+  - [x] `admin/client_routes.py:26` - Remove `website_url` from `ClientCreate` model
+  - [x] `admin/client_routes.py:34` - Remove `website_url` from `ClientUpdate` model
+
+- [x] **Update Admin Response Model (Temporary)** (20 min)
+  - [x] `admin/client_routes.py:44` - Add `urls: list[ClientUrl]` field to `ClientResponse`
+  - [x] Keep `website_url` field temporarily for backwards compatibility
+  - [x] Update all admin endpoints to populate `urls` array from `ClientUrlRepository`
+  - [x] Endpoints to update: list_clients, get_client, create_client, update_client
+
+##### Phase 3B — User-Facing API Updates (P0)
+
+**Effort:** 30 minutes | **Risk:** Low
+
+- [x] **Update User API Response Models** (15 min)
+  - [x] `api/clients.py:31` - Add `urls: list[ClientUrl]` to `ClientResponse`
+  - [x] `api/clients.py:50` - Add `urls: list[ClientUrl]` to `FavoriteResponse`
+  - [x] Create `ClientUrl` Pydantic model (id, alias, url, is_active, last_scraped_at)
+  - [x] Keep `website_url` field temporarily for backwards compatibility
+
+- [x] **Update User API Endpoints** (15 min)
+  - [x] Update `list_clients` endpoint - Populate `urls` from `ClientUrlRepository`
+  - [x] Update `get_client` endpoint - Include client URLs in response
+  - [x] Update `get_favorites` endpoint - Include URLs for favorited clients
+
+##### Phase 3C — Test Updates (P1)
+
+**Effort:** 3 hours | **Risk:** Medium
+
+- [ ] **Update Test Database Schema** (30 min)
+  - [ ] `tests/conftest.py:124` - Remove `website_url TEXT,` from client table
+  - [ ] Add `client_urls` table to test schema
+  - [ ] Add indexes for `client_urls` table
+  - [ ] Seed test data with URLs for JEA test client
+
+- [ ] **Update Integration Tests** (2 hours)
+  - [ ] `test_admin_client_management.py:19` - Remove `website_url` from create test
+  - [ ] `test_admin_client_management.py:27` - Update assertions to check `urls` array
+  - [ ] `test_admin_client_management.py:44` - Update minimal data test assertions
+  - [ ] `test_admin_client_management.py:263` - Remove `website_url` from update test
+  - [ ] `test_admin_client_management.py:270` - Update update test assertions
+  - [ ] Add test: Verify client response includes `urls` array
+  - [ ] Add test: Verify URL data structure (id, alias, url, is_active)
+
+- [ ] **Add URL Management Tests** (30 min)
+  - [ ] Create `test_client_url_management.py`
+  - [ ] Test creating URL for client
+  - [ ] Test listing client URLs
+  - [ ] Test updating URL
+  - [ ] Test deleting URL
+  - [ ] Test URL cascade delete when client deleted
+
+##### Phase 3D — UI Updates (P1)
+
+**Effort:** 6 hours | **Risk:** High
+
+- [ ] **Remove website_url from Client Form** (15 min)
+  - [ ] `templates/clients/form.html:64-77` - Delete entire "Website URL" section
+
+- [ ] **Add URL Management UI to Client Form** (4 hours)
+  - [ ] Add "Client URLs" section to form
+  - [ ] Display existing URLs (if editing client):
+    - [ ] Show alias input field
+    - [ ] Show URL input field
+    - [ ] Show "Active" checkbox
+    - [ ] Show "Delete" button per URL
+  - [ ] Add "Add URL" button
+  - [ ] Implement JavaScript for dynamic add/remove URL rows
+  - [ ] Handle hidden input fields for URL IDs (to track existing vs new)
+  - [ ] Style with Tailwind CSS to match existing form design
+
+- [ ] **Update Form Submission Handler** (1 hour)
+  - [ ] `api/clients_ui.py:236-287` - Update `create_client` endpoint
+    - [ ] Parse new URL data from form (aliases, urls, active status)
+    - [ ] Use `ClientUrlRepository` to create URLs after client creation
+  - [ ] `api/clients_ui.py:290-334` - Update `update_client` endpoint
+    - [ ] Parse existing URL IDs and updates
+    - [ ] Parse new URL data
+    - [ ] Handle URL updates, creates, and deletes
+  - [ ] Add error handling for URL creation/update failures
+
+- [ ] **Add URL Display to Client Detail Page** (45 min)
+  - [ ] `templates/clients/detail.html` - Insert "Client URLs" card after Client Info
+  - [ ] Use htmx to load URL data dynamically
+  - [ ] Create endpoint `GET /api/clients/{id}/urls` - Return HTML fragment
+  - [ ] Display each URL with:
+    - [ ] Alias (prominent)
+    - [ ] URL (clickable link)
+    - [ ] Active/Inactive badge
+    - [ ] Last scraped timestamp
+  - [ ] Add "Edit URLs" link for admins
+
+- [ ] **Update Scraper Job Creation UI** (Optional - Phase 4)
+  - [ ] Update `/scraper/jobs/new` form to show URL dropdown after client selection
+  - [ ] Display format: `[alias] url`
+  - [ ] Only show active URLs
+  - [ ] Update job creation to use `client_url_id`
+
+##### Phase 3E — Documentation & Cleanup (P2)
+
+**Effort:** 1 hour | **Risk:** Low
+
+- [ ] **Update API Documentation** (30 min)
+  - [ ] Document `ClientUrl` model
+  - [ ] Document URL management endpoints
+  - [ ] Mark `website_url` as DEPRECATED
+  - [ ] Update examples to show `urls` array
+
+- [ ] **Remove Comments & Backwards Compatibility** (5 min)
+  - [ ] `api/clients_ui.py:256,308` - Remove or update comments
+  - [ ] Remove `website_url` field from response models (remove backwards compat)
+
+- [ ] **Final Cleanup** (25 min)
+  - [ ] Update CHANGELOG
+  - [ ] Run full test suite
+  - [ ] Manual testing checklist
+  - [ ] Code review
 
 **Exit Criteria:**
-- No `website_url` references remaining in codebase
-- UI fully supports multiple URLs per client
-- Users can add/edit/delete URLs through forms
-- Scraper jobs reference specific URLs
-- All tests passing
-- Documentation updated
+- ✅ No `website_url` parameters passed to service methods
+- ✅ All Pydantic models include `urls: list[ClientUrl]`
+- ✅ UI supports adding/editing/deleting URLs
+- ✅ Client detail page displays all URLs
+- ✅ Test database schema updated
+- ✅ All tests passing (200+ tests)
+- ✅ No TypeErrors or 500 responses
+- ✅ Documentation updated
 
 ##### Phase 4 — URL-Level Features (Optional - Future)
 

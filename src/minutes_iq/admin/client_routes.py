@@ -12,7 +12,8 @@ from pydantic import BaseModel, Field
 
 from minutes_iq.auth.dependencies import get_current_admin_user
 from minutes_iq.db.client_service import ClientService
-from minutes_iq.db.dependencies import get_client_service
+from minutes_iq.db.client_url_repository import ClientUrlRepository
+from minutes_iq.db.dependencies import get_client_service, get_client_url_repository
 
 router = APIRouter(prefix="/admin/clients", tags=["admin", "clients"])
 
@@ -23,7 +24,6 @@ class ClientCreate(BaseModel):
 
     name: str = Field(..., min_length=3, max_length=200)
     description: str | None = Field(None, max_length=1000)
-    website_url: str | None = Field(None, max_length=500)
 
 
 class ClientUpdate(BaseModel):
@@ -31,8 +31,19 @@ class ClientUpdate(BaseModel):
 
     name: str | None = Field(None, min_length=3, max_length=200)
     description: str | None = Field(None, max_length=1000)
-    website_url: str | None = Field(None, max_length=500)
     is_active: bool | None = None
+
+
+class ClientUrlResponse(BaseModel):
+    """Response model for a client URL."""
+
+    id: int
+    alias: str
+    url: str
+    is_active: bool
+    last_scraped_at: int | None
+    created_at: int
+    updated_at: int | None
 
 
 class ClientResponse(BaseModel):
@@ -41,12 +52,12 @@ class ClientResponse(BaseModel):
     client_id: int
     name: str
     description: str | None
-    website_url: str | None
     is_active: bool
     created_at: int
     created_by: int
     updated_at: int | None
     keywords: list[dict] | None = None
+    urls: list[ClientUrlResponse] = []
 
 
 class ClientListResponse(BaseModel):
@@ -70,6 +81,7 @@ async def create_client(
     client: ClientCreate,
     admin_user: Annotated[dict, Depends(get_current_admin_user)],
     client_service: Annotated[ClientService, Depends(get_client_service)],
+    client_url_repo: Annotated[ClientUrlRepository, Depends(get_client_url_repository)],
 ):
     """
     Create a new client (government agency to track).
@@ -79,19 +91,23 @@ async def create_client(
         name=client.name,
         created_by=admin_user["user_id"],
         description=client.description,
-        website_url=client.website_url,
     )
 
     if not success or not client_data:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_msg)
 
-    return ClientResponse(**client_data, keywords=None)
+    # Get URLs for this client
+    urls = client_url_repo.get_client_urls(client_data["client_id"])
+    url_responses = [ClientUrlResponse(**url) for url in urls]
+
+    return ClientResponse(**client_data, keywords=None, urls=url_responses)
 
 
 @router.get("", response_model=ClientListResponse)
 async def list_clients(
     admin_user: Annotated[dict, Depends(get_current_admin_user)],
     client_service: Annotated[ClientService, Depends(get_client_service)],
+    client_url_repo: Annotated[ClientUrlRepository, Depends(get_client_url_repository)],
     is_active: bool | None = None,
     include_keywords: bool = False,
     limit: int = 100,
@@ -108,8 +124,15 @@ async def list_clients(
         offset=offset,
     )
 
+    # Add URLs for each client
+    client_responses = []
+    for client in clients:
+        urls = client_url_repo.get_client_urls(client["client_id"])
+        url_responses = [ClientUrlResponse(**url) for url in urls]
+        client_responses.append(ClientResponse(**client, urls=url_responses))
+
     return ClientListResponse(
-        clients=[ClientResponse(**c) for c in clients],
+        clients=client_responses,
         total=total,
         limit=limit,
         offset=offset,
@@ -121,6 +144,7 @@ async def get_client(
     client_id: int,
     admin_user: Annotated[dict, Depends(get_current_admin_user)],
     client_service: Annotated[ClientService, Depends(get_client_service)],
+    client_url_repo: Annotated[ClientUrlRepository, Depends(get_client_url_repository)],
 ):
     """
     Get a specific client by ID with its keywords.
@@ -133,7 +157,11 @@ async def get_client(
             status_code=status.HTTP_404_NOT_FOUND, detail="Client not found"
         )
 
-    return ClientResponse(**client)
+    # Get URLs for this client
+    urls = client_url_repo.get_client_urls(client_id)
+    url_responses = [ClientUrlResponse(**url) for url in urls]
+
+    return ClientResponse(**client, urls=url_responses)
 
 
 @router.put("/{client_id}", response_model=ClientResponse)
@@ -142,6 +170,7 @@ async def update_client(
     update: ClientUpdate,
     admin_user: Annotated[dict, Depends(get_current_admin_user)],
     client_service: Annotated[ClientService, Depends(get_client_service)],
+    client_url_repo: Annotated[ClientUrlRepository, Depends(get_client_url_repository)],
 ):
     """
     Update a client's information.
@@ -151,7 +180,6 @@ async def update_client(
         client_id=client_id,
         name=update.name,
         description=update.description,
-        website_url=update.website_url,
         is_active=update.is_active,
     )
 
@@ -160,7 +188,11 @@ async def update_client(
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error_msg)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_msg)
 
-    return ClientResponse(**client_data, keywords=None)
+    # Get URLs for this client
+    urls = client_url_repo.get_client_urls(client_id)
+    url_responses = [ClientUrlResponse(**url) for url in urls]
+
+    return ClientResponse(**client_data, keywords=None, urls=url_responses)
 
 
 @router.delete("/{client_id}", status_code=status.HTTP_204_NO_CONTENT)

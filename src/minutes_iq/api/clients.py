@@ -12,8 +12,10 @@ from pydantic import BaseModel
 
 from minutes_iq.auth.dependencies import get_current_user
 from minutes_iq.db.client_service import ClientService
+from minutes_iq.db.client_url_repository import ClientUrlRepository
 from minutes_iq.db.dependencies import (
     get_client_service,
+    get_client_url_repository,
     get_favorites_repository,
 )
 from minutes_iq.db.favorites_repository import FavoritesRepository
@@ -22,16 +24,26 @@ router = APIRouter(prefix="/clients", tags=["clients"])
 
 
 # Response Models
+class ClientUrlResponse(BaseModel):
+    """Response model for a client URL."""
+
+    id: int
+    alias: str
+    url: str
+    is_active: bool
+    last_scraped_at: int | None
+
+
 class ClientResponse(BaseModel):
     """Response model for a single client."""
 
     client_id: int
     name: str
     description: str | None
-    website_url: str | None
     is_active: bool
     is_favorited: bool = False
     keywords: list[dict] | None = None
+    urls: list[ClientUrlResponse] = []
 
 
 class ClientListResponse(BaseModel):
@@ -47,10 +59,10 @@ class FavoriteResponse(BaseModel):
     client_id: int
     name: str
     description: str | None
-    website_url: str | None
     is_active: bool
     favorited_at: int
     keywords: list[dict] | None = None
+    urls: list[ClientUrlResponse] = []
 
 
 # Endpoints
@@ -59,6 +71,7 @@ async def list_clients(
     current_user: Annotated[dict, Depends(get_current_user)],
     client_service: Annotated[ClientService, Depends(get_client_service)],
     favorites_repo: Annotated[FavoritesRepository, Depends(get_favorites_repository)],
+    client_url_repo: Annotated[ClientUrlRepository, Depends(get_client_url_repository)],
     include_keywords: bool = False,
 ):
     """
@@ -75,14 +88,18 @@ async def list_clients(
     favorites = favorites_repo.get_user_favorites(user_id)
     favorite_ids = {fav["client_id"] for fav in favorites}
 
-    # Mark favorited clients
-    client_responses = [
-        ClientResponse(
-            **client,
-            is_favorited=client["client_id"] in favorite_ids,
+    # Mark favorited clients and add URLs
+    client_responses = []
+    for client in clients:
+        urls = client_url_repo.get_client_urls(client["client_id"])
+        url_responses = [ClientUrlResponse(**url) for url in urls]
+        client_responses.append(
+            ClientResponse(
+                **client,
+                is_favorited=client["client_id"] in favorite_ids,
+                urls=url_responses,
+            )
         )
-        for client in clients
-    ]
 
     return ClientListResponse(clients=client_responses, total=total)
 
@@ -91,6 +108,7 @@ async def list_clients(
 async def get_favorites(
     current_user: Annotated[dict, Depends(get_current_user)],
     favorites_repo: Annotated[FavoritesRepository, Depends(get_favorites_repository)],
+    client_url_repo: Annotated[ClientUrlRepository, Depends(get_client_url_repository)],
 ):
     """
     Get all clients favorited by the current user.
@@ -98,7 +116,14 @@ async def get_favorites(
     user_id = current_user["user_id"]
     favorites = favorites_repo.get_user_favorites(user_id)
 
-    return [FavoriteResponse(**fav) for fav in favorites]
+    # Add URLs for each favorite
+    favorite_responses = []
+    for fav in favorites:
+        urls = client_url_repo.get_client_urls(fav["client_id"])
+        url_responses = [ClientUrlResponse(**url) for url in urls]
+        favorite_responses.append(FavoriteResponse(**fav, urls=url_responses))
+
+    return favorite_responses
 
 
 @router.get("/{client_id}", response_model=ClientResponse)
@@ -107,6 +132,7 @@ async def get_client(
     current_user: Annotated[dict, Depends(get_current_user)],
     client_service: Annotated[ClientService, Depends(get_client_service)],
     favorites_repo: Annotated[FavoritesRepository, Depends(get_favorites_repository)],
+    client_url_repo: Annotated[ClientUrlRepository, Depends(get_client_url_repository)],
 ):
     """
     Get a specific client by ID with its keywords.
@@ -128,7 +154,11 @@ async def get_client(
     user_id = current_user["user_id"]
     is_favorited = favorites_repo.is_favorite(user_id, client_id)
 
-    return ClientResponse(**client, is_favorited=is_favorited)
+    # Get URLs for this client
+    urls = client_url_repo.get_client_urls(client_id)
+    url_responses = [ClientUrlResponse(**url) for url in urls]
+
+    return ClientResponse(**client, is_favorited=is_favorited, urls=url_responses)
 
 
 @router.post("/{client_id}/favorite", status_code=status.HTTP_201_CREATED)
