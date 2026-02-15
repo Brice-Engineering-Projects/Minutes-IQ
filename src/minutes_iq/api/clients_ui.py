@@ -287,8 +287,8 @@ async def get_client_urls(
             except (ValueError, OSError, OverflowError):
                 last_scraped_str = "Unknown"
 
-        status_badge = f"""<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {'bg-green-100 text-green-800' if is_active else 'bg-gray-100 text-gray-600'}">
-            {'Active' if is_active else 'Inactive'}
+        status_badge = f"""<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {"bg-green-100 text-green-800" if is_active else "bg-gray-100 text-gray-600"}">
+            {"Active" if is_active else "Inactive"}
         </span>"""
 
         items_html += f"""
