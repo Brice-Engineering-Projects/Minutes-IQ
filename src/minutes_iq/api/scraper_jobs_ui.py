@@ -312,11 +312,34 @@ async def create_job(
     # TODO: Get created_by from current_user when auth is integrated
     created_by = 1  # Temporary: use admin user ID
 
-    # Extract form fields
-    client_url_id = int(form_data.get("client_url_id"))
-    start_date = form_data.get("start_date")
-    end_date = form_data.get("end_date")
-    max_scan_pages = int(form_data.get("max_scan_pages", 15))
+    # Extract form fields with proper type handling
+    from starlette.datastructures import UploadFile
+
+    client_url_id_raw = form_data.get("client_url_id")
+    if not client_url_id_raw or isinstance(client_url_id_raw, bytes | UploadFile):
+        raise HTTPException(status_code=400, detail="client_url_id is required")
+    client_url_id = int(str(client_url_id_raw))
+
+    start_date_raw = form_data.get("start_date")
+    start_date = (
+        str(start_date_raw)
+        if start_date_raw and not isinstance(start_date_raw, bytes | UploadFile)
+        else None
+    )
+
+    end_date_raw = form_data.get("end_date")
+    end_date = (
+        str(end_date_raw)
+        if end_date_raw and not isinstance(end_date_raw, bytes | UploadFile)
+        else None
+    )
+
+    max_scan_pages_raw = form_data.get("max_scan_pages", "15")
+    max_scan_pages = (
+        int(str(max_scan_pages_raw))
+        if max_scan_pages_raw and not isinstance(max_scan_pages_raw, bytes | UploadFile)
+        else 15
+    )
     include_board_minutes = "include_board_minutes" in form_data
     include_packages = "include_packages" in form_data
 

@@ -49,7 +49,7 @@ class ScraperService:
         """
         # Create job
         job_id = self.repository.create_job(
-            client_id=client_id,
+            client_url_id=client_id,
             created_by=created_by,
             status="pending",
         )
