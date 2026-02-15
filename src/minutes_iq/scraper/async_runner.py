@@ -94,6 +94,7 @@ def run_scrape_job_async(
         storage_manager: Optional StorageManager for organized file storage
     """
     start_time = time.time()
+    print(f"📋 Starting background execution of job {job_id}", flush=True)
     logger.info(f"Starting background execution of job {job_id}")
 
     try:
@@ -117,17 +118,24 @@ def run_scrape_job_async(
 
         # Check final status
         elapsed = time.time() - start_time
+        print(
+            f"✅ Job {job_id} completed successfully in {elapsed:.1f}s: {result}",
+            flush=True,
+        )
         logger.info(f"Job {job_id} completed successfully in {elapsed:.1f}s: {result}")
 
     except JobCancelledException as e:
+        print(f"⚠️ Job {job_id} was cancelled: {e}", flush=True)
         logger.warning(f"Job {job_id} was cancelled: {e}")
         service.repository.update_job_status(job_id, "cancelled", str(e))
 
     except JobTimeoutException as e:
+        print(f"❌ Job {job_id} timed out: {e}", flush=True)
         logger.error(f"Job {job_id} timed out: {e}")
         service.repository.update_job_status(job_id, "failed", str(e))
 
     except Exception as e:
+        print(f"❌ Job {job_id} failed with error: {e}", flush=True)
         logger.error(f"Job {job_id} failed with error: {e}", exc_info=True)
         service.repository.update_job_status(job_id, "failed", str(e))
 
@@ -208,6 +216,7 @@ def _execute_with_monitoring(
         check_cancellation(job_id)
         _check_timeout(job_id, start_time)
 
+        print(f"🔍 [Job {job_id}] Scraping PDF links from {source_url}", flush=True)
         logger.info(f"[Job {job_id}] Scraping PDF links from {source_url}")
         pdf_links = scrape_pdf_links(
             base_url=source_url,
@@ -217,7 +226,9 @@ def _execute_with_monitoring(
             include_packages=config["include_packages"],
         )
         all_pdf_links.extend(pdf_links)
+        print(f"  Found {len(pdf_links)} PDFs from {source_url}", flush=True)
 
+    print(f"📚 [Job {job_id}] Total {len(all_pdf_links)} PDFs to scan", flush=True)
     logger.info(f"[Job {job_id}] Found {len(all_pdf_links)} PDFs to scan")
 
     # Process each PDF
@@ -270,7 +281,8 @@ def _execute_with_monitoring(
                         logger.info(
                             f"[Job {job_id}] Attempting to reconnect to database..."
                         )
-                        new_conn = get_db_connection()
+                        conn_ctx = get_db_connection()
+                        new_conn = conn_ctx.__enter__()
                         service.repository = ScraperRepository(new_conn)
                         logger.info(f"[Job {job_id}] ✅ Reconnected successfully")
                     except Exception as reconnect_error:

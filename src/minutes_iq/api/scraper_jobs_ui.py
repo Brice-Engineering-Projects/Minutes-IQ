@@ -362,9 +362,10 @@ async def create_job(
             from minutes_iq.db.client import get_db_connection
             from minutes_iq.db.scraper_repository import ScraperRepository
 
-            conn = get_db_connection()
+            conn_ctx = get_db_connection()
+            conn = conn_ctx.__enter__()  # Get actual connection from context manager
             thread_repo = ScraperRepository(conn)
-            return ScraperService(thread_repo), conn
+            return ScraperService(thread_repo), conn, conn_ctx
 
         try:
             print(f"🚀 Thread starting for job {job_id}", flush=True)
@@ -372,7 +373,7 @@ async def create_job(
 
             # Create initial connection
             print(f"✅ Creating DB connection for job {job_id}", flush=True)
-            thread_service, conn = get_fresh_service()
+            thread_service, conn, conn_ctx = get_fresh_service()
 
             print(
                 f"✅ DB connection created for job {job_id}, starting execution",
@@ -382,16 +383,20 @@ async def create_job(
                 f"✅ DB connection created for job {job_id}, starting execution"
             )
 
-            # Run with connection retry support
-            run_scrape_job_async(
-                job_id=job_id,
-                service=thread_service,
-                source_urls=source_urls,
-                storage_manager=storage,
-            )
-
-            # Close connection
-            conn.close()
+            try:
+                # Run with connection retry support
+                run_scrape_job_async(
+                    job_id=job_id,
+                    service=thread_service,
+                    source_urls=source_urls,
+                    storage_manager=storage,
+                )
+            finally:
+                # Properly close connection context manager
+                try:
+                    conn_ctx.__exit__(None, None, None)
+                except Exception as close_error:
+                    logger.warning(f"Error closing connection: {close_error}")
 
             print(f"✅ Job {job_id} thread completed", flush=True)
             logger.info(f"✅ Job {job_id} thread completed")
