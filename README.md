@@ -13,8 +13,6 @@
 
 **Minutes IQ** is a **private, login-protected intelligence platform** designed to extract **business development and pre-positioning signals** from publicly available municipal meeting documents.
 
-The system currently targets **JEA (Jacksonville Electric Authority)** and is architected to support additional municipalities including **Jacksonville Beach**, **Atlantic Beach**, **Palm Coast**, and others.
-
 All scraping, NLP, and PDF annotation workflows are executed as **tracked asynchronous jobs**, with results packaged into downloadable ZIP artifacts. Documents are stored **on disk only**, never in the database.
 
 ---
@@ -59,17 +57,6 @@ Versioning follows semantic intent:
 * Predefined and client-specific keyword sets
 * Database-driven keyword selection
 * NLP entity extraction and annotation
-
-### 🏙️ Municipality Targeting
-
-Currently supported:
-
-* JEA
-* City of Jacksonville Beach
-* Atlantic Beach
-* Palm Coast
-
-Designed for easy onboarding of additional agencies.
 
 ### 📄 Scraper & NLP Pipeline
 
