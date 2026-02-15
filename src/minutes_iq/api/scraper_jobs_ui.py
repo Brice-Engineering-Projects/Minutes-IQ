@@ -10,8 +10,10 @@ from fastapi.responses import HTMLResponse, Response
 from pydantic import BaseModel
 
 from minutes_iq.db.client_repository import ClientRepository
+from minutes_iq.db.client_url_repository import ClientUrlRepository
 from minutes_iq.db.dependencies import (
     get_client_repository,
+    get_client_url_repository,
     get_keyword_repository,
     get_scraper_repository,
 )
@@ -24,7 +26,7 @@ router = APIRouter(prefix="/api/scraper/jobs", tags=["Scraper Jobs UI API"])
 class JobCreate(BaseModel):
     """Schema for creating a scrape job."""
 
-    client_id: int
+    client_url_id: int
     start_date: str
     end_date: str
     max_scan_pages: int = 15
@@ -251,15 +253,20 @@ async def get_jobs_list(
 
 @router.get("/preview-keywords", response_class=HTMLResponse)
 async def preview_keywords(
-    client_id: int,
+    client_url_id: int,
+    client_url_repo: Annotated[ClientUrlRepository, Depends(get_client_url_repository)],
     keyword_repo: Annotated[KeywordRepository, Depends(get_keyword_repository)],
 ):
-    """Return HTML preview of keywords for selected client."""
-    if not client_id:
-        return (
-            '<p class="text-sm text-gray-500">Select a client to preview keywords</p>'
-        )
+    """Return HTML preview of keywords for selected client URL."""
+    if not client_url_id:
+        return '<p class="text-sm text-gray-500">Select a client URL to preview keywords</p>'
 
+    # Get the client_id from the client_url
+    client_url = client_url_repo.get_url(client_url_id)
+    if not client_url:
+        return '<p class="text-sm text-red-500">Client URL not found</p>'
+
+    client_id = client_url["client_id"]
     keywords = keyword_repo.get_client_keywords(client_id)
 
     if not keywords:
@@ -290,16 +297,62 @@ async def preview_keywords(
 
 @router.post("", response_class=HTMLResponse)
 async def create_job(
-    job_data: JobCreate,
+    request: Request,
     scraper_repo: Annotated[ScraperRepository, Depends(get_scraper_repository)],
+    client_url_repo: Annotated[ClientUrlRepository, Depends(get_client_url_repository)],
 ):
-    """Create a new scrape job."""
+    """Create a new scrape job and start background execution."""
+    from minutes_iq.db.scraper_service import ScraperService
+    from minutes_iq.scraper.async_runner import run_scrape_job_async
+    from minutes_iq.scraper.storage import StorageManager
+
+    # Parse form data
+    form_data = await request.form()
+
     # TODO: Get created_by from current_user when auth is integrated
     created_by = 1  # Temporary: use admin user ID
 
+    # Extract form fields with proper type handling
+    from starlette.datastructures import UploadFile
+
+    client_url_id_raw = form_data.get("client_url_id")
+    if not client_url_id_raw or isinstance(client_url_id_raw, bytes | UploadFile):
+        raise HTTPException(status_code=400, detail="client_url_id is required")
+    client_url_id = int(str(client_url_id_raw))
+
+    start_date_raw = form_data.get("start_date")
+    start_date = (
+        str(start_date_raw)
+        if start_date_raw and not isinstance(start_date_raw, bytes | UploadFile)
+        else None
+    )
+
+    end_date_raw = form_data.get("end_date")
+    end_date = (
+        str(end_date_raw)
+        if end_date_raw and not isinstance(end_date_raw, bytes | UploadFile)
+        else None
+    )
+
+    max_scan_pages_raw = form_data.get("max_scan_pages", "15")
+    max_scan_pages = (
+        int(str(max_scan_pages_raw))
+        if max_scan_pages_raw and not isinstance(max_scan_pages_raw, bytes | UploadFile)
+        else 15
+    )
+    include_board_minutes = "include_board_minutes" in form_data
+    include_packages = "include_packages" in form_data
+
+    # Get the client URL to extract the URL itself
+    client_url = client_url_repo.get_url(client_url_id)
+    if not client_url:
+        raise HTTPException(status_code=404, detail="Client URL not found")
+
+    source_urls = [client_url["url"]]
+
     # Create job
     job_id = scraper_repo.create_job(
-        client_id=job_data.client_id,
+        client_url_id=client_url_id,
         created_by=created_by,
         status="pending",
     )
@@ -307,12 +360,81 @@ async def create_job(
     # Create job config
     scraper_repo.create_job_config(
         job_id=job_id,
-        date_range_start=job_data.start_date,
-        date_range_end=job_data.end_date,
-        max_scan_pages=job_data.max_scan_pages,
-        include_minutes=job_data.include_board_minutes,
-        include_packages=job_data.include_packages,
+        date_range_start=start_date,
+        date_range_end=end_date,
+        max_scan_pages=max_scan_pages,
+        include_minutes=include_board_minutes,
+        include_packages=include_packages,
     )
+
+    # Start background execution in a separate thread
+    # IMPORTANT: We must pass the job_id and source_urls, not the service/connection
+    # The thread will create its own database connection to avoid threading issues
+    import threading
+
+    storage = StorageManager(base_dir="data")
+
+    def run_job_in_thread():
+        """Run the job in a background thread with its own DB connection."""
+        import logging
+
+        logger = logging.getLogger(__name__)
+
+        # Connection retry wrapper - recreates connection on timeout
+        def get_fresh_service():
+            from minutes_iq.db.client import get_db_connection
+            from minutes_iq.db.scraper_repository import ScraperRepository
+
+            conn_ctx = get_db_connection()
+            conn = conn_ctx.__enter__()  # Get actual connection from context manager
+            thread_repo = ScraperRepository(conn)
+            return ScraperService(thread_repo), conn, conn_ctx
+
+        try:
+            print(f"🚀 Thread starting for job {job_id}", flush=True)
+            logger.info(f"🚀 Thread starting for job {job_id}")
+
+            # Create initial connection
+            print(f"✅ Creating DB connection for job {job_id}", flush=True)
+            thread_service, conn, conn_ctx = get_fresh_service()
+
+            print(
+                f"✅ DB connection created for job {job_id}, starting execution",
+                flush=True,
+            )
+            logger.info(
+                f"✅ DB connection created for job {job_id}, starting execution"
+            )
+
+            try:
+                # Run with connection retry support
+                run_scrape_job_async(
+                    job_id=job_id,
+                    service=thread_service,
+                    source_urls=source_urls,
+                    storage_manager=storage,
+                )
+            finally:
+                # Properly close connection context manager
+                try:
+                    conn_ctx.__exit__(None, None, None)
+                except Exception as close_error:
+                    logger.warning(f"Error closing connection: {close_error}")
+
+            print(f"✅ Job {job_id} thread completed", flush=True)
+            logger.info(f"✅ Job {job_id} thread completed")
+
+        except Exception as e:
+            print(f"❌ Fatal error in job {job_id} thread: {e}", flush=True)
+            logger.error(f"❌ Fatal error in job {job_id} thread: {e}", exc_info=True)
+            import traceback
+
+            traceback.print_exc()
+
+    print(f"🎯 Creating thread for job {job_id}", flush=True)
+    thread = threading.Thread(target=run_job_in_thread, daemon=True)
+    thread.start()
+    print(f"🎯 Thread started for job {job_id}", flush=True)
 
     # Redirect to job detail page
     response = Response(status_code=200)
@@ -325,15 +447,22 @@ async def get_job_status(
     job_id: int,
     scraper_repo: Annotated[ScraperRepository, Depends(get_scraper_repository)],
     client_repo: Annotated[ClientRepository, Depends(get_client_repository)],
+    client_url_repo: Annotated[ClientUrlRepository, Depends(get_client_url_repository)],
 ):
     """Return job status card HTML (for polling)."""
     job = scraper_repo.get_job(job_id)
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
 
-    # Get client name
-    client = client_repo.get_client_by_id(job["client_id"])
-    client_name = client.get("name", "Unknown") if client else "Unknown"
+    # Get client name from client_url
+    client_url = client_url_repo.get_url(job["client_url_id"])
+    if client_url:
+        client = client_repo.get_client_by_id(client_url["client_id"])
+        client_name = client.get("name", "Unknown") if client else "Unknown"
+        client_id = client_url["client_id"]
+    else:
+        client_name = "Unknown"
+        client_id = None
 
     # Format timestamps
     created_at_formatted = (
@@ -391,7 +520,7 @@ async def get_job_status(
                 <dt class="text-sm font-medium text-gray-500">Client</dt>
                 <dd class="mt-1 text-sm text-gray-900">
                     <a href="/clients/{
-        job["client_id"]
+        client_id if client_id else "#"
     }" class="text-blue-600 hover:text-blue-800">
                         {client_name}
                     </a>
@@ -621,15 +750,10 @@ async def get_job_results(
         escaped_filename = escape(pdf_filename)
         escaped_keyword = escape(keyword)
 
-        # Build PDF link
-        pdf_link = f"/api/scraper/jobs/{job_id}/pdfs/{escaped_filename}"
-
         rows_html += f"""
         <tr class="hover:bg-gray-50">
-            <td class="px-6 py-4 text-sm">
-                <a href="{pdf_link}" target="_blank" class="text-blue-600 hover:text-blue-800">
-                    {escaped_filename}
-                </a>
+            <td class="px-6 py-4 text-sm text-gray-900">
+                {escaped_filename}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {escape(str(page_number))}
@@ -946,13 +1070,18 @@ async def export_csv(
     )
 
 
-@router.get("/{job_id}/pdfs/{filename}", response_class=HTMLResponse)
+# NOTE: PDF storage disabled per deployment strategy (storing only matched snippets)
+# Uncomment this endpoint if full PDF storage is implemented in the future
+# @router.get("/{job_id}/pdfs/{filename}", response_class=HTMLResponse)
 async def serve_pdf(
     job_id: int,
     filename: str,
     scraper_repo: Annotated[ScraperRepository, Depends(get_scraper_repository)],
 ):
-    """Serve PDF file for viewing (with authentication and ownership validation)."""
+    """Serve PDF file for viewing (with authentication and ownership validation).
+
+    NOTE: Currently disabled - we store only matched page snippets, not full PDFs.
+    """
     from pathlib import Path
 
     from fastapi.responses import FileResponse

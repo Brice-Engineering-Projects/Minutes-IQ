@@ -113,10 +113,14 @@ def scrape_pdf_links(
                 y, m = date_match.groups()[0], date_match.groups()[1]
                 date_str = f"{y}-{m}"
 
-                # Apply date range filter if specified
-                if date_range_start and date_range_end:
-                    if not (date_range_start <= date_str <= date_range_end):
-                        continue
+            # Apply date range filter if specified
+            if date_range_start and date_range_end:
+                # Skip if we couldn't extract a date
+                if not date_str:
+                    continue
+                # Skip if date is outside range
+                if not (date_range_start <= date_str <= date_range_end):
+                    continue
 
             pdf_links.append(
                 {

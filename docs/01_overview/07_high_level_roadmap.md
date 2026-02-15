@@ -103,6 +103,7 @@ Auth no longer depends on in-memory data structures.
 **Goal:** Prevent unauthorized self-registration.
 
 ### Completed
+
 - [x] Design authorization code model (database schema, code format, validation logic)
 - [x] Create migration for `auth_codes` and `code_usage` tables
 - [x] Implement `AuthCodeRepository` (CRUD operations)
@@ -129,6 +130,7 @@ Auth no longer depends on in-memory data structures.
   - [x] Updated security documentation with authorization code policies
 
 **Test Results:**
+
 - 43 tests passing (16 registration + 19 admin + 8 auth flow)
 - 0 failures
 - All Phase 3 functionality complete
@@ -143,6 +145,7 @@ Only explicitly authorized users can create accounts.
 **Goal:** Enable safe account recovery.
 
 ### Completed
+
 - [x] Design and implement password reset token model (SHA-256 hashed, 30-min expiration)
 - [x] Create migration for `password_reset_tokens` table
 - [x] Implement `PasswordResetRepository` with CRUD operations
@@ -156,11 +159,13 @@ Only explicitly authorized users can create accounts.
 - [x] Email enumeration protection
 
 ### Test Results
+
 - 56 tests passing (13 new password reset tests)
 - 0 failures
 - Full mypy type safety
 
 ### Future Enhancement
+
 - [ ] Email delivery integration (SendGrid/SMTP) - Currently placeholder
 
 **Exit Criteria: ✅ ACHIEVED**
@@ -173,7 +178,9 @@ Users can recover access without admin intervention through password reset endpo
 **Goal:** Enable real value from the dashboard by managing clients (agencies) and keywords.
 
 ### Overview
+
 This phase implements the core data model for:
+
 - **Clients** - Government agencies/organizations being tracked (e.g., JEA, City of Jacksonville)
 - **Keywords** - Search terms used to filter relevant meeting minutes
 - **User Favorites** - Per-user client preferences
@@ -181,6 +188,7 @@ This phase implements the core data model for:
 ### Completed Work
 
 #### 5.1 Database Schema ✅
+
 - [x] Create `clients` table with metadata tracking
 - [x] Create `keywords` table (keyword taxonomy with categories)
 - [x] Create `user_client_favorites` table (many-to-many)
@@ -190,17 +198,20 @@ This phase implements the core data model for:
 - [x] Update test database setup in `conftest.py` with Phase 5 tables
 
 #### 5.2 Data Access Layer ✅
+
 - [x] Implement `ClientRepository` (CRUD for clients, soft delete, counting)
 - [x] Implement `KeywordRepository` (CRUD for keywords, client-keyword associations)
 - [x] Implement `FavoritesRepository` (user favorites management, counting)
 - [x] All repositories pass mypy type checking
 
 #### 5.3 Business Logic Layer ✅
+
 - [x] Implement `ClientService` (business logic, validation, keyword associations)
 - [x] Implement `KeywordService` (keyword management, search, suggestions, categories)
 - [x] Implement dependency injection for all Phase 5 repositories and services
 
 #### 5.4 API Endpoints ✅
+
 - [x] Admin: POST `/admin/clients` - Create client
 - [x] Admin: GET `/admin/clients` - List all clients
 - [x] Admin: GET `/admin/clients/{id}` - Get client details
@@ -225,6 +236,7 @@ This phase implements the core data model for:
 - [x] User: GET `/clients/favorites` - Get user's favorites
 
 ### Test Results ✅
+
 - 149 existing tests still passing (Phases 1-4)
 - **69 new Phase 5 integration tests created**
   - 21 tests for admin client management
@@ -237,6 +249,7 @@ This phase implements the core data model for:
 - **Total: 213 passing tests across all phases**
 
 #### 5.5 Testing ✅
+
 - [x] Integration tests for admin client management endpoints (21 tests)
 - [x] Integration tests for admin keyword management endpoints (26 tests)
 - [x] Integration tests for user favorites endpoints (22 tests)
@@ -246,6 +259,7 @@ This phase implements the core data model for:
 - [x] Test coverage for user favorites isolation
 
 #### 5.6 Documentation ✅
+
 - [x] **API Documentation** - Complete REST API reference (`docs/04_api/03_client_keyword_api.md`)
   - 22 endpoint specifications with examples
   - Request/response schemas
@@ -267,6 +281,7 @@ This phase implements the core data model for:
   - Quick reference commands
 
 **Exit Criteria: ✅ FULLY ACHIEVED**
+
 - ✅ Admins can manage a pool of clients (agencies) via API
 - ✅ Users can view and save favorite clients
 - ✅ Keyword taxonomy is defined and manageable
@@ -281,11 +296,13 @@ This phase implements the core data model for:
 **Goal:** Convert scraper into a safe, async service.
 
 ### Overview
+
 This phase migrates the CLI-based scraper logic (`jea_minutes_scraper.py`, `highlight_mentions.py`) into the FastAPI application as async background jobs. Instead of running manually with hardcoded keywords and date ranges, scrapes are triggered via API and use client/keyword data from Phase 5.
 
 ### Completed Work
 
 #### 6.1 Database Schema
+
 - [x] Create `scrape_jobs` table
   - Fields: job_id, client_id, status, created_by, created_at, started_at, completed_at, error_message
   - Status enum: pending, running, completed, failed, cancelled
@@ -301,6 +318,7 @@ This phase migrates the CLI-based scraper logic (`jea_minutes_scraper.py`, `high
 - [x] Update test database setup with Phase 6 tables
 
 #### 6.2 Core Scraper Refactor
+
 - [x] Extract reusable functions from `jea_minutes_scraper.py`
   - [x] `scrape_pdf_links()` - Fetch PDF URLs from JEA website
   - [x] `stream_and_scan_pdf()` - Search PDF for keywords
@@ -314,6 +332,7 @@ This phase migrates the CLI-based scraper logic (`jea_minutes_scraper.py`, `high
 - [x] Add progress tracking (pages scanned, matches found)
 
 #### 6.3 PDF Highlighter Refactor
+
 - [x] Extract reusable functions from `highlight_mentions.py`
   - [x] `highlight_pdf()` - Add highlights to PDF
   - [x] `add_bookmarks()` - Create outline entries
@@ -324,6 +343,7 @@ This phase migrates the CLI-based scraper logic (`jea_minutes_scraper.py`, `high
   - [x] Organize by job_id: `data/annotated_pdfs/{job_id}/{filename}_annotated.pdf`
 
 #### 6.4 Data Access Layer
+
 - [x] Implement `ScrapeJobRepository` (CRUD for scrape jobs)
   - [x] `create_job()` - Create new scrape job
   - [x] `get_job_by_id()` - Retrieve job details
@@ -341,6 +361,7 @@ This phase migrates the CLI-based scraper logic (`jea_minutes_scraper.py`, `high
   - [x] `get_config_by_job()` - Retrieve config for job execution
 
 #### 6.5 Business Logic Layer
+
 - [x] Implement `ScraperService` (core scraper orchestration)
   - [x] `create_scrape_job()` - Create job with validation
   - [x] `execute_scrape()` - Main async scraper logic
@@ -358,6 +379,7 @@ This phase migrates the CLI-based scraper logic (`jea_minutes_scraper.py`, `high
   - [x] `create_annotated_zip()` - Bundle annotated PDFs
 
 #### 6.6 Background Job Execution
+
 - [ ] Choose async execution strategy
   - Option A: FastAPI BackgroundTasks (simple, no external deps)
   - Option B: Celery + Redis (production-ready, better monitoring)
@@ -374,6 +396,7 @@ This phase migrates the CLI-based scraper logic (`jea_minutes_scraper.py`, `high
   - [ ] Cleanup on cancellation
 
 #### 6.7 API Endpoints
+
 - [x] **Job Management Endpoints**
   - [x] POST `/scraper/jobs` - Create new scrape job
     - Request: client_id, date_range, max_scan_pages, include_minutes, include_packages
@@ -405,6 +428,7 @@ This phase migrates the CLI-based scraper logic (`jea_minutes_scraper.py`, `high
     - Auth: Job creator only
 
 #### 6.8 Testing
+
 - [x] Unit tests for scraper logic
   - [x] Test PDF link scraping with mocked HTML
   - [x] Test keyword matching with sample PDFs
@@ -432,6 +456,7 @@ This phase migrates the CLI-based scraper logic (`jea_minutes_scraper.py`, `high
   - [x] Test memory usage with large result sets
 
 #### 6.9 Documentation
+
 - [x] **API Documentation** - REST API reference for scraper endpoints
   - POST, GET, DELETE endpoints with examples
   - Job status lifecycle diagram
@@ -446,6 +471,7 @@ This phase migrates the CLI-based scraper logic (`jea_minutes_scraper.py`, `high
   - Storage cleanup policies
 
 #### 6.10 Storage Management
+
 - [x] Implement file storage strategy
   - [x] Organize PDFs: `data/raw_pdfs/{job_id}/{filename}.pdf`
   - [x] Organize annotated: `data/annotated_pdfs/{job_id}/{filename}_annotated.pdf`
@@ -459,12 +485,14 @@ This phase migrates the CLI-based scraper logic (`jea_minutes_scraper.py`, `high
   - [x] Admin-only endpoint for bulk cleanup
 
 ### Test Coverage Goals
+
 - 35+ new integration tests (job management, results, artifacts)
 - 100% pass rate for all Phase 6 tests
 - No regressions in Phases 1-5 tests (213 tests)
 - Total: 248+ passing tests across all phases
 
 **Exit Criteria:**
+
 - ✅ Scrapes run asynchronously without blocking the UI
 - ✅ Jobs are tracked with status, progress, and error handling
 - ✅ Results are stored in database, not CSV files
@@ -480,11 +508,13 @@ This phase migrates the CLI-based scraper logic (`jea_minutes_scraper.py`, `high
 **Goal:** Provide a usable internal dashboard.
 
 ### Overview
+
 This phase builds a web-based UI for the FastAPI application, allowing non-technical users to interact with the system without API knowledge. The UI will be a server-rendered application using Jinja2 templates with modern CSS (Tailwind or Bootstrap) and progressive enhancement with Alpine.js or htmx for interactivity.
 
 ### Completed Work
 
 #### 7.1 Frontend Technology Stack
+
 - [x] Choose UI approach
   - Option A: Server-rendered (Jinja2 + htmx + Tailwind) - Simple, no build step
   - Option B: SPA (React/Vue + API) - Modern, better interactivity
@@ -503,11 +533,13 @@ This phase builds a web-based UI for the FastAPI application, allowing non-techn
   - [x] Add loading states and error handling
 
 #### 7.2 Authentication UI
-_**Instructions:**_
+
+_**Instructions:**
+
 - All UI work must respect the existing frontend boundary.
 - No new frontend tooling decisions unless explicitly planned.
 
-_**Checklist Items:**_
+_**Checklist Items:**
 
 - [x] **Login Page** (`/login`)
   - [x] Create login form template
@@ -538,11 +570,13 @@ _**Checklist Items:**_
   - [x] Redirect to login page
 
 #### 7.3 Dashboard & Navigation
-_**Instructions:**_
+
+_**Instructions:**
+
 - All UI work must respect the existing frontend boundary.
 - No new frontend tooling decisions unless explicitly planned.
 
-_**Checklist Items:**_
+_**Checklist Items:**
 
 - [x] **Main Dashboard** (`/dashboard`)
   - [x] Welcome message with user's name
@@ -575,11 +609,14 @@ _**Checklist Items:**_
   - [x] Consistent spacing and typography
 
 #### 7.4 Client Management UI
-_**Instructions:**_
+
+_**Instructions:**
+
 - All UI work must respect the existing frontend boundary.
 - No new frontend tooling decisions unless explicitly planned.
 
-_**Checklist Items:**_
+_**Checklist Items:**
+
 - [x] **Client List Page** (`/clients`)
   - [x] Table/card view of all active clients
   - [x] Columns: Name, Description, Keywords, Favorite status
@@ -604,10 +641,237 @@ _**Checklist Items:**_
   - [x] Same layout as client list
   - [x] "Remove from Favorites" button
 
-#### 7.4.1 Client List Edit Actions (🚧 In Progress)
+#### 7.4.1 Multi-URL Client Architecture (🚧 In Progress - Phase 1 Complete)
+
+_**Goal:** Enable clients to have multiple scraping URLs with aliases (e.g., "current", "archive") instead of a single website_url field._
+
+_**Status:** Phase 1 (Stabilization) Complete ✅ | Phase 2 (Audit) Pending | Phase 3 (UI) Pending
+
+##### Phase 1 — Critical API Stabilization ✅
+
+**Priority: P0 (Blocking) - COMPLETED**
+
+- [x] **Database Migration**
+  - [x] Create `client_urls` table (id, client_id, alias, url, is_active, last_scraped_at, created_at, updated_at)
+  - [x] Migrate existing `website_url` data to `client_urls` table
+  - [x] Drop `client_sources` table (old schema)
+  - [x] Remove `website_url` column from `client` table
+  - [x] Update `scrape_jobs` to reference `client_url_id` instead of `client_id`
+  - [x] Migration file: `20260212_120000_refactor_client_urls.sql`
+
+- [x] **Repository Layer**
+  - [x] Create `ClientUrlRepository` with full CRUD operations
+  - [x] Update `ClientRepository` - Remove all `website_url` parameters
+  - [x] Update `FavoritesRepository` - Remove `website_url` from queries
+  - [x] Update `ScraperRepository` - Use `client_urls` join, return `client_url_id`, `url_alias`, `url`
+
+- [x] **Service Layer**
+  - [x] Update `ClientService` - Remove `website_url` from create/update methods
+  - [x] Add `get_client_url_repository()` to dependencies
+
+- [x] **Critical API Endpoints**
+  - [x] Fix `clients_ui.py` - Remove `website_url` from create/update handlers
+  - [x] Add `/api/clients/all` endpoint for dropdown population
+  - [x] Fix `clients_ui.py` - Correct method name `get_client_by_id()`
+  - [x] Fix `client_routes.py` - Add `current_user` to template context
+
+- [x] **Template Fixes (Minimal)**
+  - [x] Remove `website_url` display from `clients/detail.html`
+  - [x] Edit button now visible for admins
+
+- [x] **Project Organization**
+  - [x] Move 9 loose Python scripts to organized `scripts/` directory
+  - [x] Create professional migration runner with error handling
+  - [x] Create `scripts/README.md` documentation
+
+**Exit Criteria: ✅ ACHIEVED**
+- Application boots without 500 errors
+- Client CRUD operations functional
+- Scraper job listing works
+- Edit functionality operational
+- JEA has 3 URLs configured: default, current, archive
+
+##### Phase 2 — Refactor Audit Checklist
+
+**Priority: P1 (High) - NEXT**
+
+- [x] **Audit Remaining website_url References**
+  - [x] Search all Pydantic models for `website_url` fields
+    - `api/clients.py` - `ClientResponse`, `FavoriteResponse`
+  - [x] Search all SQL queries for `website_url` references
+  - [x] Search all templates for `client.website_url` usage
+    - `clients/form.html` - Still has input field (ignored but should be removed)
+  - [x] Search test files for `website_url` assertions
+  - [x] Check `admin/client_routes.py` for admin-specific forms
+  - [x] Document all findings in audit report
+
+- [x] **Create Phase 3 Implementation Plan**
+  - [x] List all files requiring updates
+  - [x] Prioritize by user impact
+  - [x] Estimate effort per change
+  - [x] Define acceptance criteria
+
+##### Phase 3 — Complete UI Refactor
+
+**Priority: P1 (High) - AFTER PHASE 2**
+
+_**Implementation Guide:** See `docs/10_instructions/11_phase3_implementation_plan.md` for detailed step-by-step instructions_
+
+**Estimated Effort:** ~10 hours | **Risk:** Medium
+
+##### Phase 3A — Critical Fixes (P0 - Blocking) ⚠️
+
+**Effort:** 35 minutes | **Risk:** Low | **MUST DO FIRST**
+
+- [x] **Fix Admin Endpoint Service Calls** (5 min)
+  - [x] `admin/client_routes.py:82` - Remove `website_url` parameter from `create_client()` call
+  - [x] `admin/client_routes.py:154` - Remove `website_url` parameter from `update_client()` call
+  - [x] **Critical:** These lines currently cause TypeErrors and 500 responses
+
+- [x] **Update Admin Pydantic Request Models** (10 min)
+  - [x] `admin/client_routes.py:26` - Remove `website_url` from `ClientCreate` model
+  - [x] `admin/client_routes.py:34` - Remove `website_url` from `ClientUpdate` model
+
+- [x] **Update Admin Response Model (Temporary)** (20 min)
+  - [x] `admin/client_routes.py:44` - Add `urls: list[ClientUrl]` field to `ClientResponse`
+  - [x] Keep `website_url` field temporarily for backwards compatibility
+  - [x] Update all admin endpoints to populate `urls` array from `ClientUrlRepository`
+  - [x] Endpoints to update: list_clients, get_client, create_client, update_client
+
+##### Phase 3B — User-Facing API Updates (P0)
+
+**Effort:** 30 minutes | **Risk:** Low
+
+- [x] **Update User API Response Models** (15 min)
+  - [x] `api/clients.py:31` - Add `urls: list[ClientUrl]` to `ClientResponse`
+  - [x] `api/clients.py:50` - Add `urls: list[ClientUrl]` to `FavoriteResponse`
+  - [x] Create `ClientUrl` Pydantic model (id, alias, url, is_active, last_scraped_at)
+  - [x] Keep `website_url` field temporarily for backwards compatibility
+
+- [x] **Update User API Endpoints** (15 min)
+  - [x] Update `list_clients` endpoint - Populate `urls` from `ClientUrlRepository`
+  - [x] Update `get_client` endpoint - Include client URLs in response
+  - [x] Update `get_favorites` endpoint - Include URLs for favorited clients
+
+##### Phase 3C — Test Updates (P1)
+
+**Effort:** 3 hours | **Risk:** Medium
+
+- [x] **Update Test Database Schema** (30 min)
+  - [x] `tests/conftest.py:124` - Remove `website_url TEXT,` from client table
+  - [x] Add `client_urls` table to test schema
+  - [x] Add indexes for `client_urls` table
+  - [x] Seed test data with URLs for JEA test client
+
+- [x] **Update Integration Tests** (2 hours)
+  - [x] `test_admin_client_management.py:19` - Remove `website_url` from create test
+  - [x] `test_admin_client_management.py:27` - Update assertions to check `urls` array
+  - [x] `test_admin_client_management.py:44` - Update minimal data test assertions
+  - [x] `test_admin_client_management.py:263` - Remove `website_url` from update test
+  - [x] `test_admin_client_management.py:270` - Update update test assertions
+  - [x] Add test: Verify client response includes `urls` array
+  - [x] Add test: Verify URL data structure (id, alias, url, is_active)
+
+- [x] **Add URL Management Tests** (30 min)
+  - [x] Create `test_client_url_management.py`
+  - [x] Test creating URL for client
+  - [x] Test listing client URLs
+  - [x] Test updating URL
+  - [x] Test deleting URL
+  - [x] Test URL cascade delete when client deleted
+
+##### Phase 3D — UI Updates (P1)
+
+**Effort:** 6 hours | **Risk:** High
+
+- [x] **Remove website_url from Client Form** (15 min)
+  - [x] `templates/clients/form.html:64-77` - Delete entire "Website URL" section
+
+- [x] **Add URL Management UI to Client Form** (4 hours)
+  - [x] Add "Client URLs" section to form
+  - [x] Display existing URLs (if editing client):
+    - [x] Show alias input field
+    - [x] Show URL input field
+    - [x] Show "Active" checkbox
+    - [x] Show "Delete" button per URL
+  - [x] Add "Add URL" button
+  - [x] Implement JavaScript for dynamic add/remove URL rows
+  - [x] Handle hidden input fields for URL IDs (to track existing vs new)
+  - [x] Style with Tailwind CSS to match existing form design
+
+- [x] **Update Form Submission Handler** (1 hour)
+  - [x] `api/clients_ui.py:236-287` - Update `create_client` endpoint
+    - [x] Parse new URL data from form (aliases, urls, active status)
+    - [x] Use `ClientUrlRepository` to create URLs after client creation
+  - [x] `api/clients_ui.py:290-334` - Update `update_client` endpoint
+    - [x] Parse existing URL IDs and updates
+    - [x] Parse new URL data
+    - [x] Handle URL updates, creates, and deletes
+  - [x] Add error handling for URL creation/update failures
+
+- [x] **Add URL Display to Client Detail Page** (45 min)
+  - [x] `templates/clients/detail.html` - Insert "Client URLs" card after Client Info
+  - [x] Use htmx to load URL data dynamically
+  - [x] Create endpoint `GET /api/clients/{id}/urls` - Return HTML fragment
+  - [x] Display each URL with:
+    - [x] Alias (prominent)
+    - [x] URL (clickable link)
+    - [x] Active/Inactive badge
+    - [x] Last scraped timestamp
+  - [x] Add "Edit URLs" link for admins
+
+- [x] **Update Scraper Job Creation UI** (Optional - Phase 4)
+  - [x] Update `/scraper/jobs/new` form to show URL dropdown after client selection
+  - [x] Display format: `[alias] url`
+  - [x] Only show active URLs
+  - [x] Update job creation to use `client_url_id`
+
+##### Phase 3E — Documentation & Cleanup (P2)
+
+**Effort:** 1 hour | **Risk:** Low
+
+- [x] **Update API Documentation** (30 min)
+  - [x] Document `ClientUrl` model
+  - [x] Document URL management endpoints
+  - [x] Mark `website_url` as DEPRECATED
+  - [x] Update examples to show `urls` array
+
+- [x] **Remove Comments & Backwards Compatibility** (5 min)
+  - [x] `api/clients_ui.py:256,308` - Remove or update comments
+  - [x] Remove `website_url` field from response models (remove backwards compat)
+
+- [x] **Final Cleanup** (25 min)
+  - [x] Update CHANGELOG
+  - [x] Run full test suite
+  - [x] Manual testing checklist
+  - [x] Code review
+
+**Exit Criteria:**
+- ✅ No `website_url` parameters passed to service methods
+- ✅ All Pydantic models include `urls: list[ClientUrl]`
+- ✅ UI supports adding/editing/deleting URLs
+- ✅ Client detail page displays all URLs
+- ✅ Test database schema updated
+- ✅ All tests passing (200+ tests)
+- ✅ No TypeErrors or 500 responses
+- ✅ Documentation updated
+
+##### Phase 4 — URL-Level Features (Optional - Future)
+
+**Priority: P2 (Nice-to-Have)**
+
+- [ ] URL-level scheduling (e.g., scrape "current" daily, "archive" monthly)
+- [ ] URL-level success/failure tracking
+- [ ] URL health monitoring (check if URL is accessible)
+- [ ] URL change detection (notify if URL structure changes)
+- [ ] Per-URL keyword associations (different keywords per URL)
+
+#### 7.4.2 Client List Edit Actions (⏳ Planned)
+
 _**Goal:** Allow admins to quickly edit clients directly from the client list page without navigating to a separate edit page._
 
-_**Backend Checklist:**_
+_**Backend Checklist:**
+
 - [ ] **API Endpoints**
   - [x] POST `/api/clients` - Create client (already implemented)
   - [x] PUT `/api/clients/{id}` - Update client (already implemented)
@@ -615,17 +879,19 @@ _**Backend Checklist:**_
   - [ ] GET `/api/clients/{id}/edit-form` - Return pre-populated edit form HTML
   - [ ] PATCH `/api/clients/{id}/quick-edit` - Update specific client fields (optional, for inline editing)
 
-_**UI/UX Checklist:**_
+_**UI/UX Checklist:**
 **Goal:** Allow admins to quickly edit clients directly from the client list page without navigating to a separate edit page.
 
 Constraints:
+
 - UI-only implementation
 - Reuse existing API endpoints
 - No new backend routes or schema changes
 
 **UI/UX Checklist Items:**
+
 - [ ] **Client List Page Enhancements**
-  - [ ] Add "Edit" button/icon next to each client row (admin only)
+  - [x] Add "Edit" button/icon next to each client row (admin only)
   - [x] Edit action implemented via modal popup with edit form
   - [ ] Show loading state during form submission
   - [ ] Display success message after save
@@ -651,11 +917,14 @@ Constraints:
   - [ ] Responsive modal layout for small screens
 
 #### 7.5 Keyword Management UI
-_**Instructions:**_
+
+_**Instructions:**
+
 - All UI work must respect the existing frontend boundary.
 - No new frontend tooling decisions unless explicitly planned.
 
-_**Checklist Items:**_
+_**Checklist Items:**
+
 - [x] **Keyword List Page** (`/keywords`)
   - [x] Table view of all keywords
   - [x] Columns: Keyword, Category, Description, Usage count
@@ -678,11 +947,14 @@ _**Checklist Items:**_
   - [x] Click to filter keywords by category
 
 #### 7.6 Scrape Job Management UI
-_**Instructions:**_
+
+_**Instructions:**
+
 - All UI work must respect the existing frontend boundary.
 - No new frontend tooling decisions unless explicitly planned.
 
-_**Checklist Items:**_
+_**Checklist Items:**
+
 - [x] **Job List Page** (`/scraper/jobs`)
   - [x] Table view of user's scrape jobs
   - [x] Columns: Client, Status, Created, Duration, Results count
@@ -737,11 +1009,14 @@ _**Checklist Items:**_
   - [x] Show notification on completion
 
 #### 7.7 Results & Downloads UI
-_**Instructions:**_
+
+_**Instructions:**
+
 - All UI work must respect the existing frontend boundary.
 - No new frontend tooling decisions unless explicitly planned.
 
-_**Checklist Items:**_
+_**Checklist Items:**
+
 - [x] **Results List Page** (`/scraper/jobs/{id}/results`)
   - [x] Dedicated page for browsing results
   - [x] Filters:
@@ -766,11 +1041,14 @@ _**Checklist Items:**_
   - [x] Expiration notice (30 days)
 
 #### 7.8 Admin Panel UI
-_**Instructions:**_
+
+_**Instructions:**
+
 - All UI work must respect the existing frontend boundary.
 - No new frontend tooling decisions unless explicitly planned.
 
-_**Checklist Items:**_
+_**Checklist Items:**
+
 - [x] **Admin Dashboard** (`/admin`)
   - [x] System statistics:
     - Total users
@@ -799,11 +1077,14 @@ _**Checklist Items:**_
   - [x] Confirmation dialog
 
 #### 7.9 User Profile & Settings
-_**Instructions:**_
+
+_**Instructions:**
+
 - All UI work must respect the existing frontend boundary.
 - No new frontend tooling decisions unless explicitly planned.
 
-_**Checklist Items:**_
+_**Checklist Items:**
+
 - [x] **Profile Page** (`/profile`)
   - [x] User info display (username, email, role)
   - [x] Account created date
@@ -819,11 +1100,14 @@ _**Checklist Items:**_
   - [x] Results per page preference
 
 #### 7.10 UX Enhancements
-_**Instructions:**_
+
+_**Instructions:**
+
 - All UI work must respect the existing frontend boundary.
 - No new frontend tooling decisions unless explicitly planned.
 
-_**Checklist Items:**_
+_**Checklist Items:**
+
 - [x] **Loading States**
   - [x] Spinner overlays for long operations
   - [x] Skeleton screens for data loading
@@ -851,11 +1135,14 @@ _**Checklist Items:**_
   - [x] Minified CSS and JS
 
 #### 7.11 E2E Testing ✅
-_**Instructions:**_
+
+_**Instructions:**
+
 - All UI work must respect the existing frontend boundary.
 - No new frontend tooling decisions unless explicitly planned.
 
-_**Checklist Items:**_
+_**Checklist Items:**
+
 - [x] Set up E2E testing framework (Playwright)
 - [x] **Authentication Flow Tests** (8 tests)
   - [x] Test login with valid credentials
@@ -902,6 +1189,7 @@ _**Checklist Items:**_
   - [x] Test modals and dialogs on mobile
 
 **Test Results:**
+
 - 38 E2E tests implemented (exceeds minimums)
 - Framework: Playwright with TypeScript
 - Browser: Chromium (Desktop & Mobile viewports)
@@ -910,7 +1198,8 @@ _**Checklist Items:**_
 - Comprehensive README and helper utilities
 
 #### 7.12 Documentation (⏳ Post-Deployment)
-_**Note:** Documentation will be completed after UI deployment and stabilization._
+
+_**Note:** Documentation will be completed after UI deployment and stabilization.
 
 - [ ] **User Guide** - End-user documentation
   - Step-by-step walkthroughs with screenshots
@@ -927,7 +1216,8 @@ _**Note:** Documentation will be completed after UI deployment and stabilization
 
 ### Test Coverage Goals ✅
 
-**E2E Test Implementation: COMPLETE**
+_**E2E Test Implementation: COMPLETE**
+
 - ✅ 38 E2E tests implemented (exceeds 26+ goal by 46%)
   - 8 Authentication Flow tests
   - 7 Client Management tests
@@ -941,11 +1231,13 @@ _**Note:** Documentation will be completed after UI deployment and stabilization
 - ⏳ Cross-browser expansion: Firefox, Safari (planned for future)
 
 **Test Status:**
+
 - All test files created and passing linting
 - CI validates Playwright installation and configuration
 - Full test execution will be enabled post-deployment
 
 **Exit Criteria:**
+
 - ✅ Non-technical users can use the system end-to-end
 - ✅ Complete authentication flow (login, register, password reset)
 - ✅ Full client and keyword management UI
@@ -964,11 +1256,13 @@ _**Note:** Documentation will be completed after UI deployment and stabilization
 **Goal:** Prepare for limited internal distribution.
 
 ### Overview
+
 This phase focuses on production readiness: secure configuration, robust error handling, comprehensive logging, performance optimization, and deployment infrastructure. The system will be hardened against common security threats and prepared for reliable internal use.
 
 ### Completed Work
 
 #### 8.1 Production Configuration
+
 - [ ] **Environment Configuration**
   - [ ] Create production `.env.production` template
   - [ ] Document all required environment variables
@@ -994,6 +1288,7 @@ This phase focuses on production readiness: secure configuration, robust error h
   - [ ] Set up automatic cleanup policies
 
 #### 8.2 Security Hardening
+
 - [ ] **HTTPS Enforcement**
   - [ ] Obtain SSL/TLS certificate (Let's Encrypt or corporate CA)
   - [ ] Configure Nginx/Caddy as reverse proxy
@@ -1034,6 +1329,7 @@ This phase focuses on production readiness: secure configuration, robust error h
   - [ ] Add `Referrer-Policy: strict-origin-when-cross-origin`
 
 #### 8.3 Logging & Monitoring
+
 - [ ] **Application Logging**
   - [ ] Configure structured logging (JSON format)
   - [ ] Set log levels per environment (INFO for prod)
@@ -1069,6 +1365,7 @@ This phase focuses on production readiness: secure configuration, robust error h
   - [ ] Add uptime monitoring (UptimeRobot or Pingdom)
 
 #### 8.4 Error Handling
+
 - [ ] **Global Exception Handlers**
   - [ ] 400 Bad Request - Invalid input
   - [ ] 401 Unauthorized - Missing/invalid auth
@@ -1091,6 +1388,7 @@ This phase focuses on production readiness: secure configuration, robust error h
   - [ ] Log technical details server-side
 
 #### 8.5 Performance Optimization
+
 - [ ] **Database Optimization**
   - [ ] Add indexes on frequently queried columns:
     - users.email
@@ -1121,6 +1419,7 @@ This phase focuses on production readiness: secure configuration, robust error h
   - [ ] Optimize PDF streaming (chunk size tuning)
 
 #### 8.6 Deployment Infrastructure
+
 - [ ] **Hosting Platform**
   - [ ] Choose hosting provider (AWS, DigitalOcean, Fly.io, Railway)
   - [ ] Set up production server (Ubuntu 22.04 LTS)
@@ -1154,6 +1453,7 @@ This phase focuses on production readiness: secure configuration, robust error h
   - [ ] Set backup retention policy (30 days)
 
 #### 8.7 CI/CD Pipeline
+
 - [ ] **Continuous Integration**
   - [ ] Set up GitHub Actions (or GitLab CI)
   - [ ] Run tests on every PR (all 248+ tests)
@@ -1174,6 +1474,7 @@ This phase focuses on production readiness: secure configuration, robust error h
   - [ ] Document manual deployment steps (fallback)
 
 #### 8.8 Production Testing
+
 - [ ] **Smoke Tests**
   - [ ] Health check endpoint returns 200
   - [ ] Login flow works end-to-end
@@ -1204,6 +1505,7 @@ This phase focuses on production readiness: secure configuration, robust error h
   - [ ] Document recovery time objectives (RTO)
 
 #### 8.9 Documentation
+
 - [ ] **Deployment Guide**
   - [ ] Server requirements and setup
   - [ ] Environment variable configuration
@@ -1232,6 +1534,7 @@ This phase focuses on production readiness: secure configuration, robust error h
   - [ ] Certificate renewal procedures
 
 #### 8.10 Production Readiness Checklist
+
 - [ ] **Pre-Launch Verification**
   - [ ] All environment variables configured
   - [ ] All secrets rotated and secured
@@ -1258,7 +1561,9 @@ This phase focuses on production readiness: secure configuration, robust error h
   - [ ] Schedule follow-up review (1 week post-launch)
 
 ### Production Environment Variables
+
 Document all required variables:
+
 ```bash
 # Application
 APP_ENV=production
@@ -1293,6 +1598,7 @@ LOG_LEVEL=INFO
 ```
 
 **Exit Criteria:**
+
 - ✅ System is stable for internal use
 - ✅ HTTPS enforced with valid certificate
 - ✅ All environment variables audited and documented

@@ -115,19 +115,43 @@ def test_db_connection(test_db_file):
         );
     """)
 
-    # Create clients table (Phase 5)
+    # Create client table (Phase 5) - singular to match production code
     conn.execute("""
-        CREATE TABLE IF NOT EXISTS clients (
+        CREATE TABLE IF NOT EXISTS client (
             client_id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL UNIQUE,
             description TEXT,
-            website_url TEXT,
             is_active INTEGER NOT NULL DEFAULT 1,
             created_at INTEGER NOT NULL,
             created_by INTEGER NOT NULL,
             updated_at INTEGER,
             FOREIGN KEY (created_by) REFERENCES users(user_id)
         );
+    """)
+
+    # Create client_urls table (Phase 5 - Multi-URL support)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS client_urls (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            client_id INTEGER NOT NULL,
+            alias TEXT NOT NULL,
+            url TEXT NOT NULL,
+            is_active INTEGER NOT NULL DEFAULT 1,
+            last_scraped_at INTEGER,
+            created_at INTEGER NOT NULL,
+            updated_at INTEGER,
+            FOREIGN KEY (client_id) REFERENCES client(client_id) ON DELETE CASCADE
+        );
+    """)
+
+    # Create indexes for client_urls
+    conn.execute("""
+        CREATE INDEX IF NOT EXISTS idx_client_urls_client_id
+        ON client_urls(client_id);
+    """)
+    conn.execute("""
+        CREATE INDEX IF NOT EXISTS idx_client_urls_alias
+        ON client_urls(alias);
     """)
 
     # Create keywords table (Phase 5)
@@ -152,7 +176,7 @@ def test_db_connection(test_db_file):
             added_at INTEGER NOT NULL,
             added_by INTEGER NOT NULL,
             PRIMARY KEY (client_id, keyword_id),
-            FOREIGN KEY (client_id) REFERENCES clients(client_id) ON DELETE CASCADE,
+            FOREIGN KEY (client_id) REFERENCES client(client_id) ON DELETE CASCADE,
             FOREIGN KEY (keyword_id) REFERENCES keywords(keyword_id) ON DELETE CASCADE,
             FOREIGN KEY (added_by) REFERENCES users(user_id)
         );
@@ -166,7 +190,7 @@ def test_db_connection(test_db_file):
             favorited_at INTEGER NOT NULL,
             PRIMARY KEY (user_id, client_id),
             FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-            FOREIGN KEY (client_id) REFERENCES clients(client_id) ON DELETE CASCADE
+            FOREIGN KEY (client_id) REFERENCES client(client_id) ON DELETE CASCADE
         );
     """)
 
@@ -183,7 +207,7 @@ def test_db_connection(test_db_file):
             last_scraped_at INTEGER,
             created_at INTEGER NOT NULL,
             created_by INTEGER NOT NULL,
-            FOREIGN KEY (client_id) REFERENCES clients(client_id) ON DELETE CASCADE,
+            FOREIGN KEY (client_id) REFERENCES client(client_id) ON DELETE CASCADE,
             FOREIGN KEY (created_by) REFERENCES users(user_id)
         );
     """)
@@ -192,14 +216,14 @@ def test_db_connection(test_db_file):
     conn.execute("""
         CREATE TABLE IF NOT EXISTS scrape_jobs (
             job_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            client_id INTEGER NOT NULL,
+            client_url_id INTEGER NOT NULL,
             status TEXT NOT NULL CHECK (status IN ('pending', 'running', 'completed', 'failed', 'cancelled')),
             created_by INTEGER NOT NULL,
             created_at INTEGER NOT NULL,
             started_at INTEGER,
             completed_at INTEGER,
             error_message TEXT,
-            FOREIGN KEY (client_id) REFERENCES clients(client_id) ON DELETE RESTRICT,
+            FOREIGN KEY (client_url_id) REFERENCES client_urls(id) ON DELETE RESTRICT,
             FOREIGN KEY (created_by) REFERENCES users(user_id) ON DELETE RESTRICT
         );
     """)
@@ -279,10 +303,11 @@ def setup_test_db(test_db_connection, monkeypatch):
     conn.execute("DELETE FROM scrape_job_config;")
     conn.execute("DELETE FROM scrape_jobs;")
     conn.execute("DELETE FROM client_sources;")
+    conn.execute("DELETE FROM client_urls;")
     conn.execute("DELETE FROM user_client_favorites;")
     conn.execute("DELETE FROM client_keywords;")
     conn.execute("DELETE FROM keywords;")
-    conn.execute("DELETE FROM clients;")
+    conn.execute("DELETE FROM client;")
     conn.execute("DELETE FROM password_reset_tokens;")
     conn.execute("DELETE FROM code_usage;")
     conn.execute("DELETE FROM auth_codes;")

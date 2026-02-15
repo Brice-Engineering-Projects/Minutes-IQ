@@ -2,14 +2,66 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import HTMLResponse
 
+from minutes_iq.auth.dependencies import get_current_user
 from minutes_iq.db.client_repository import ClientRepository
-from minutes_iq.db.dependencies import get_client_repository, get_keyword_repository
+from minutes_iq.db.client_url_repository import ClientUrlRepository
+from minutes_iq.db.dependencies import (
+    get_client_repository,
+    get_client_url_repository,
+    get_favorites_repository,
+    get_keyword_repository,
+)
+from minutes_iq.db.favorites_repository import FavoritesRepository
 from minutes_iq.db.keyword_repository import KeywordRepository
 
 router = APIRouter(prefix="/api/clients", tags=["Client API"])
+
+
+@router.get("/all")
+async def get_all_clients(
+    client_repo: Annotated[ClientRepository, Depends(get_client_repository)],
+):
+    """Get all active clients as JSON for dropdowns."""
+    clients = client_repo.list_clients(is_active=True, limit=1000)
+    return [
+        {
+            "client_id": c["client_id"],
+            "name": c["name"],
+        }
+        for c in clients
+    ]
+
+
+@router.get("/all-urls")
+async def get_all_client_urls(
+    client_repo: Annotated[ClientRepository, Depends(get_client_repository)],
+    client_url_repo: Annotated[ClientUrlRepository, Depends(get_client_url_repository)],
+):
+    """Get all active client URLs as JSON for scraper job dropdowns."""
+    clients = client_repo.list_clients(is_active=True, limit=1000)
+    result = []
+
+    for client in clients:
+        urls = client_url_repo.get_client_urls(client["client_id"])
+        # Only include active URLs
+        active_urls = [url for url in urls if url.get("is_active", 0) == 1]
+
+        for url in active_urls:
+            result.append(
+                {
+                    "client_url_id": url["id"],
+                    "client_id": client["client_id"],
+                    "client_name": client["name"],
+                    "alias": url["alias"],
+                    "url": url["url"],
+                    "display_name": f"{client['name']} - {url['alias']}",
+                }
+            )
+
+    return result
 
 
 @router.get("/list", response_class=HTMLResponse)
@@ -201,6 +253,71 @@ async def get_client_keywords(
     """
 
 
+@router.get("/{client_id}/urls", response_class=HTMLResponse)
+async def get_client_urls(
+    client_id: int,
+    client_url_repo: Annotated[ClientUrlRepository, Depends(get_client_url_repository)],
+):
+    """Get client's URLs as HTML."""
+    from datetime import datetime
+
+    # Get URLs for this client
+    urls = client_url_repo.get_client_urls(client_id)
+
+    if not urls:
+        return """
+        <div class="text-center py-8">
+            <p class="text-sm text-gray-500">No URLs configured yet</p>
+            <p class="text-xs text-gray-400 mt-1">URLs can be added when editing this client</p>
+        </div>
+        """
+
+    # Build URL list HTML
+    items_html = ""
+    for url in urls:
+        is_active = url.get("is_active", 0) == 1
+        last_scraped = url.get("last_scraped_at")
+
+        # Format timestamp if available
+        last_scraped_str = ""
+        if last_scraped:
+            try:
+                dt = datetime.fromtimestamp(last_scraped)
+                last_scraped_str = dt.strftime("%b %d, %Y at %I:%M %p")
+            except (ValueError, OSError, OverflowError):
+                last_scraped_str = "Unknown"
+
+        status_badge = f"""<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {"bg-green-100 text-green-800" if is_active else "bg-gray-100 text-gray-600"}">
+            {"Active" if is_active else "Inactive"}
+        </span>"""
+
+        items_html += f"""
+        <div class="py-3 border-b border-gray-200 last:border-0">
+            <div class="flex items-start justify-between">
+                <div class="flex-1">
+                    <div class="flex items-center space-x-2 mb-1">
+                        <span class="text-sm font-medium text-gray-900">{url.get("alias", "")}</span>
+                        {status_badge}
+                    </div>
+                    <a href="{url.get("url", "")}" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 break-all">
+                        {url.get("url", "")}
+                        <svg class="inline w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                        </svg>
+                    </a>
+                    {f'<p class="text-xs text-gray-500 mt-1">Last scraped: {last_scraped_str}</p>' if last_scraped else '<p class="text-xs text-gray-400 mt-1">Never scraped</p>'}
+                </div>
+            </div>
+        </div>
+        """
+
+    return f"""
+    <div class="space-y-0">
+        {items_html}
+    </div>
+    """
+
+
 @router.get("/{client_id}/scrape-jobs", response_class=HTMLResponse)
 async def get_client_scrape_jobs(client_id: int):
     """Get client's recent scrape jobs as HTML."""
@@ -216,6 +333,7 @@ async def get_client_scrape_jobs(client_id: int):
 async def create_client(
     request: Request,
     client_repo: Annotated[ClientRepository, Depends(get_client_repository)],
+    client_url_repo: Annotated[ClientUrlRepository, Depends(get_client_url_repository)],
     keyword_repo: Annotated[KeywordRepository, Depends(get_keyword_repository)],
 ):
     """Create a new client."""
@@ -226,10 +344,13 @@ async def create_client(
     name = str(form_data.get("name", "")).strip()
     description_raw = form_data.get("description", "")
     description = str(description_raw).strip() or None if description_raw else None
-    website_url_raw = form_data.get("website_url", "")
-    website_url = str(website_url_raw).strip() or None if website_url_raw else None
     is_active = form_data.get("is_active") == "on"
     keyword_ids = form_data.getlist("keyword_ids")
+
+    # Get URL data
+    url_aliases = form_data.getlist("url_alias[]")
+    url_values = form_data.getlist("url_value[]")
+    url_is_active = form_data.getlist("url_is_active[]")
 
     if not name:
         return '<div class="p-4 bg-red-50 border border-red-200 rounded-md"><p class="text-sm text-red-800">Client name is required</p></div>'
@@ -240,11 +361,24 @@ async def create_client(
     client = client_repo.create_client(
         name=name,
         description=description,
-        website_url=website_url,
         is_active=is_active,
         created_by=created_by_user,
     )
     client_id = client["client_id"]
+
+    # Add URLs to client
+    for i, (alias, url_value) in enumerate(zip(url_aliases, url_values, strict=False)):
+        if alias and url_value:
+            url_active = i < len(url_is_active)
+            try:
+                client_url_repo.create_url(
+                    client_id=client_id,
+                    alias=str(alias),
+                    url=str(url_value),
+                    is_active=url_active,
+                )
+            except Exception:
+                pass  # Skip invalid URLs
 
     # Add keywords to client
     if keyword_ids:
@@ -271,6 +405,7 @@ async def update_client(
     client_id: int,
     request: Request,
     client_repo: Annotated[ClientRepository, Depends(get_client_repository)],
+    client_url_repo: Annotated[ClientUrlRepository, Depends(get_client_url_repository)],
     keyword_repo: Annotated[KeywordRepository, Depends(get_keyword_repository)],
 ):
     """Update an existing client."""
@@ -281,10 +416,14 @@ async def update_client(
     name = str(form_data.get("name", "")).strip()
     description_raw = form_data.get("description", "")
     description = str(description_raw).strip() or None if description_raw else None
-    website_url_raw = form_data.get("website_url", "")
-    website_url = str(website_url_raw).strip() or None if website_url_raw else None
     is_active = form_data.get("is_active") == "on"
     keyword_ids = form_data.getlist("keyword_ids")
+
+    # Get URL data
+    url_ids = form_data.getlist("url_id[]")
+    url_aliases = form_data.getlist("url_alias[]")
+    url_values = form_data.getlist("url_value[]")
+    url_is_active_list = form_data.getlist("url_is_active[]")
 
     if not name:
         return '<div class="p-4 bg-red-50 border border-red-200 rounded-md"><p class="text-sm text-red-800">Client name is required</p></div>'
@@ -294,9 +433,54 @@ async def update_client(
         client_id=client_id,
         name=name,
         description=description,
-        website_url=website_url,
         is_active=is_active,
     )
+
+    # Update URLs - get existing URLs, update/delete/create as needed
+    existing_urls = {
+        url["id"]: url for url in client_url_repo.get_client_urls(client_id)
+    }
+    submitted_url_ids = set()
+
+    for i, (url_id, alias, url_value) in enumerate(
+        zip(url_ids, url_aliases, url_values, strict=False)
+    ):
+        if alias and url_value:
+            url_active = i < len(url_is_active_list)
+            url_id_str = str(url_id)
+            alias_str = str(alias)
+            url_value_str = str(url_value)
+
+            if url_id_str and url_id_str.strip():  # Existing URL
+                url_id_int = int(url_id_str)
+                submitted_url_ids.add(url_id_int)
+                try:
+                    client_url_repo.update_url(
+                        url_id=url_id_int,
+                        alias=alias_str,
+                        url=url_value_str,
+                        is_active=url_active,
+                    )
+                except Exception:
+                    pass  # Skip invalid updates
+            else:  # New URL
+                try:
+                    client_url_repo.create_url(
+                        client_id=client_id,
+                        alias=alias_str,
+                        url=url_value_str,
+                        is_active=url_active,
+                    )
+                except Exception:
+                    pass  # Skip invalid URLs
+
+    # Delete URLs that were removed from form
+    for existing_url_id in existing_urls.keys():
+        if existing_url_id not in submitted_url_ids:
+            try:
+                client_url_repo.delete_url(existing_url_id)
+            except Exception:
+                pass
 
     # Update keywords - remove all and re-add
     # TODO: Get updated_by from current_user when auth is integrated
@@ -325,3 +509,44 @@ async def update_client(
     )
     response.headers["HX-Redirect"] = f"/clients/{client_id}"
     return response
+
+
+@router.post("/{client_id}/favorite", response_class=HTMLResponse)
+async def toggle_favorite(
+    client_id: int,
+    current_user: Annotated[dict, Depends(get_current_user)],
+    client_repo: Annotated[ClientRepository, Depends(get_client_repository)],
+    favorites_repo: Annotated[FavoritesRepository, Depends(get_favorites_repository)],
+):
+    """Toggle favorite status for a client."""
+    # Verify client exists and is active
+    client = client_repo.get_client_by_id(client_id)
+    if not client or not client.get("is_active"):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Client not found"
+        )
+
+    user_id = current_user["user_id"]
+    is_favorited = favorites_repo.is_favorite(user_id, client_id)
+
+    # Toggle favorite status
+    if is_favorited:
+        favorites_repo.remove_favorite(user_id, client_id)
+        is_favorited = False
+    else:
+        favorites_repo.add_favorite(user_id, client_id)
+        is_favorited = True
+
+    # Return updated heart icon
+    return f"""
+    <button
+        hx-post="/api/clients/{client_id}/favorite"
+        hx-swap="outerHTML"
+        onclick="event.stopPropagation()"
+        class="text-gray-400 hover:text-red-500"
+    >
+        <svg class="w-5 h-5 {"fill-current text-red-500" if is_favorited else ""}" fill="{"currentColor" if is_favorited else "none"}" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+        </svg>
+    </button>
+    """

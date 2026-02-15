@@ -7,7 +7,12 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
 
 from minutes_iq.db.client_repository import ClientRepository
-from minutes_iq.db.dependencies import get_client_repository, get_scraper_repository
+from minutes_iq.db.client_url_repository import ClientUrlRepository
+from minutes_iq.db.dependencies import (
+    get_client_repository,
+    get_client_url_repository,
+    get_scraper_repository,
+)
 from minutes_iq.db.scraper_repository import ScraperRepository
 from minutes_iq.templates_config import templates
 
@@ -32,6 +37,7 @@ async def job_detail(
     job_id: int,
     scraper_repo: Annotated[ScraperRepository, Depends(get_scraper_repository)],
     client_repo: Annotated[ClientRepository, Depends(get_client_repository)],
+    client_url_repo: Annotated[ClientUrlRepository, Depends(get_client_url_repository)],
 ):
     """Render scrape job detail page."""
     job = scraper_repo.get_job(job_id)
@@ -40,9 +46,15 @@ async def job_detail(
 
     config = scraper_repo.get_job_config(job_id)
 
-    # Get client name
-    client = client_repo.get_client_by_id(job["client_id"])
-    client_name = client.get("name", "Unknown") if client else "Unknown"
+    # Get client name from client_url
+    client_url = client_url_repo.get_url(job["client_url_id"])
+    if client_url:
+        client = client_repo.get_client_by_id(client_url["client_id"])
+        client_name = client.get("name", "Unknown") if client else "Unknown"
+        client_id = client_url["client_id"]
+    else:
+        client_name = "Unknown"
+        client_id = None
 
     # Format timestamps
     created_at_formatted = (
@@ -79,7 +91,7 @@ async def job_detail(
         "request": request,
         "job": {
             "job_id": job["job_id"],
-            "client_id": job["client_id"],
+            "client_id": client_id,
             "client_name": client_name,
             "status": job["status"],
             "created_at": job.get("created_at"),

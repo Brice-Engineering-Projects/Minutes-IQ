@@ -29,7 +29,6 @@ class ClientRepository:
         name: str,
         created_by: int,
         description: str | None = None,
-        website_url: str | None = None,
         is_active: bool = True,
     ) -> dict[str, Any]:
         """
@@ -39,7 +38,6 @@ class ClientRepository:
             name: Client organization name
             created_by: User ID of admin creating the client
             description: Optional description
-            website_url: Optional official website
             is_active: Whether client is active
 
         Returns:
@@ -47,6 +45,9 @@ class ClientRepository:
 
         Raises:
             ValueError: If client name already exists
+
+        Note:
+            URLs should be added separately using ClientUrlRepository
         """
         created_at = int(time.time())
         is_active_int = 1 if is_active else 0
@@ -54,11 +55,11 @@ class ClientRepository:
         try:
             cursor = self.db.execute(
                 """
-                INSERT INTO client (name, description, website_url, is_active, created_at, created_by)
-                VALUES (?, ?, ?, ?, ?, ?)
-                RETURNING client_id, name, description, website_url, is_active, created_at, created_by, updated_at;
+                INSERT INTO client (name, description, is_active, created_at, created_by)
+                VALUES (?, ?, ?, ?, ?)
+                RETURNING client_id, name, description, is_active, created_at, created_by, updated_at;
                 """,
-                (name, description, website_url, is_active_int, created_at, created_by),
+                (name, description, is_active_int, created_at, created_by),
             )
             row = cursor.fetchone()
             cursor.close()
@@ -72,11 +73,10 @@ class ClientRepository:
                 "client_id": row[0],
                 "name": row[1],
                 "description": row[2],
-                "website_url": row[3],
-                "is_active": bool(row[4]),
-                "created_at": row[5],
-                "created_by": row[6],
-                "updated_at": row[7],
+                "is_active": bool(row[3]),
+                "created_at": row[4],
+                "created_by": row[5],
+                "updated_at": row[6],
             }
         except Exception as e:
             self.db.rollback()
@@ -96,7 +96,7 @@ class ClientRepository:
         """
         cursor = self.db.execute(
             """
-            SELECT client_id, name, description, website_url, is_active, created_at, created_by, updated_at
+            SELECT client_id, name, description, is_active, created_at, created_by, updated_at
             FROM client
             WHERE client_id = ?;
             """,
@@ -112,11 +112,10 @@ class ClientRepository:
             "client_id": row[0],
             "name": row[1],
             "description": row[2],
-            "website_url": row[3],
-            "is_active": bool(row[4]),
-            "created_at": row[5],
-            "created_by": row[6],
-            "updated_at": row[7],
+            "is_active": bool(row[3]),
+            "created_at": row[4],
+            "created_by": row[5],
+            "updated_at": row[6],
         }
 
     def get_client_by_name(self, name: str) -> dict[str, Any] | None:
@@ -131,7 +130,7 @@ class ClientRepository:
         """
         cursor = self.db.execute(
             """
-            SELECT client_id, name, description, website_url, is_active, created_at, created_by, updated_at
+            SELECT client_id, name, description, is_active, created_at, created_by, updated_at
             FROM client
             WHERE name = ?;
             """,
@@ -147,11 +146,10 @@ class ClientRepository:
             "client_id": row[0],
             "name": row[1],
             "description": row[2],
-            "website_url": row[3],
-            "is_active": bool(row[4]),
-            "created_at": row[5],
-            "created_by": row[6],
-            "updated_at": row[7],
+            "is_active": bool(row[3]),
+            "created_at": row[4],
+            "created_by": row[5],
+            "updated_at": row[6],
         }
 
     def list_clients(
@@ -169,7 +167,7 @@ class ClientRepository:
             List of client dictionaries
         """
         query = """
-            SELECT client_id, name, description, website_url, is_active, created_at, created_by, updated_at
+            SELECT client_id, name, description, is_active, created_at, created_by, updated_at
             FROM client
         """
         params: list[int] = []
@@ -190,11 +188,10 @@ class ClientRepository:
                 "client_id": row[0],
                 "name": row[1],
                 "description": row[2],
-                "website_url": row[3],
-                "is_active": bool(row[4]),
-                "created_at": row[5],
-                "created_by": row[6],
-                "updated_at": row[7],
+                "is_active": bool(row[3]),
+                "created_at": row[4],
+                "created_by": row[5],
+                "updated_at": row[6],
             }
             for row in rows
         ]
@@ -204,7 +201,6 @@ class ClientRepository:
         client_id: int,
         name: str | None = None,
         description: str | None = None,
-        website_url: str | None = None,
         is_active: bool | None = None,
     ) -> dict[str, Any] | None:
         """
@@ -214,7 +210,6 @@ class ClientRepository:
             client_id: Client ID
             name: New name (optional)
             description: New description (optional)
-            website_url: New website URL (optional)
             is_active: New active status (optional)
 
         Returns:
@@ -222,6 +217,9 @@ class ClientRepository:
 
         Raises:
             ValueError: If new name already exists for another client
+
+        Note:
+            URLs should be managed separately using ClientUrlRepository
         """
         # Build dynamic update query based on provided fields
         updates: list[str] = []
@@ -234,10 +232,6 @@ class ClientRepository:
         if description is not None:
             updates.append("description = ?")
             params.append(description)
-
-        if website_url is not None:
-            updates.append("website_url = ?")
-            params.append(website_url)
 
         if is_active is not None:
             updates.append("is_active = ?")
@@ -254,7 +248,7 @@ class ClientRepository:
             UPDATE client
             SET {", ".join(updates)}
             WHERE client_id = ?
-            RETURNING client_id, name, description, website_url, is_active, created_at, created_by, updated_at;
+            RETURNING client_id, name, description, is_active, created_at, created_by, updated_at;
         """
         params.append(client_id)
 
@@ -272,11 +266,10 @@ class ClientRepository:
                 "client_id": row[0],
                 "name": row[1],
                 "description": row[2],
-                "website_url": row[3],
-                "is_active": bool(row[4]),
-                "created_at": row[5],
-                "created_by": row[6],
-                "updated_at": row[7],
+                "is_active": bool(row[3]),
+                "created_at": row[4],
+                "created_by": row[5],
+                "updated_at": row[6],
             }
         except Exception as e:
             self.db.rollback()

@@ -5,6 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
 
+from minutes_iq.auth.dependencies import get_current_user
 from minutes_iq.db.client_repository import ClientRepository
 from minutes_iq.db.dependencies import get_client_repository
 from minutes_iq.templates_config import templates
@@ -36,6 +37,7 @@ async def client_detail(
     request: Request,
     client_id: int,
     client_repo: Annotated[ClientRepository, Depends(get_client_repository)],
+    current_user: Annotated[dict, Depends(get_current_user)],
 ):
     """Render the client detail page."""
     client = client_repo.get_client_by_id(client_id)
@@ -44,7 +46,8 @@ async def client_detail(
         raise HTTPException(status_code=404, detail="Client not found")
 
     return templates.TemplateResponse(
-        "clients/detail.html", {"request": request, "client": client}
+        "clients/detail.html",
+        {"request": request, "client": client, "current_user": current_user},
     )
 
 

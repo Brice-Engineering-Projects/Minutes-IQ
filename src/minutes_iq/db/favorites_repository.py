@@ -119,7 +119,7 @@ class FavoritesRepository:
         """
         cursor = self.db.execute(
             """
-            SELECT c.client_id, c.name, c.description, c.website_url,
+            SELECT c.client_id, c.name, c.description,
                    c.is_active, c.created_at, c.created_by, c.updated_at,
                    f.favorited_at
             FROM client c
@@ -137,12 +137,11 @@ class FavoritesRepository:
                 "client_id": row[0],
                 "name": row[1],
                 "description": row[2],
-                "website_url": row[3],
-                "is_active": bool(row[4]),
-                "created_at": row[5],
-                "created_by": row[6],
-                "updated_at": row[7],
-                "favorited_at": row[8],
+                "is_active": bool(row[3]),
+                "created_at": row[4],
+                "created_by": row[5],
+                "updated_at": row[6],
+                "favorited_at": row[7],
             }
             for row in rows
         ]

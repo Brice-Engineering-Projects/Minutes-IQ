@@ -31,12 +31,12 @@
             <h2 class="text-lg font-semibold text-gray-900 mb-4">Client Selection</h2>
 
             <div>
-                <label for="client_id" class="block text-sm font-medium text-gray-700 mb-1">
-                    Client <span class="text-red-500">*</span>
+                <label for="client_url_id" class="block text-sm font-medium text-gray-700 mb-1">
+                    Client URL <span class="text-red-500">*</span>
                 </label>
                 <select
-                    id="client_id"
-                    name="client_id"
+                    id="client_url_id"
+                    name="client_url_id"
                     required
                     hx-get="/api/scraper/jobs/preview-keywords"
                     hx-trigger="change"
@@ -44,15 +44,15 @@
                     hx-swap="innerHTML"
                     class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                 >
-                    <option value="">Select a client...</option>
+                    <option value="">Select a client URL...</option>
                     <optgroup label="Favorites">
-                        <!-- Favorites loaded via script -->
+                        <!-- Favorite client URLs loaded via script -->
                     </optgroup>
-                    <optgroup label="All Clients">
-                        <!-- All clients loaded via script -->
+                    <optgroup label="All Client URLs">
+                        <!-- All client URLs loaded via script -->
                     </optgroup>
                 </select>
-                <p class="mt-1 text-xs text-gray-500">Choose the client to scrape for</p>
+                <p class="mt-1 text-xs text-gray-500">Choose the client URL to scrape</p>
             </div>
 
             <!-- Keyword Preview -->
@@ -177,34 +177,40 @@
     </form>
 </div>
 
-<!-- Load clients for dropdown -->
+<!-- Load client URLs for dropdown -->
 <script>
-// Load clients and organize into favorites and all
+// Load client URLs and organize into favorites and all
 Promise.all([
-    fetch('/api/clients/all').then(r => r.json()),
+    fetch('/api/clients/all-urls').then(r => r.json()),
     fetch('/api/clients/favorites').then(r => r.json()).catch(() => [])
 ])
-.then(([allClients, favorites]) => {
-    const select = document.getElementById('client_id');
+.then(([allClientUrls, favorites]) => {
+    const select = document.getElementById('client_url_id');
     const favoritesOptgroup = select.querySelector('optgroup[label="Favorites"]');
-    const allClientsOptgroup = select.querySelector('optgroup[label="All Clients"]');
+    const allUrlsOptgroup = select.querySelector('optgroup[label="All Client URLs"]');
 
-    const favoriteIds = new Set(favorites.map(f => f.client_id));
+    const favoriteClientIds = new Set(favorites.map(f => f.client_id));
 
-    // Add favorites
-    favorites.forEach(client => {
+    // Separate URLs into favorites and others
+    const favoriteUrls = allClientUrls.filter(url => favoriteClientIds.has(url.client_id));
+    const otherUrls = allClientUrls.filter(url => !favoriteClientIds.has(url.client_id));
+
+    // Add favorite client URLs
+    favoriteUrls.forEach(clientUrl => {
         const option = document.createElement('option');
-        option.value = client.client_id;
-        option.textContent = client.name;
+        option.value = clientUrl.client_url_id;
+        option.textContent = clientUrl.display_name;
+        option.title = clientUrl.url;
         favoritesOptgroup.appendChild(option);
     });
 
-    // Add all clients
-    allClients.forEach(client => {
+    // Add all other client URLs
+    otherUrls.forEach(clientUrl => {
         const option = document.createElement('option');
-        option.value = client.client_id;
-        option.textContent = client.name;
-        allClientsOptgroup.appendChild(option);
+        option.value = clientUrl.client_url_id;
+        option.textContent = clientUrl.display_name;
+        option.title = clientUrl.url;
+        allUrlsOptgroup.appendChild(option);
     });
 
     // Remove empty optgroups
@@ -212,6 +218,6 @@ Promise.all([
         favoritesOptgroup.remove();
     }
 })
-.catch(error => console.error('Error loading clients:', error));
+.catch(error => console.error('Error loading client URLs:', error));
 </script>
 {% endblock %}

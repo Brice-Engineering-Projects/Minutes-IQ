@@ -19,6 +19,12 @@ JEA_WEB_SCRAPING/
 │   ├── 08_database/
 │   └── 09_medium_blog/
 │
+├── scripts/
+│   ├── README.md           # Documentation
+│   ├── migrations/         # Database migrations
+│   ├── admin/             # Admin utilities
+│   └── archive/           # Deprecated scripts
+│
 ├── src/jea_meeting_web_scraper/
 │   ├── __init__.py
 │   │

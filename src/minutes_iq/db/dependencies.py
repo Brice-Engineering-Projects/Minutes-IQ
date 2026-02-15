@@ -16,6 +16,7 @@ from minutes_iq.db.auth_code_service import AuthCodeService
 from minutes_iq.db.client import get_db_connection
 from minutes_iq.db.client_repository import ClientRepository
 from minutes_iq.db.client_service import ClientService
+from minutes_iq.db.client_url_repository import ClientUrlRepository
 from minutes_iq.db.favorites_repository import FavoritesRepository
 from minutes_iq.db.keyword_repository import KeywordRepository
 from minutes_iq.db.keyword_service import KeywordService
@@ -101,3 +102,9 @@ def get_scraper_repository() -> Generator[ScraperRepository, None, None]:
     """Get ScraperRepository instance with database connection."""
     with get_db_connection() as conn:
         yield ScraperRepository(conn)
+
+
+def get_client_url_repository() -> Generator[ClientUrlRepository, None, None]:
+    """Get ClientUrlRepository instance with database connection."""
+    with get_db_connection() as conn:
+        yield ClientUrlRepository(conn)
