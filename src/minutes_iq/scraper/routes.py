@@ -138,7 +138,7 @@ def list_scrape_jobs(
     current_user: Annotated[dict, Depends(get_current_user)],
     service: Annotated[ScraperService, Depends(get_scraper_service)],
     status_filter: str | None = Query(None, alias="status"),
-    client_id: int | None = Query(None),
+    client_id: str | None = Query(None),
     limit: int = Query(100, ge=1, le=1000),
     offset: int = Query(0, ge=0),
 ) -> JobListResponse:
@@ -148,9 +148,12 @@ def list_scrape_jobs(
     Supports filtering by status and client_id.
     """
     try:
+        # Convert client_id from string to int, treating empty string as None
+        client_id_int = int(client_id) if client_id and client_id.strip() else None
+
         jobs = service.repository.list_jobs(
             user_id=current_user["user_id"],
-            client_id=client_id,
+            client_id=client_id_int,
             status=status_filter,
             limit=limit,
             offset=offset,

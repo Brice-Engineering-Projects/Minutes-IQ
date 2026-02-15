@@ -172,10 +172,24 @@ def _execute_with_monitoring(
     if not config:
         raise ValueError(f"Configuration for job {job_id} not found")
 
+    # Get client_id from client_url_id
+    # Query directly to avoid connection sharing issues
+    # Note: client_urls table uses 'id' not 'client_url_id'
+    cursor = service.repository.conn.execute(
+        "SELECT client_id, url FROM client_urls WHERE id = ?", (job["client_url_id"],)
+    )
+    row = cursor.fetchone()
+    cursor.close()
+
+    if not row:
+        raise ValueError(f"Client URL {job['client_url_id']} not found")
+
+    client_id = row[0]
+
     # Get client keywords
-    keywords_data = service.repository.get_client_keywords(job["client_id"])
+    keywords_data = service.repository.get_client_keywords(client_id)
     if not keywords_data:
-        raise ValueError(f"No keywords configured for client {job['client_id']}")
+        raise ValueError(f"No keywords configured for client {client_id}")
 
     keywords = [kw["keyword"] for kw in keywords_data]
     keyword_id_map = {kw["keyword"]: kw["keyword_id"] for kw in keywords_data}
@@ -240,6 +254,30 @@ def _execute_with_monitoring(
                     )
                     matches_found += 1
 
+                # Commit after each PDF with matches to avoid connection timeout
+                try:
+                    service.repository.conn.commit()
+                except Exception as commit_error:
+                    # Connection might have timed out - this is not fatal, results are already inserted
+                    logger.warning(
+                        f"[Job {job_id}] Commit warning after PDF (connection may have timed out): {commit_error}"
+                    )
+                    # Try to reconnect for next operations
+                    try:
+                        from minutes_iq.db.client import get_db_connection
+                        from minutes_iq.db.scraper_repository import ScraperRepository
+
+                        logger.info(
+                            f"[Job {job_id}] Attempting to reconnect to database..."
+                        )
+                        new_conn = get_db_connection()
+                        service.repository = ScraperRepository(new_conn)
+                        logger.info(f"[Job {job_id}] ✅ Reconnected successfully")
+                    except Exception as reconnect_error:
+                        logger.error(
+                            f"[Job {job_id}] Failed to reconnect: {reconnect_error}"
+                        )
+
                 # Download PDF using storage manager (preferred) or legacy path
                 if pdf_content:
                     if storage_manager:
@@ -275,11 +313,20 @@ def _execute_with_monitoring(
             errors += 1
             continue
 
-    # Commit all results
-    service.repository.conn.commit()
+    # Final commit (most results should already be committed incrementally)
+    try:
+        service.repository.conn.commit()
+    except Exception as commit_error:
+        logger.warning(f"[Job {job_id}] Final commit warning: {commit_error}")
 
     # Update job status to completed
-    service.repository.update_job_status(job_id, "completed")
+    try:
+        service.repository.update_job_status(job_id, "completed")
+        service.repository.conn.commit()
+    except Exception as status_error:
+        logger.error(
+            f"[Job {job_id}] Failed to update status to completed: {status_error}"
+        )
 
     return {
         "pdfs_scanned": pdfs_scanned,

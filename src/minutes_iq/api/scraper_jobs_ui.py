@@ -299,8 +299,13 @@ async def preview_keywords(
 async def create_job(
     request: Request,
     scraper_repo: Annotated[ScraperRepository, Depends(get_scraper_repository)],
+    client_url_repo: Annotated[ClientUrlRepository, Depends(get_client_url_repository)],
 ):
-    """Create a new scrape job."""
+    """Create a new scrape job and start background execution."""
+    from minutes_iq.db.scraper_service import ScraperService
+    from minutes_iq.scraper.async_runner import run_scrape_job_async
+    from minutes_iq.scraper.storage import StorageManager
+
     # Parse form data
     form_data = await request.form()
 
@@ -314,6 +319,13 @@ async def create_job(
     max_scan_pages = int(form_data.get("max_scan_pages", 15))
     include_board_minutes = "include_board_minutes" in form_data
     include_packages = "include_packages" in form_data
+
+    # Get the client URL to extract the URL itself
+    client_url = client_url_repo.get_url(client_url_id)
+    if not client_url:
+        raise HTTPException(status_code=404, detail="Client URL not found")
+
+    source_urls = [client_url["url"]]
 
     # Create job
     job_id = scraper_repo.create_job(
@@ -331,6 +343,70 @@ async def create_job(
         include_minutes=include_board_minutes,
         include_packages=include_packages,
     )
+
+    # Start background execution in a separate thread
+    # IMPORTANT: We must pass the job_id and source_urls, not the service/connection
+    # The thread will create its own database connection to avoid threading issues
+    import threading
+
+    storage = StorageManager(base_dir="data")
+
+    def run_job_in_thread():
+        """Run the job in a background thread with its own DB connection."""
+        import logging
+
+        logger = logging.getLogger(__name__)
+
+        # Connection retry wrapper - recreates connection on timeout
+        def get_fresh_service():
+            from minutes_iq.db.client import get_db_connection
+            from minutes_iq.db.scraper_repository import ScraperRepository
+
+            conn = get_db_connection()
+            thread_repo = ScraperRepository(conn)
+            return ScraperService(thread_repo), conn
+
+        try:
+            print(f"🚀 Thread starting for job {job_id}", flush=True)
+            logger.info(f"🚀 Thread starting for job {job_id}")
+
+            # Create initial connection
+            print(f"✅ Creating DB connection for job {job_id}", flush=True)
+            thread_service, conn = get_fresh_service()
+
+            print(
+                f"✅ DB connection created for job {job_id}, starting execution",
+                flush=True,
+            )
+            logger.info(
+                f"✅ DB connection created for job {job_id}, starting execution"
+            )
+
+            # Run with connection retry support
+            run_scrape_job_async(
+                job_id=job_id,
+                service=thread_service,
+                source_urls=source_urls,
+                storage_manager=storage,
+            )
+
+            # Close connection
+            conn.close()
+
+            print(f"✅ Job {job_id} thread completed", flush=True)
+            logger.info(f"✅ Job {job_id} thread completed")
+
+        except Exception as e:
+            print(f"❌ Fatal error in job {job_id} thread: {e}", flush=True)
+            logger.error(f"❌ Fatal error in job {job_id} thread: {e}", exc_info=True)
+            import traceback
+
+            traceback.print_exc()
+
+    print(f"🎯 Creating thread for job {job_id}", flush=True)
+    thread = threading.Thread(target=run_job_in_thread, daemon=True)
+    thread.start()
+    print(f"🎯 Thread started for job {job_id}", flush=True)
 
     # Redirect to job detail page
     response = Response(status_code=200)
