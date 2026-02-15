@@ -727,15 +727,10 @@ async def get_job_results(
         escaped_filename = escape(pdf_filename)
         escaped_keyword = escape(keyword)
 
-        # Build PDF link
-        pdf_link = f"/api/scraper/jobs/{job_id}/pdfs/{escaped_filename}"
-
         rows_html += f"""
         <tr class="hover:bg-gray-50">
-            <td class="px-6 py-4 text-sm">
-                <a href="{pdf_link}" target="_blank" class="text-blue-600 hover:text-blue-800">
-                    {escaped_filename}
-                </a>
+            <td class="px-6 py-4 text-sm text-gray-900">
+                {escaped_filename}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {escape(str(page_number))}
@@ -1052,13 +1047,18 @@ async def export_csv(
     )
 
 
-@router.get("/{job_id}/pdfs/{filename}", response_class=HTMLResponse)
+# NOTE: PDF storage disabled per deployment strategy (storing only matched snippets)
+# Uncomment this endpoint if full PDF storage is implemented in the future
+# @router.get("/{job_id}/pdfs/{filename}", response_class=HTMLResponse)
 async def serve_pdf(
     job_id: int,
     filename: str,
     scraper_repo: Annotated[ScraperRepository, Depends(get_scraper_repository)],
 ):
-    """Serve PDF file for viewing (with authentication and ownership validation)."""
+    """Serve PDF file for viewing (with authentication and ownership validation).
+
+    NOTE: Currently disabled - we store only matched page snippets, not full PDFs.
+    """
     from pathlib import Path
 
     from fastapi.responses import FileResponse
