@@ -9,6 +9,7 @@ This guide explains the complete workflow for adding new users to the JEA Meetin
 ## Overview
 
 The platform uses an **invite-only registration system**:
+
 1. An **admin** creates an authorization code
 2. The **admin** shares the code with the new user (via email, message, etc.)
 3. The **new user** uses the code to create their account
@@ -40,6 +41,7 @@ curl -X POST "http://localhost:8000/admin/auth-codes" \
 ```
 
 **Request Parameters:**
+
 - `expires_in_days` (optional): Number of days until the code expires (default: 7)
   - Set to `null` for codes that never expire
 - `max_uses` (optional): How many times the code can be used (default: 1)
