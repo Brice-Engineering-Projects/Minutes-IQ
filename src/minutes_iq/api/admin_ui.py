@@ -686,9 +686,14 @@ async def generate_auth_code(
 
     # Get form parameters
     form_data = await request.form()
-    expires_in_days = form_data.get("expires_in_days", "")
-    max_uses = form_data.get("max_uses", "1")
-    notes = form_data.get("notes", "Generated from admin panel")
+    expires_in_days_raw = form_data.get("expires_in_days", "")
+    max_uses_raw = form_data.get("max_uses", "1")
+    notes_raw = form_data.get("notes", "Generated from admin panel")
+
+    # Ensure form fields are strings (not UploadFile)
+    expires_in_days = str(expires_in_days_raw) if expires_in_days_raw else ""
+    max_uses = str(max_uses_raw) if max_uses_raw else "1"
+    notes = str(notes_raw) if notes_raw else "Generated from admin panel"
 
     logger.info(
         f"Form data received: expires_in_days={expires_in_days}, max_uses={max_uses}, notes={notes}"
