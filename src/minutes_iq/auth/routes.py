@@ -149,6 +149,14 @@ async def register(
         HTTPException 409: If username or email already exists
         HTTPException 500: If user creation or code marking fails
     """
+    import logging
+
+    logger = logging.getLogger(__name__)
+    logger.info("=== REGISTRATION REQUEST ===")
+    logger.info(f"Username: {request.username}")
+    logger.info(f"Email: {request.email}")
+    logger.info(f"Auth Code: {request.auth_code}")
+
     # Step 1: Validate the authorization code
     is_valid, error_message, code_data = auth_code_service.validate_code(
         request.auth_code

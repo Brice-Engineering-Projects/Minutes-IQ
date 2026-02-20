@@ -8,9 +8,11 @@ from fastapi.responses import HTMLResponse
 
 from minutes_iq.auth.dependencies import get_current_user
 from minutes_iq.db.auth_code_repository import AuthCodeRepository
+from minutes_iq.db.auth_code_service import AuthCodeService
 from minutes_iq.db.client_repository import ClientRepository
 from minutes_iq.db.dependencies import (
     get_auth_code_repository,
+    get_auth_code_service,
     get_client_repository,
     get_keyword_repository,
     get_scraper_repository,
@@ -561,8 +563,16 @@ async def get_auth_codes_list(
 
     # Build code cards
     cards_html = ""
+    import time
+
+    current_time = time.time()
+
     for code in codes:
         is_used = code.get("is_used", False)
+        is_active = code.get("is_active", True)
+        expires_at = code.get("expires_at")
+        is_expired = expires_at and current_time > expires_at
+
         created_at = (
             datetime.fromtimestamp(code["created_at"]).strftime("%Y-%m-%d %H:%M")
             if code.get("created_at")
@@ -574,10 +584,35 @@ async def get_auth_codes_list(
             else None
         )
 
-        status_badge = (
-            '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Used</span>'
-            if is_used
-            else '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Available</span>'
+        # Format expiration display
+        if expires_at:
+            expires_display = datetime.fromtimestamp(expires_at).strftime(
+                "%Y-%m-%d %H:%M"
+            )
+        else:
+            expires_display = "Never"
+
+        # Determine status badge
+        if not is_active:
+            status_badge = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Revoked</span>'
+        elif is_used:
+            status_badge = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Used</span>'
+        elif is_expired:
+            status_badge = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Expired</span>'
+        else:
+            status_badge = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Active</span>'
+
+        # Usage display
+        current_uses = code.get("current_uses", 0)
+        max_uses = code.get("max_uses", 1)
+        usage_display = f"{current_uses}/{max_uses} uses"
+
+        # Notes display
+        notes = code.get("notes", "")
+        notes_display = (
+            f'<p class="text-xs text-gray-500 mt-1">{escape(notes)}</p>'
+            if notes
+            else ""
         )
 
         cards_html += f"""
@@ -595,11 +630,14 @@ async def get_auth_codes_list(
                             Copy
                         </button>
                     </div>
-                    <div class="mt-2 text-sm text-gray-500">
-                        <p>Created: {created_at}</p>
-                        {"" if not used_at else f"<p>Used: {used_at}</p>"}
+                    <div class="mt-2 text-sm text-gray-600 space-y-1">
+                        <p><span class="font-medium">Created:</span> {created_at}</p>
+                        {"" if not used_at else f'<p><span class="font-medium">Used:</span> {used_at}</p>'}
+                        <p><span class="font-medium">Expires:</span> {expires_display}</p>
+                        <p><span class="font-medium">Usage:</span> {usage_display}</p>
                     </div>
-                    <div class="mt-2">
+                    {notes_display}
+                    <div class="mt-3">
                         {status_badge}
                     </div>
                 </div>
@@ -631,57 +669,140 @@ async def get_auth_codes_list(
 
 @router.post("/auth-codes/generate", response_class=HTMLResponse)
 async def generate_auth_code(
+    request: Request,
     current_user: Annotated[dict, Depends(get_current_user)],
-    auth_code_repo: Annotated[AuthCodeRepository, Depends(get_auth_code_repository)],
+    auth_code_service: Annotated[AuthCodeService, Depends(get_auth_code_service)],
 ):
     """Generate a new authorization code."""
+    import logging
     from html import escape
 
+    logger = logging.getLogger(__name__)
+    logger.info("=== AUTH CODE GENERATION REQUEST STARTED ===")
+
     if not current_user or current_user.get("role_id") != 1:
+        logger.error(f"Unauthorized access attempt. User: {current_user}")
         raise HTTPException(status_code=403, detail="Admin access required")
 
-    # Generate new code string
-    import secrets
+    # Get form parameters
+    form_data = await request.form()
+    expires_in_days_raw = form_data.get("expires_in_days", "")
+    max_uses_raw = form_data.get("max_uses", "1")
+    notes_raw = form_data.get("notes", "Generated from admin panel")
 
-    code_string = secrets.token_urlsafe(32)
+    # Ensure form fields are strings (not UploadFile)
+    expires_in_days = str(expires_in_days_raw) if expires_in_days_raw else ""
+    max_uses = str(max_uses_raw) if max_uses_raw else "1"
+    notes = str(notes_raw) if notes_raw else "Generated from admin panel"
 
-    # Create code in database
-    code_record = auth_code_repo.create_code(
-        code=code_string,
-        created_by=current_user.get("user_id", 1),
-        expires_at=None,  # Never expires
-        max_uses=1,
-        notes="Generated from admin panel",
+    logger.info(
+        f"Form data received: expires_in_days={expires_in_days}, max_uses={max_uses}, notes={notes}"
     )
+
+    # Convert to proper types with validation
+    try:
+        expires_in_days_int = (
+            int(expires_in_days)
+            if expires_in_days and expires_in_days.strip()
+            else None
+        )
+        max_uses_int = int(max_uses) if max_uses else 1
+
+        logger.info(
+            f"Parsed values: expires_in_days_int={expires_in_days_int}, max_uses_int={max_uses_int}"
+        )
+
+        if expires_in_days_int is not None and expires_in_days_int < 1:
+            raise HTTPException(
+                status_code=400, detail="Expiration days must be at least 1"
+            )
+        if max_uses_int < 1:
+            raise HTTPException(status_code=400, detail="Max uses must be at least 1")
+    except ValueError:
+        logger.error("ValueError parsing numeric parameters")
+        raise HTTPException(
+            status_code=400, detail="Invalid numeric parameters"
+        ) from None
+
+    # Use the service layer to create code
+    logger.info("Creating code via service layer...")
+    code_record = auth_code_service.create_code(
+        created_by=current_user.get("user_id", 1),
+        expires_in_days=expires_in_days_int,
+        max_uses=max_uses_int,
+        notes=notes,
+    )
+
+    logger.info(f"Code created successfully: {code_record}")
+
+    # Get the formatted code for display
+    code_string = code_record.get("code_formatted", code_record["code"])
+    logger.info(f"Formatted code: {code_string}")
+
+    # Format expiration for display
+    expires_at = code_record.get("expires_at")
+    if expires_at:
+        expiration_display = datetime.fromtimestamp(expires_at).strftime(
+            "%Y-%m-%d %H:%M"
+        )
+        expires_badge = f'<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Expires: {expiration_display}</span>'
+    else:
+        expiration_display = "Never"
+        expires_badge = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">No expiration</span>'
 
     created_at = datetime.now().strftime("%Y-%m-%d %H:%M")
 
     # Return HTML for the new code card (to be prepended to list)
     html = f"""
-    <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6 border-green-500" id="code-{code_record["code_id"]}">
+    <div class="bg-white shadow-sm rounded-lg border-2 border-green-500 p-6" id="code-{code_record["code_id"]}">
         <div class="flex items-start justify-between">
             <div class="flex-1">
+                <div class="mb-3">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        ✓ New Code Generated
+                    </span>
+                </div>
                 <div class="flex items-center">
-                    <code class="text-lg font-mono font-semibold text-gray-900 select-all">
+                    <code class="text-xl font-mono font-bold text-gray-900 select-all">
                         {escape(code_string)}
                     </code>
                     <button
-                        onclick="navigator.clipboard.writeText('{escape(code_string)}'); this.textContent='Copied!'; setTimeout(() => this.textContent='Copy', 2000)"
-                        class="ml-3 text-sm text-blue-600 hover:text-blue-800"
+                        onclick="navigator.clipboard.writeText('{escape(code_string)}'); this.textContent='✓ Copied!'; setTimeout(() => this.textContent='Copy', 2000)"
+                        class="ml-3 px-3 py-1 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded"
                     >
                         Copy
                     </button>
                 </div>
-                <div class="mt-2 text-sm text-gray-500">
-                    <p>Created: {created_at}</p>
+                <div class="mt-3 text-sm text-gray-600 space-y-1">
+                    <p><span class="font-medium">Created:</span> {created_at}</p>
+                    <p><span class="font-medium">Expires:</span> {expiration_display}</p>
+                    <p><span class="font-medium">Max uses:</span> {code_record.get("current_uses", 0)}/{max_uses_int}</p>
+                    {f'<p><span class="font-medium">Notes:</span> {escape(notes)}</p>' if notes and notes != "Generated from admin panel" else ""}
                 </div>
-                <div class="mt-2">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Available</span>
+                <div class="mt-3 flex gap-2">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Active</span>
+                    {expires_badge}
                 </div>
+            </div>
+            <div>
+                <button
+                    hx-delete="/api/admin/auth-codes/{code_record["code_id"]}"
+                    hx-confirm="Are you sure you want to delete this authorization code?"
+                    hx-target="closest div.bg-white"
+                    hx-swap="outerHTML"
+                    class="text-red-600 hover:text-red-900"
+                >
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                </button>
             </div>
         </div>
     </div>
     """
+
+    logger.info(f"Returning HTML response (length: {len(html)} chars)")
+    logger.info("=== AUTH CODE GENERATION REQUEST COMPLETED ===")
 
     return html
 

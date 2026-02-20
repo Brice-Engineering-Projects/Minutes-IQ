@@ -56,21 +56,29 @@ app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="stat
 # IMPORTANT: Register UI routes before API routes when they share the same prefix
 # to ensure HTML pages are served instead of JSON responses
 app.include_router(auth_routes.router, prefix="/auth")
+
+# Register UI routes BEFORE REST API routes to prevent conflicts
+# The admin UI route /admin/auth-codes must be registered before the REST API /admin/auth-codes
+app.include_router(admin_ui_routes.router)
+app.include_router(client_ui_routes.router)
+app.include_router(keyword_ui_routes.router)
+app.include_router(scraper_job_ui_routes.router)
+app.include_router(profile_ui_routes.router)
+
+# Now register REST API routers
 app.include_router(auth_code_routes.router)
 app.include_router(client_routes.router)
 app.include_router(keyword_routes.router)
 app.include_router(dashboard_api.router)
-# Register UI routes before API routes to avoid path conflicts
-app.include_router(client_ui_routes.router)
+
+# Register API fragment routers
 app.include_router(clients_ui_api.router)
 app.include_router(clients.router)
-app.include_router(keyword_ui_routes.router)
 app.include_router(keywords_ui_api.router)
-app.include_router(scraper_job_ui_routes.router)
 app.include_router(scraper_jobs_ui_api.router)
 app.include_router(scraper_routes.router)
-app.include_router(admin_ui_routes.router)
 app.include_router(admin_ui_api.router)
+app.include_router(profile_ui_api.router)
 app.include_router(profile_ui_routes.router)
 app.include_router(profile_ui_api.router)
 
