@@ -674,9 +674,14 @@ async def generate_auth_code(
     auth_code_service: Annotated[AuthCodeService, Depends(get_auth_code_service)],
 ):
     """Generate a new authorization code."""
+    import logging
     from html import escape
 
+    logger = logging.getLogger(__name__)
+    logger.info("=== AUTH CODE GENERATION REQUEST STARTED ===")
+
     if not current_user or current_user.get("role_id") != 1:
+        logger.error(f"Unauthorized access attempt. User: {current_user}")
         raise HTTPException(status_code=403, detail="Admin access required")
 
     # Get form parameters
@@ -684,6 +689,10 @@ async def generate_auth_code(
     expires_in_days = form_data.get("expires_in_days", "")
     max_uses = form_data.get("max_uses", "1")
     notes = form_data.get("notes", "Generated from admin panel")
+
+    logger.info(
+        f"Form data received: expires_in_days={expires_in_days}, max_uses={max_uses}, notes={notes}"
+    )
 
     # Convert to proper types with validation
     try:
@@ -694,6 +703,10 @@ async def generate_auth_code(
         )
         max_uses_int = int(max_uses) if max_uses else 1
 
+        logger.info(
+            f"Parsed values: expires_in_days_int={expires_in_days_int}, max_uses_int={max_uses_int}"
+        )
+
         if expires_in_days_int is not None and expires_in_days_int < 1:
             raise HTTPException(
                 status_code=400, detail="Expiration days must be at least 1"
@@ -701,11 +714,13 @@ async def generate_auth_code(
         if max_uses_int < 1:
             raise HTTPException(status_code=400, detail="Max uses must be at least 1")
     except ValueError:
+        logger.error("ValueError parsing numeric parameters")
         raise HTTPException(
             status_code=400, detail="Invalid numeric parameters"
         ) from None
 
     # Use the service layer to create code
+    logger.info("Creating code via service layer...")
     code_record = auth_code_service.create_code(
         created_by=current_user.get("user_id", 1),
         expires_in_days=expires_in_days_int,
@@ -713,8 +728,11 @@ async def generate_auth_code(
         notes=notes,
     )
 
+    logger.info(f"Code created successfully: {code_record}")
+
     # Get the formatted code for display
     code_string = code_record.get("code_formatted", code_record["code"])
+    logger.info(f"Formatted code: {code_string}")
 
     # Format expiration for display
     expires_at = code_record.get("expires_at")
@@ -777,6 +795,9 @@ async def generate_auth_code(
         </div>
     </div>
     """
+
+    logger.info(f"Returning HTML response (length: {len(html)} chars)")
+    logger.info("=== AUTH CODE GENERATION REQUEST COMPLETED ===")
 
     return html
 
