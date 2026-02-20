@@ -771,8 +771,8 @@ async def generate_auth_code(
                 <div class="mt-3 text-sm text-gray-600 space-y-1">
                     <p><span class="font-medium">Created:</span> {created_at}</p>
                     <p><span class="font-medium">Expires:</span> {expiration_display}</p>
-                    <p><span class="font-medium">Max uses:</span> {code_record.get('current_uses', 0)}/{max_uses_int}</p>
-                    {f'<p><span class="font-medium">Notes:</span> {escape(notes)}</p>' if notes and notes != 'Generated from admin panel' else ''}
+                    <p><span class="font-medium">Max uses:</span> {code_record.get("current_uses", 0)}/{max_uses_int}</p>
+                    {f'<p><span class="font-medium">Notes:</span> {escape(notes)}</p>' if notes and notes != "Generated from admin panel" else ""}
                 </div>
                 <div class="mt-3 flex gap-2">
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Active</span>
@@ -781,7 +781,7 @@ async def generate_auth_code(
             </div>
             <div>
                 <button
-                    hx-delete="/api/admin/auth-codes/{code_record['code_id']}"
+                    hx-delete="/api/admin/auth-codes/{code_record["code_id"]}"
                     hx-confirm="Are you sure you want to delete this authorization code?"
                     hx-target="closest div.bg-white"
                     hx-swap="outerHTML"
