@@ -1,4 +1,4 @@
-"""Main module for the JEA Meeting Web Scraper."""
+"""Main module for the Minutes IQ application."""
 
 from pathlib import Path
 from typing import Annotated

@@ -1,11 +1,11 @@
-# src/dashboard/dashboard.py
+# src/minutes_iq/dashboard/dashboard.py
 
 """
-Streamlit Dashboard for JEA Meeting Minutes Keyword Matches
+Dashboard for Minutes IQ Keyword Matches
 - Select any extracted CSV from dropdown
 - Displays keyword match summary
 - Filters results by keyword, date, and named entities
-- Allows quick insight into what topics are surfacing in JEA meetings
+- Allows quick insight into what topics are surfacing in meetings
 """
 
 import glob

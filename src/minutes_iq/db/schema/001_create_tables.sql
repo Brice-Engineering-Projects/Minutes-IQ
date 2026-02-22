@@ -1,5 +1,5 @@
 -- =====================================================
--- JEA Web Scraper Database Schema (v1)
+-- Minutes IQ Database Schema (v1)
 -- SQLite / Turso Compatible
 -- =====================================================
 

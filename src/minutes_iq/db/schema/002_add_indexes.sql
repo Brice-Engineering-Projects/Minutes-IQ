@@ -1,6 +1,6 @@
 -- =====================================================
 -- 002_add_indexes.sql
--- Additional indexes for JEA Web Scraper (v1)
+-- Additional indexes for Minutes IQ (v1)
 -- SQLite / Turso Compatible
 -- =====================================================
 

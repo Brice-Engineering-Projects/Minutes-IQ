@@ -2,7 +2,7 @@
 minutes_iq/auth/security.py
 ----------------------------------------
 
-This module contains security-related functions and utilities for handling authentication and authorization in the JEA meeting web scraper application.
+This module contains security-related functions and utilities for handling authentication and authorization in the Minutes IQ application.
 """
 
 from datetime import UTC, datetime, timedelta
