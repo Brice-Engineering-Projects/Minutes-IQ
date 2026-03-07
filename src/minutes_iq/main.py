@@ -7,7 +7,6 @@ import uvicorn
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from minutes_iq.admin import (
     auth_code_routes,
@@ -44,9 +43,6 @@ app.add_exception_handler(401, unauthorized_handler)
 app.add_exception_handler(404, not_found_handler)
 app.add_exception_handler(403, forbidden_handler)
 app.add_exception_handler(500, internal_server_error_handler)
-app.add_exception_handler(
-    StarletteHTTPException, not_found_handler
-)  # Catch-all for other HTTP exceptions
 
 # Set up static files
 BASE_DIR = Path(__file__).resolve().parent

@@ -1,6 +1,7 @@
 # 🗄️ Database Schema — JEA / Municipal Intelligence Dashboard
 
 ## Purpose
+
 This document defines the database schema for the FastAPI-based municipal meeting intelligence platform.
 The schema is intentionally **lean**, **secure**, and **admin-controlled**, designed for a small internal user base with a clean scaling path.
 
@@ -20,7 +21,7 @@ The schema is intentionally **lean**, **secure**, and **admin-controlled**, desi
 ## Core Tables Overview
 
 | Table | Purpose |
-|-----|--------|
+| ----- | -------- |
 | users | Authentication & access control |
 | profiles | User identity & metadata |
 | auth_codes | Controlled registration |
@@ -47,6 +48,7 @@ created_at (timestamp)
 ```
 
 Notes:
+
 - Email is the login identifier
 - Passwords stored using bcrypt hash
 - `is_admin` controls data mutation rights
@@ -67,6 +69,7 @@ job_title (text)
 ```
 
 Notes:
+
 - 1:1 relationship with users
 - Keeps auth table clean
 
@@ -86,6 +89,7 @@ expires_at (timestamp, nullable)
 ```
 
 Notes:
+
 - 6-digit numeric codes
 - Rotatable
 - Can be single-use or reusable
@@ -106,6 +110,7 @@ created_at (timestamp)
 ```
 
 Example values:
+
 - JEA
 - City of Jacksonville
 - Tampa
@@ -130,6 +135,7 @@ is_active (boolean)
 ```
 
 Notes:
+
 - One client can have multiple sources
 - Allows testing without affecting production scrapes
 
@@ -148,6 +154,7 @@ PRIMARY KEY (user_id, client_id)
 ```
 
 Notes:
+
 - Does NOT affect global client pool
 - Only affects UI filtering
 
@@ -168,6 +175,7 @@ used (boolean, default false)
 ```
 
 Notes:
+
 - Tokens are hashed
 - Single-use
 - Short-lived
@@ -179,12 +187,14 @@ Notes:
 ### Why Only Admins Can Add Clients
 
 Allowing unrestricted client creation would:
+
 - Break scraping logic
 - Introduce malformed URLs
 - Cause runtime failures
 - Reduce trust in the tool
 
 Scraping sources are **not generic inputs** — each requires:
+
 - Structure validation
 - Keyword coverage testing
 - PDF handling checks
@@ -193,7 +203,7 @@ Scraping sources are **not generic inputs** — each requires:
 ### Policy Decision
 
 | Action | Who |
-|-----|----|
+| ----- | ---- |
 | Add / edit clients | Admin only |
 | Add / edit sources | Admin only |
 | Enable / disable client | Admin only |
@@ -201,6 +211,7 @@ Scraping sources are **not generic inputs** — each requires:
 | Submit scrape jobs | Any user |
 
 ### User Request Flow (Future)
+
 1. User submits client request (name + URL)
 2. Admin reviews & tests
 3. Admin adds to DB
@@ -211,6 +222,7 @@ Scraping sources are **not generic inputs** — each requires:
 ## Scaling Forward
 
 If adoption grows:
+
 - Replace auth_codes with invite tokens
 - Replace Turso with Postgres
 - Add audit logs

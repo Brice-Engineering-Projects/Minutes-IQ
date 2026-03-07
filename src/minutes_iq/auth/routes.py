@@ -6,9 +6,11 @@ Handles HTTP requests for login, logout, and registration.
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, Depends, Form, HTTPException, Request, Response, status
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordRequestForm
+from pydantic import ValidationError
 
 from minutes_iq.auth.dependencies import (
     get_auth_code_service,
@@ -17,6 +19,7 @@ from minutes_iq.auth.dependencies import (
     get_password_reset_service,
     get_user_service,
 )
+from minutes_iq.auth.email_service import send_password_reset_email
 from minutes_iq.auth.schemas import (
     PasswordResetConfirm,
     PasswordResetRequest,
@@ -227,8 +230,9 @@ async def read_users_me(current_user: Annotated[dict, Depends(get_current_user)]
 
 @router.post("/reset-request", response_model=PasswordResetResponse)
 async def request_password_reset(
-    request: PasswordResetRequest,
+    http_request: Request,
     reset_service: Annotated[PasswordResetService, Depends(get_password_reset_service)],
+    email: str | None = Form(default=None),
 ):
     """
     Initiate a password reset by requesting a reset token.
@@ -253,8 +257,23 @@ async def request_password_reset(
         Always returns success to prevent email enumeration attacks.
         No indication is given whether the email exists in the system.
     """
+    input_email = email
+    if input_email is None:
+        try:
+            body = await http_request.json()
+        except Exception:
+            body = {}
+
+        if isinstance(body, dict):
+            input_email = body.get("email")
+
+    try:
+        reset_request = PasswordResetRequest(email=input_email or "")
+    except ValidationError as e:
+        raise RequestValidationError(e.errors()) from e
+
     # Create reset token (returns success even if email doesn't exist)
-    success, error_msg, token = reset_service.create_reset_token(request.email)
+    success, error_msg, token = reset_service.create_reset_token(reset_request.email)
 
     if not success:
         # This should rarely happen (database errors, etc.)
@@ -263,11 +282,11 @@ async def request_password_reset(
             detail="Failed to process password reset request",
         )
 
-    # TODO: Send email with reset link containing the token
-    # For now, we just return success
-    # In production:
-    # reset_link = f"https://your-domain.com/reset-password?token={token}"
-    # send_email(to=request.email, subject="Password Reset", body=f"Click here: {reset_link}")
+    if token:
+        reset_link = str(
+            http_request.url_for("password_reset_confirm_page", token=token)
+        )
+        send_password_reset_email(to_email=reset_request.email, reset_link=reset_link)
 
     return PasswordResetResponse(
         message="If an account exists with this email, a password reset link has been sent"
