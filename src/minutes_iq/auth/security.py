@@ -32,6 +32,13 @@ def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
 
+def validate_password_strength(password: str) -> str:
+    """Validate password strength using the shared project policy."""
+    if len(password) < 8:
+        raise ValueError("Password must be at least 8 characters long")
+    return password
+
+
 def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
     """Create a JWT access token."""
     to_encode = data.copy()

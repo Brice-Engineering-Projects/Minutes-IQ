@@ -259,6 +259,18 @@ async def update_password(
     try:
         user_repo.update_password(user_id, new_password)
 
+        with get_db_connection() as conn:
+            clear_flag_cursor = conn.execute(
+                """
+                UPDATE users
+                SET force_password_change = 0
+                WHERE user_id = ?;
+                """,
+                (user_id,),
+            )
+            clear_flag_cursor.close()
+            conn.commit()
+
         return """
         <div class="rounded-md bg-green-50 border border-green-200 p-4">
             <div class="flex">

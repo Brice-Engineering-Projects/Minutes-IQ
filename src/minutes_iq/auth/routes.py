@@ -21,16 +21,23 @@ from minutes_iq.auth.dependencies import (
 )
 from minutes_iq.auth.email_service import send_password_reset_email
 from minutes_iq.auth.schemas import (
+    ChangePasswordRequest,
     PasswordResetConfirm,
     PasswordResetRequest,
     PasswordResetResponse,
     RegisterRequest,
     RegisterResponse,
 )
-from minutes_iq.auth.security import create_access_token
+from minutes_iq.auth.security import (
+    create_access_token,
+    get_password_hash,
+    validate_password_strength,
+    verify_password,
+)
 from minutes_iq.auth.service import AuthService
 from minutes_iq.config.settings import settings
 from minutes_iq.db.auth_code_service import AuthCodeService
+from minutes_iq.db.client import get_db_connection
 from minutes_iq.db.password_reset_service import PasswordResetService
 from minutes_iq.db.user_service import UserService
 from minutes_iq.templates_config import templates
@@ -119,6 +126,7 @@ async def login(
         "user": user,
         "access_token": access_token,
         "token_type": "bearer",
+        "force_password_change": bool(user.get("force_password_change", 0)),
     }
 
 
@@ -332,6 +340,74 @@ async def confirm_password_reset(
     return PasswordResetResponse(
         message="Password has been reset successfully. You can now log in with your new password."
     )
+
+
+@router.post("/change-password")
+async def change_password(
+    request: ChangePasswordRequest,
+    current_user: Annotated[dict, Depends(get_current_user)],
+):
+    """Change current user's password and clear forced password change flag."""
+    if request.new_password != request.confirm_password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New passwords do not match",
+        )
+
+    validate_password_strength(request.new_password)
+
+    user_id = current_user["user_id"]
+
+    with get_db_connection() as conn:
+        cursor = conn.execute(
+            """
+            SELECT hashed_password
+            FROM auth_credentials
+            WHERE user_id = ? AND provider_id = 1 AND is_active = 1;
+            """,
+            (user_id,),
+        )
+        row = cursor.fetchone()
+        cursor.close()
+
+        if not row:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Password credentials not found",
+            )
+
+        current_hash = row[0]
+        if not verify_password(request.current_password, current_hash):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Current password is incorrect",
+            )
+
+        new_hash = get_password_hash(request.new_password)
+
+        update_credentials_cursor = conn.execute(
+            """
+            UPDATE auth_credentials
+            SET hashed_password = ?
+            WHERE user_id = ? AND provider_id = 1 AND is_active = 1;
+            """,
+            (new_hash, user_id),
+        )
+        update_credentials_cursor.close()
+
+        clear_flag_cursor = conn.execute(
+            """
+            UPDATE users
+            SET force_password_change = 0
+            WHERE user_id = ?;
+            """,
+            (user_id,),
+        )
+        clear_flag_cursor.close()
+
+        conn.commit()
+
+    return {"message": "Password changed successfully"}
 
 
 @router.post("/logout")

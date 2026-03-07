@@ -27,7 +27,9 @@ class AuthRepository:
                 ac.hashed_password,
                 u.user_id,
                 u.username,
-                u.email
+                u.email,
+                u.role_id,
+                u.force_password_change
             FROM users u
             JOIN auth_credentials ac ON u.user_id = ac.user_id
             JOIN auth_providers ap ON ac.provider_id = ap.provider_id
@@ -48,4 +50,6 @@ class AuthRepository:
             "user_id": row[1],
             "username": row[2],
             "email": row[3],
+            "role_id": row[4],
+            "force_password_change": row[5],
         }

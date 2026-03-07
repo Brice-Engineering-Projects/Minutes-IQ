@@ -20,8 +20,10 @@ from minutes_iq.api import dashboard as dashboard_api
 from minutes_iq.api import keywords_ui as keywords_ui_api
 from minutes_iq.api import profile_ui as profile_ui_api
 from minutes_iq.api import scraper_jobs_ui as scraper_jobs_ui_api
+from minutes_iq.auth import admin_routes as auth_admin_routes
 from minutes_iq.auth import routes as auth_routes
 from minutes_iq.auth.dependencies import get_current_user
+from minutes_iq.auth.schemas import ChangePasswordRequest
 from minutes_iq.error_handlers import (
     forbidden_handler,
     internal_server_error_handler,
@@ -52,6 +54,7 @@ app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="stat
 # IMPORTANT: Register UI routes before API routes when they share the same prefix
 # to ensure HTML pages are served instead of JSON responses
 app.include_router(auth_routes.router, prefix="/auth")
+app.include_router(auth_admin_routes.router)
 
 # Register UI routes BEFORE REST API routes to prevent conflicts
 # The admin UI route /admin/auth-codes must be registered before the REST API /admin/auth-codes
@@ -91,9 +94,31 @@ async def dashboard(
     current_user: Annotated[dict, Depends(get_current_user)],
 ):
     """Render the dashboard page (requires authentication)."""
+    if current_user.get("force_password_change"):
+        return RedirectResponse(url="/change-password", status_code=303)
+
     return templates.TemplateResponse(
         "dashboard.html", {"request": request, "current_user": current_user}
     )
+
+
+@app.get("/change-password")
+async def change_password_page(
+    current_user: Annotated[dict, Depends(get_current_user)],
+):
+    """Redirect users to profile page where password can be updated."""
+    if current_user.get("force_password_change"):
+        return RedirectResponse(url="/profile", status_code=303)
+    return RedirectResponse(url="/profile", status_code=303)
+
+
+@app.post("/change-password")
+async def change_password_api_alias(
+    request: ChangePasswordRequest,
+    current_user: Annotated[dict, Depends(get_current_user)],
+):
+    """Compatibility alias for changing password outside the /auth prefix."""
+    return await auth_routes.change_password(request=request, current_user=current_user)
 
 
 @app.get("/health")

@@ -7,6 +7,8 @@ This module contains schemas for handling authentication-related data structures
 
 from pydantic import BaseModel, field_validator
 
+from minutes_iq.auth.security import validate_password_strength
+
 
 # Pydantic models
 class Token(BaseModel):
@@ -72,9 +74,7 @@ class RegisterRequest(BaseModel):
     @classmethod
     def validate_password(cls, v: str) -> str:
         """Validate password strength."""
-        if len(v) < 8:
-            raise ValueError("Password must be at least 8 characters long")
-        return v
+        return validate_password_strength(v)
 
     @field_validator("auth_code")
     @classmethod
@@ -124,12 +124,45 @@ class PasswordResetConfirm(BaseModel):
     @classmethod
     def validate_password(cls, v: str) -> str:
         """Validate password strength."""
-        if len(v) < 8:
-            raise ValueError("Password must be at least 8 characters long")
-        return v
+        return validate_password_strength(v)
 
 
 class PasswordResetResponse(BaseModel):
     """Response model for password reset operations."""
 
     message: str
+
+
+class AdminResetPasswordRequest(BaseModel):
+    """Request model for admin-triggered password reset."""
+
+    email: str
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, v: str) -> str:
+        """Basic email validation."""
+        if not v or "@" not in v:
+            raise ValueError("Invalid email address")
+        return v.strip().lower()
+
+
+class AdminResetPasswordResponse(BaseModel):
+    """Response model for admin-triggered password reset."""
+
+    message: str
+    temporary_password: str
+
+
+class ChangePasswordRequest(BaseModel):
+    """Request model for authenticated password change."""
+
+    current_password: str
+    new_password: str
+    confirm_password: str
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_new_password(cls, v: str) -> str:
+        """Validate password strength."""
+        return validate_password_strength(v)
