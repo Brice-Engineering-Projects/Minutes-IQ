@@ -5,7 +5,7 @@ from typing import Annotated
 
 import uvicorn
 from fastapi import Depends, FastAPI, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
@@ -103,6 +103,11 @@ async def dashboard(
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    return RedirectResponse(url="/static/images/favicon.ico")
 
 
 @app.get("/nlp_demo")
