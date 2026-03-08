@@ -1,198 +1,164 @@
 -- =====================================================
--- Minutes IQ Database Schema (v1)
--- SQLite / Turso Compatible
+-- 001_create_tables.sql
+-- Canonical Minutes IQ schema (SQLite / Turso)
 -- =====================================================
 
 PRAGMA foreign_keys = ON;
 
--- -----------------------------------------------------
--- Roles
--- -----------------------------------------------------
-CREATE TABLE role (
-    role_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE,
-    description TEXT
+-- Core identity tables
+CREATE TABLE IF NOT EXISTS roles (
+    role_id INTEGER PRIMARY KEY,
+    role_name TEXT NOT NULL UNIQUE
 );
 
--- -----------------------------------------------------
--- Permissions
--- -----------------------------------------------------
-CREATE TABLE permission (
-    permission_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE,
-    description TEXT
-);
-
--- -----------------------------------------------------
--- Role-Permission Mapping
--- -----------------------------------------------------
-CREATE TABLE role_permission (
-    role_id INTEGER NOT NULL,
-    permission_id INTEGER NOT NULL,
-    PRIMARY KEY (role_id, permission_id),
-    FOREIGN KEY (role_id) REFERENCES role(role_id)
-        ON DELETE RESTRICT ON UPDATE RESTRICT,
-    FOREIGN KEY (permission_id) REFERENCES permission(permission_id)
-        ON DELETE RESTRICT ON UPDATE RESTRICT
-);
-
--- -----------------------------------------------------
--- Users
--- -----------------------------------------------------
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     user_id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT NOT NULL UNIQUE,
     email TEXT NOT NULL UNIQUE,
-    phone TEXT,
-    role_id INTEGER,
-    provider_id INTEGER
+    role_id INTEGER NOT NULL,
+    force_password_change INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY (role_id) REFERENCES roles(role_id)
 );
 
--- -----------------------------------------------------
--- Auth Providers
--- -----------------------------------------------------
-CREATE TABLE auth_providers (
-    provider_id INTEGER PRIMARY KEY AUTOINCREMENT,
+CREATE TABLE IF NOT EXISTS auth_providers (
+    provider_id INTEGER PRIMARY KEY,
+    provider_name TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS auth_credentials (
+    credential_id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
-    provider_type TEXT NOT NULL,
-    UNIQUE (user_id, provider_type),
-    FOREIGN KEY (user_id) REFERENCES users(user_id)
-        ON DELETE RESTRICT ON UPDATE RESTRICT
-);
-
--- -----------------------------------------------------
--- Profiles
--- -----------------------------------------------------
-DROP TABLE IF EXISTS profile;
-CREATE TABLE profile (
-    profile_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL UNIQUE,
-    first_name TEXT,
-    last_name TEXT,
-    title TEXT,
-    FOREIGN KEY (user_id) REFERENCES users(user_id)
-        ON DELETE RESTRICT ON UPDATE RESTRICT
-);
-
--- -----------------------------------------------------
--- Auth Credentials
--- -----------------------------------------------------
-DROP TABLE IF EXISTS auth_credentials;
-CREATE TABLE auth_credentials (
-    auth_id INTEGER PRIMARY KEY AUTOINCREMENT,
     provider_id INTEGER NOT NULL,
-    user_id INTEGER NOT NULL,
     hashed_password TEXT NOT NULL,
     is_active INTEGER NOT NULL DEFAULT 1,
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (provider_id, user_id),
-    FOREIGN KEY (provider_id) REFERENCES auth_provider(provider_id)
-        ON DELETE RESTRICT ON UPDATE RESTRICT,
-    FOREIGN KEY (user_id) REFERENCES users(user_id)
-        ON DELETE RESTRICT ON UPDATE RESTRICT
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    FOREIGN KEY (provider_id) REFERENCES auth_providers(provider_id)
 );
 
--- -----------------------------------------------------
--- Clients
--- -----------------------------------------------------
-CREATE TABLE client (
+-- Registration authorization code flow
+CREATE TABLE IF NOT EXISTS auth_codes (
+    code_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    code TEXT NOT NULL UNIQUE,
+    created_by INTEGER NOT NULL,
+    created_at INTEGER NOT NULL,
+    expires_at INTEGER,
+    max_uses INTEGER DEFAULT 1,
+    current_uses INTEGER DEFAULT 0,
+    is_active INTEGER DEFAULT 1,
+    notes TEXT,
+    FOREIGN KEY (created_by) REFERENCES users(user_id)
+);
+
+CREATE TABLE IF NOT EXISTS code_usage (
+    usage_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    code_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    used_at INTEGER NOT NULL,
+    FOREIGN KEY (code_id) REFERENCES auth_codes(code_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+-- Password reset flow
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    token_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    token_hash TEXT NOT NULL UNIQUE,
+    created_at INTEGER NOT NULL,
+    expires_at INTEGER NOT NULL,
+    used_at INTEGER,
+    is_valid INTEGER NOT NULL DEFAULT 1,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+-- Client and keyword management
+CREATE TABLE IF NOT EXISTS client (
     client_id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE,
-    is_active INTEGER NOT NULL DEFAULT 1,
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
--- -----------------------------------------------------
--- Client Sources
--- -----------------------------------------------------
-CREATE TABLE client_sources (
-    source_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    client_id INTEGER NOT NULL,
-    source_key TEXT NOT NULL,
-    source_name TEXT NOT NULL,
-    base_url TEXT NOT NULL,
-    index_url TEXT NOT NULL,
-    archive_url TEXT,
-    source_type TEXT NOT NULL,
-    parser_type TEXT NOT NULL,
-    is_active INTEGER NOT NULL DEFAULT 1,
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (client_id, source_key),
-    FOREIGN KEY (client_id) REFERENCES client(client_id)
-        ON DELETE RESTRICT ON UPDATE RESTRICT
-);
-
--- -----------------------------------------------------
--- User Client Favorites
--- -----------------------------------------------------
-DROP TABLE IF EXISTS user_client_favorites;
-CREATE TABLE user_client_favorites (
-    user_id INTEGER NOT NULL,
-    client_id INTEGER NOT NULL,
-    PRIMARY KEY (user_id, client_id),
-    FOREIGN KEY (user_id) REFERENCES users(user_id)
-        ON DELETE RESTRICT ON UPDATE RESTRICT,
-    FOREIGN KEY (client_id) REFERENCES client(client_id)
-        ON DELETE RESTRICT ON UPDATE RESTRICT
-);
-
--- -----------------------------------------------------
--- Saved Searches
--- -----------------------------------------------------
-DROP TABLE IF EXISTS saved_searches;
-CREATE TABLE saved_searches (
-    saved_search_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    client_id INTEGER NOT NULL,
-    name TEXT NOT NULL,
     description TEXT,
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (user_id, client_id, name),
-    FOREIGN KEY (user_id) REFERENCES users(user_id)
-        ON DELETE RESTRICT ON UPDATE RESTRICT,
-    FOREIGN KEY (client_id) REFERENCES client(client_id)
-        ON DELETE RESTRICT ON UPDATE RESTRICT
+    is_active INTEGER NOT NULL DEFAULT 1,
+    created_at INTEGER NOT NULL,
+    created_by INTEGER NOT NULL,
+    updated_at INTEGER,
+    FOREIGN KEY (created_by) REFERENCES users(user_id)
 );
 
--- -----------------------------------------------------
--- Saved Search Sources
--- -----------------------------------------------------
-CREATE TABLE saved_search_sources (
-    saved_search_id INTEGER NOT NULL,
-    source_id INTEGER NOT NULL,
-    PRIMARY KEY (saved_search_id, source_id),
-    FOREIGN KEY (saved_search_id) REFERENCES saved_searches(saved_search_id)
-        ON DELETE RESTRICT ON UPDATE RESTRICT,
-    FOREIGN KEY (source_id) REFERENCES client_sources(source_id)
-        ON DELETE RESTRICT ON UPDATE RESTRICT
+CREATE TABLE IF NOT EXISTS client_urls (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    client_id INTEGER NOT NULL,
+    alias TEXT NOT NULL,
+    url TEXT NOT NULL,
+    is_active INTEGER NOT NULL DEFAULT 1,
+    last_scraped_at INTEGER,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER,
+    FOREIGN KEY (client_id) REFERENCES client(client_id) ON DELETE CASCADE
 );
 
--- -----------------------------------------------------
--- Keywords
--- -----------------------------------------------------
-CREATE TABLE keywords (
+CREATE TABLE IF NOT EXISTS keywords (
     keyword_id INTEGER PRIMARY KEY AUTOINCREMENT,
     keyword TEXT NOT NULL UNIQUE,
+    category TEXT,
     description TEXT,
     is_active INTEGER NOT NULL DEFAULT 1,
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at INTEGER NOT NULL,
+    created_by INTEGER NOT NULL,
+    FOREIGN KEY (created_by) REFERENCES users(user_id)
 );
 
--- -----------------------------------------------------
--- Saved Search Keywords
--- -----------------------------------------------------
-CREATE TABLE saved_search_keywords (
-    saved_search_id INTEGER NOT NULL,
+CREATE TABLE IF NOT EXISTS client_keywords (
+    client_id INTEGER NOT NULL,
     keyword_id INTEGER NOT NULL,
-    PRIMARY KEY (saved_search_id, keyword_id),
-    FOREIGN KEY (saved_search_id) REFERENCES saved_searches(saved_search_id)
-        ON DELETE RESTRICT ON UPDATE RESTRICT,
-    FOREIGN KEY (keyword_id) REFERENCES keywords(keyword_id)
-        ON DELETE RESTRICT ON UPDATE RESTRICT
+    added_at INTEGER NOT NULL,
+    added_by INTEGER NOT NULL,
+    PRIMARY KEY (client_id, keyword_id),
+    FOREIGN KEY (client_id) REFERENCES client(client_id) ON DELETE CASCADE,
+    FOREIGN KEY (keyword_id) REFERENCES keywords(keyword_id) ON DELETE CASCADE,
+    FOREIGN KEY (added_by) REFERENCES users(user_id)
 );
 
--- =====================================================
--- End of Schema v1
--- =====================================================
+CREATE TABLE IF NOT EXISTS user_client_favorites (
+    user_id INTEGER NOT NULL,
+    client_id INTEGER NOT NULL,
+    favorited_at INTEGER NOT NULL,
+    PRIMARY KEY (user_id, client_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (client_id) REFERENCES client(client_id) ON DELETE CASCADE
+);
+
+-- Scraper orchestration
+CREATE TABLE IF NOT EXISTS scrape_jobs (
+    job_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    client_url_id INTEGER NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('pending', 'running', 'completed', 'failed', 'cancelled')),
+    created_by INTEGER NOT NULL,
+    created_at INTEGER NOT NULL,
+    started_at INTEGER,
+    completed_at INTEGER,
+    error_message TEXT,
+    FOREIGN KEY (client_url_id) REFERENCES client_urls(id) ON DELETE CASCADE,
+    FOREIGN KEY (created_by) REFERENCES users(user_id)
+);
+
+CREATE TABLE IF NOT EXISTS scrape_job_config (
+    config_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    job_id INTEGER NOT NULL UNIQUE,
+    date_range_start TEXT,
+    date_range_end TEXT,
+    max_scan_pages INTEGER,
+    include_minutes INTEGER NOT NULL DEFAULT 1,
+    include_packages INTEGER NOT NULL DEFAULT 1,
+    FOREIGN KEY (job_id) REFERENCES scrape_jobs(job_id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS scrape_results (
+    result_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    job_id INTEGER NOT NULL,
+    pdf_filename TEXT NOT NULL,
+    page_number INTEGER NOT NULL,
+    keyword_id INTEGER NOT NULL,
+    snippet TEXT NOT NULL,
+    entities_json TEXT,
+    created_at INTEGER NOT NULL,
+    FOREIGN KEY (job_id) REFERENCES scrape_jobs(job_id) ON DELETE CASCADE,
+    FOREIGN KEY (keyword_id) REFERENCES keywords(keyword_id) ON DELETE RESTRICT
+);
