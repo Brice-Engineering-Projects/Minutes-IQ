@@ -66,3 +66,17 @@ async def storage_cleanup(
     return templates.TemplateResponse(
         "admin/cleanup.html", {"request": request, "current_user": current_user}
     )
+
+
+@router.get("/reset-password", response_class=HTMLResponse)
+async def reset_password_page(
+    request: Request,
+    current_user: Annotated[dict, Depends(get_current_user)],
+):
+    """Render admin reset-password page (admin only)."""
+    if not current_user or current_user.get("role_id") != 1:
+        raise HTTPException(status_code=403, detail="Admin access required")
+
+    return templates.TemplateResponse(
+        "admin/reset_password.html", {"request": request, "current_user": current_user}
+    )

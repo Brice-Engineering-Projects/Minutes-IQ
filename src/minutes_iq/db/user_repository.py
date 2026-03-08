@@ -263,6 +263,10 @@ class UserRepository:
         if rows_affected == 0:
             raise ValueError(f"No password credentials found for user {user_id}")
 
+        # Persist credential update for callers that use the repository directly
+        # (for example, profile UI endpoints that do not go through UserService).
+        self.db.commit()
+
         return True
 
     def list_users(self, limit: int = 100, offset: int = 0) -> list[dict[str, Any]]:
