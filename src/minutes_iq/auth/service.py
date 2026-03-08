@@ -89,4 +89,6 @@ class AuthService:
             "user_id": credential["user_id"],
             "username": credential["username"],
             "email": credential["email"],
+            "role_id": credential["role_id"],
+            "force_password_change": credential.get("force_password_change", 0),
         }

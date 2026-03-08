@@ -85,6 +85,17 @@ class TestPasswordResetRequest:
         data = response.json()
         assert "password reset link has been sent" in data["message"].lower()
 
+    def test_request_reset_accepts_form_encoded_payload(self, test_user):
+        """Test that reset request accepts HTML form submissions (HTMX)."""
+        response = client.post(
+            "/auth/reset-request",
+            data={"email": test_user["email"]},
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "password reset link has been sent" in data["message"].lower()
+
     def test_request_reset_invalidates_previous_tokens(self, test_user):
         """Test that requesting a new reset invalidates previous tokens."""
         # First request

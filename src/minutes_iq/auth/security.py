@@ -2,7 +2,7 @@
 minutes_iq/auth/security.py
 ----------------------------------------
 
-This module contains security-related functions and utilities for handling authentication and authorization in the JEA meeting web scraper application.
+This module contains security-related functions and utilities for handling authentication and authorization in the Minutes IQ application.
 """
 
 from datetime import UTC, datetime, timedelta
@@ -30,6 +30,13 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 def get_password_hash(password: str) -> str:
     """Hash a password."""
     return pwd_context.hash(password)
+
+
+def validate_password_strength(password: str) -> str:
+    """Validate password strength using the shared project policy."""
+    if len(password) < 8:
+        raise ValueError("Password must be at least 8 characters long")
+    return password
 
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:

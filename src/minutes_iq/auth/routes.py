@@ -6,9 +6,11 @@ Handles HTTP requests for login, logout, and registration.
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, Depends, Form, HTTPException, Request, Response, status
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordRequestForm
+from pydantic import ValidationError
 
 from minutes_iq.auth.dependencies import (
     get_auth_code_service,
@@ -17,17 +19,25 @@ from minutes_iq.auth.dependencies import (
     get_password_reset_service,
     get_user_service,
 )
+from minutes_iq.auth.email_service import send_password_reset_email
 from minutes_iq.auth.schemas import (
+    ChangePasswordRequest,
     PasswordResetConfirm,
     PasswordResetRequest,
     PasswordResetResponse,
     RegisterRequest,
     RegisterResponse,
 )
-from minutes_iq.auth.security import create_access_token
+from minutes_iq.auth.security import (
+    create_access_token,
+    get_password_hash,
+    validate_password_strength,
+    verify_password,
+)
 from minutes_iq.auth.service import AuthService
 from minutes_iq.config.settings import settings
 from minutes_iq.db.auth_code_service import AuthCodeService
+from minutes_iq.db.client import get_db_connection
 from minutes_iq.db.password_reset_service import PasswordResetService
 from minutes_iq.db.user_service import UserService
 from minutes_iq.templates_config import templates
@@ -116,6 +126,7 @@ async def login(
         "user": user,
         "access_token": access_token,
         "token_type": "bearer",
+        "force_password_change": bool(user.get("force_password_change", 0)),
     }
 
 
@@ -227,8 +238,9 @@ async def read_users_me(current_user: Annotated[dict, Depends(get_current_user)]
 
 @router.post("/reset-request", response_model=PasswordResetResponse)
 async def request_password_reset(
-    request: PasswordResetRequest,
+    http_request: Request,
     reset_service: Annotated[PasswordResetService, Depends(get_password_reset_service)],
+    email: str | None = Form(default=None),
 ):
     """
     Initiate a password reset by requesting a reset token.
@@ -253,8 +265,23 @@ async def request_password_reset(
         Always returns success to prevent email enumeration attacks.
         No indication is given whether the email exists in the system.
     """
+    input_email = email
+    if input_email is None:
+        try:
+            body = await http_request.json()
+        except Exception:
+            body = {}
+
+        if isinstance(body, dict):
+            input_email = body.get("email")
+
+    try:
+        reset_request = PasswordResetRequest(email=input_email or "")
+    except ValidationError as e:
+        raise RequestValidationError(e.errors()) from e
+
     # Create reset token (returns success even if email doesn't exist)
-    success, error_msg, token = reset_service.create_reset_token(request.email)
+    success, error_msg, token = reset_service.create_reset_token(reset_request.email)
 
     if not success:
         # This should rarely happen (database errors, etc.)
@@ -263,11 +290,11 @@ async def request_password_reset(
             detail="Failed to process password reset request",
         )
 
-    # TODO: Send email with reset link containing the token
-    # For now, we just return success
-    # In production:
-    # reset_link = f"https://your-domain.com/reset-password?token={token}"
-    # send_email(to=request.email, subject="Password Reset", body=f"Click here: {reset_link}")
+    if token:
+        reset_link = str(
+            http_request.url_for("password_reset_confirm_page", token=token)
+        )
+        send_password_reset_email(to_email=reset_request.email, reset_link=reset_link)
 
     return PasswordResetResponse(
         message="If an account exists with this email, a password reset link has been sent"
@@ -313,6 +340,74 @@ async def confirm_password_reset(
     return PasswordResetResponse(
         message="Password has been reset successfully. You can now log in with your new password."
     )
+
+
+@router.post("/change-password")
+async def change_password(
+    request: ChangePasswordRequest,
+    current_user: Annotated[dict, Depends(get_current_user)],
+):
+    """Change current user's password and clear forced password change flag."""
+    if request.new_password != request.confirm_password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New passwords do not match",
+        )
+
+    validate_password_strength(request.new_password)
+
+    user_id = current_user["user_id"]
+
+    with get_db_connection() as conn:
+        cursor = conn.execute(
+            """
+            SELECT hashed_password
+            FROM auth_credentials
+            WHERE user_id = ? AND provider_id = 1 AND is_active = 1;
+            """,
+            (user_id,),
+        )
+        row = cursor.fetchone()
+        cursor.close()
+
+        if not row:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Password credentials not found",
+            )
+
+        current_hash = row[0]
+        if not verify_password(request.current_password, current_hash):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Current password is incorrect",
+            )
+
+        new_hash = get_password_hash(request.new_password)
+
+        update_credentials_cursor = conn.execute(
+            """
+            UPDATE auth_credentials
+            SET hashed_password = ?
+            WHERE user_id = ? AND provider_id = 1 AND is_active = 1;
+            """,
+            (new_hash, user_id),
+        )
+        update_credentials_cursor.close()
+
+        clear_flag_cursor = conn.execute(
+            """
+            UPDATE users
+            SET force_password_change = 0
+            WHERE user_id = ?;
+            """,
+            (user_id,),
+        )
+        clear_flag_cursor.close()
+
+        conn.commit()
+
+    return {"message": "Password changed successfully"}
 
 
 @router.post("/logout")

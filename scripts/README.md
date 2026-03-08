@@ -26,6 +26,7 @@ uv run python scripts/migrations/run_client_urls_migration.py
 
 - `run_client_keyword_migration.py` - Initial client/keyword management setup
 - `run_client_urls_migration.py` - Refactor to multi-URL client architecture
+- `run_force_password_change_migration.py` - Add `users.force_password_change` for admin reset flow
 
 ## Admin Scripts
 

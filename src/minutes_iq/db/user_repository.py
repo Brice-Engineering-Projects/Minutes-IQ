@@ -22,7 +22,7 @@ class UserRepository:
         Follows JEA Schema v1 naming.
         """
         query = """
-            SELECT user_id, username, email, role_id
+            SELECT user_id, username, email, role_id, force_password_change
             FROM users
             WHERE user_id = ?;
         """
@@ -38,6 +38,7 @@ class UserRepository:
             "username": row[1],
             "email": row[2],
             "role_id": row[3],
+            "force_password_change": bool(row[4]),
         }
 
     def get_user_by_username(self, username: str) -> dict[str, Any] | None:
@@ -261,6 +262,10 @@ class UserRepository:
 
         if rows_affected == 0:
             raise ValueError(f"No password credentials found for user {user_id}")
+
+        # Persist credential update for callers that use the repository directly
+        # (for example, profile UI endpoints that do not go through UserService).
+        self.db.commit()
 
         return True
 

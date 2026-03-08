@@ -18,6 +18,46 @@ class PasswordResetRepository:
             db: SQLite database connection
         """
         self.db = db
+        self._ensure_schema()
+
+    def _ensure_schema(self) -> None:
+        """Ensure required password reset schema exists (idempotent)."""
+        self.db.execute(
+            """
+            CREATE TABLE IF NOT EXISTS password_reset_tokens (
+                token_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                token_hash TEXT NOT NULL UNIQUE,
+                created_at INTEGER NOT NULL,
+                expires_at INTEGER NOT NULL,
+                used_at INTEGER,
+                is_valid INTEGER NOT NULL DEFAULT 1,
+                FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+            );
+            """
+        )
+
+        self.db.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_password_reset_token_hash
+            ON password_reset_tokens(token_hash);
+            """
+        )
+        self.db.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_password_reset_user_id
+            ON password_reset_tokens(user_id);
+            """
+        )
+        self.db.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_password_reset_expires_at
+            ON password_reset_tokens(expires_at);
+            """
+        )
+
+        # Persist DDL changes for connections that require explicit commits.
+        self.db.commit()
 
     def create_token(
         self,

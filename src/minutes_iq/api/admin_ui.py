@@ -251,14 +251,16 @@ async def get_users_list(
             if user.get("created_at")
             else "Unknown"
         )
+        safe_email = escape(user.get("email", ""))
+        safe_username = escape(user.get("username", "Unknown"))
 
         rows_html += f"""
         <tr class="hover:bg-gray-50">
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                {escape(user.get("username", "Unknown"))}
+                {safe_username}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {escape(user.get("email", "Unknown"))}
+                {safe_email or "Unknown"}
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
                 {role_badge}
@@ -276,6 +278,14 @@ async def get_users_list(
                     class="text-blue-600 hover:text-blue-900 mr-3"
                 >
                     Edit
+                </button>
+                <button
+                    type="button"
+                    class="text-orange-600 hover:text-orange-900 mr-3 js-admin-reset-password"
+                    data-user-email="{safe_email}"
+                    data-user-name="{safe_username}"
+                >
+                    Reset Password
                 </button>
                 {"" if user.get("is_active", True) else '<button class="text-green-600 hover:text-green-900" hx-post="/api/admin/users/' + str(user["user_id"]) + '/activate" hx-target="closest tr" hx-swap="outerHTML">Activate</button>'}
                 {"" if not user.get("is_active", True) else '<button class="text-gray-600 hover:text-gray-900" hx-post="/api/admin/users/' + str(user["user_id"]) + '/deactivate" hx-target="closest tr" hx-swap="outerHTML">Deactivate</button>'}

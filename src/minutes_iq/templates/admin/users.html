@@ -1,101 +1,285 @@
-{% extends "base.html" %}
-
-{% block title %}User Management - MinutesIQ{% endblock %}
-
-{% block content %}
+{% extends "base.html" %} {% block title %}User Management - MinutesIQ{%
+endblock %} {% block content %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <!-- Header -->
-    <div class="mb-8">
-        <a href="/admin" class="text-sm text-blue-600 hover:text-blue-800 mb-4 inline-flex items-center">
-            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-            </svg>
-            Back to Admin Dashboard
-        </a>
-        <h1 class="text-3xl font-bold text-gray-900 mt-2">User Management</h1>
-        <p class="mt-2 text-sm text-gray-600">Manage system users and permissions</p>
-    </div>
+  <!-- Header -->
+  <div class="mb-8">
+    <a
+      href="/admin"
+      class="text-sm text-blue-600 hover:text-blue-800 mb-4 inline-flex items-center"
+    >
+      <svg
+        class="w-4 h-4 mr-1"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M15 19l-7-7 7-7"
+        />
+      </svg>
+      Back to Admin Dashboard
+    </a>
+    <h1 class="text-3xl font-bold text-gray-900 mt-2">User Management</h1>
+    <p class="mt-2 text-sm text-gray-600">
+      Manage system users and permissions
+    </p>
+  </div>
 
-    <!-- Search and Filters -->
-    <div class="mb-6 bg-white shadow-sm rounded-lg border border-gray-200 p-4">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <!-- Search -->
-            <div>
-                <label for="user-search" class="block text-sm font-medium text-gray-700 mb-1">
-                    Search
-                </label>
-                <input
-                    type="text"
-                    id="user-search"
-                    name="search"
-                    placeholder="Username or email..."
-                    hx-get="/api/admin/users/list"
-                    hx-trigger="keyup changed delay:300ms"
-                    hx-target="#users-table"
-                    hx-include="[name='role_filter'], [name='status_filter'], [name='page']"
-                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                />
-            </div>
-
-            <!-- Role Filter -->
-            <div>
-                <label for="role-filter" class="block text-sm font-medium text-gray-700 mb-1">
-                    Role
-                </label>
-                <select
-                    id="role-filter"
-                    name="role_filter"
-                    hx-get="/api/admin/users/list"
-                    hx-trigger="change"
-                    hx-target="#users-table"
-                    hx-include="[name='search'], [name='status_filter'], [name='page']"
-                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                >
-                    <option value="">All Roles</option>
-                    <option value="1">Admin</option>
-                    <option value="2">User</option>
-                </select>
-            </div>
-
-            <!-- Status Filter -->
-            <div>
-                <label for="status-filter" class="block text-sm font-medium text-gray-700 mb-1">
-                    Status
-                </label>
-                <select
-                    id="status-filter"
-                    name="status_filter"
-                    hx-get="/api/admin/users/list"
-                    hx-trigger="change"
-                    hx-target="#users-table"
-                    hx-include="[name='search'], [name='role_filter'], [name='page']"
-                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                >
-                    <option value="">All Status</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                </select>
-            </div>
-        </div>
-    </div>
-
-    <!-- Users Table -->
-    <div class="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
-        <div
-            id="users-table"
-            hx-get="/api/admin/users/list?page=1"
-            hx-trigger="load"
-            hx-swap="innerHTML"
+  <!-- Search and Filters -->
+  <div class="mb-6 bg-white shadow-sm rounded-lg border border-gray-200 p-4">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!-- Search -->
+      <div>
+        <label
+          for="user-search"
+          class="block text-sm font-medium text-gray-700 mb-1"
         >
-            <!-- Loading skeleton -->
-            <div class="p-12 text-center">
-                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <p class="mt-2 text-sm text-gray-500">Loading users...</p>
-            </div>
-        </div>
+          Search
+        </label>
+        <input
+          type="text"
+          id="user-search"
+          name="search"
+          placeholder="Username or email..."
+          hx-get="/api/admin/users/list"
+          hx-trigger="keyup changed delay:300ms"
+          hx-target="#users-table"
+          hx-include="[name='role_filter'], [name='status_filter'], [name='page']"
+          class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+        />
+      </div>
+
+      <!-- Role Filter -->
+      <div>
+        <label
+          for="role-filter"
+          class="block text-sm font-medium text-gray-700 mb-1"
+        >
+          Role
+        </label>
+        <select
+          id="role-filter"
+          name="role_filter"
+          hx-get="/api/admin/users/list"
+          hx-trigger="change"
+          hx-target="#users-table"
+          hx-include="[name='search'], [name='status_filter'], [name='page']"
+          class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+        >
+          <option value="">All Roles</option>
+          <option value="1">Admin</option>
+          <option value="2">User</option>
+        </select>
+      </div>
+
+      <!-- Status Filter -->
+      <div>
+        <label
+          for="status-filter"
+          class="block text-sm font-medium text-gray-700 mb-1"
+        >
+          Status
+        </label>
+        <select
+          id="status-filter"
+          name="status_filter"
+          hx-get="/api/admin/users/list"
+          hx-trigger="change"
+          hx-target="#users-table"
+          hx-include="[name='search'], [name='role_filter'], [name='page']"
+          class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+        >
+          <option value="">All Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
     </div>
+  </div>
+
+  <!-- Users Table -->
+  <div
+    class="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden"
+  >
+    <div
+      id="users-table"
+      hx-get="/api/admin/users/list?page=1"
+      hx-trigger="load"
+      hx-swap="innerHTML"
+    >
+      <!-- Loading skeleton -->
+      <div class="p-12 text-center">
+        <div
+          class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"
+        ></div>
+        <p class="mt-2 text-sm text-gray-500">Loading users...</p>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Edit User Modal (loaded via htmx when edit button clicked) -->
 <div id="edit-modal"></div>
+
+<!-- Password Reset Modal (rendered by JavaScript) -->
+<div id="password-reset-modal-root"></div>
+{% endblock %} {% block extra_scripts %}
+<script>
+  (function () {
+    function escapeHtml(value) {
+      const div = document.createElement("div");
+      div.textContent = value;
+      return div.innerHTML;
+    }
+
+    function closePasswordResetModal() {
+      const root = document.getElementById("password-reset-modal-root");
+      if (root) {
+        root.innerHTML = "";
+      }
+    }
+
+    function renderPasswordModal(userName, userEmail, temporaryPassword) {
+      const root = document.getElementById("password-reset-modal-root");
+      if (!root) {
+        return;
+      }
+
+      const safeUserName = escapeHtml(userName || "User");
+      const safeUserEmail = escapeHtml(userEmail || "");
+      const safeTemporaryPassword = escapeHtml(temporaryPassword);
+
+      root.innerHTML = `
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50" id="password-reset-modal">
+                    <div class="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <h3 class="text-lg font-medium text-gray-900">Temporary Password Generated</h3>
+                        </div>
+                        <div class="px-6 py-4 space-y-4">
+                            <p class="text-sm text-gray-700">
+                                Password reset for <span class="font-semibold">${safeUserName}</span>
+                                <span class="text-gray-500">(${safeUserEmail})</span>.
+                            </p>
+                            <div class="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+                                Share this temporary password securely. The user will be forced to change it at next login.
+                            </div>
+                            <div class="rounded-md border border-gray-300 bg-gray-50 p-3">
+                                <label class="block text-xs font-medium text-gray-600 mb-2">Temporary Password</label>
+                                <div class="flex items-center gap-2">
+                                    <code id="temporary-password-value" class="flex-1 text-sm font-mono break-all text-gray-900">${safeTemporaryPassword}</code>
+                                    <button
+                                        type="button"
+                                        id="copy-temporary-password"
+                                        class="px-3 py-1.5 rounded-md border border-gray-300 bg-white text-sm text-gray-700 hover:bg-gray-100"
+                                    >
+                                        Copy
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="px-6 py-4 border-t border-gray-200 flex justify-end">
+                            <button
+                                type="button"
+                                id="close-password-reset-modal"
+                                class="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+                            >
+                                Done
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+      const closeBtn = document.getElementById("close-password-reset-modal");
+      if (closeBtn) {
+        closeBtn.addEventListener("click", closePasswordResetModal);
+      }
+
+      const copyBtn = document.getElementById("copy-temporary-password");
+      if (copyBtn) {
+        copyBtn.addEventListener("click", async () => {
+          try {
+            await navigator.clipboard.writeText(temporaryPassword);
+            copyBtn.textContent = "Copied";
+            setTimeout(() => {
+              copyBtn.textContent = "Copy";
+            }, 2000);
+          } catch (err) {
+            if (typeof showError === "function") {
+              showError("Unable to copy password. Please copy it manually.");
+            }
+          }
+        });
+      }
+    }
+
+    async function handleResetPassword(button) {
+      const userEmail = (button.dataset.userEmail || "").trim();
+      const userName = (button.dataset.userName || "").trim() || "User";
+
+      if (!userEmail) {
+        if (typeof showError === "function") {
+          showError("Cannot reset password: missing user email.");
+        }
+        return;
+      }
+
+      const confirmed = window.confirm(
+        `Generate a temporary password for ${userName} (${userEmail})?`,
+      );
+      if (!confirmed) {
+        return;
+      }
+
+      const originalText = button.textContent;
+      button.disabled = true;
+      button.textContent = "Resetting...";
+
+      try {
+        const response = await fetch("/admin/reset-user-password", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email: userEmail }),
+        });
+
+        const payload = await response.json();
+
+        if (!response.ok) {
+          const detail =
+            payload && payload.detail
+              ? payload.detail
+              : "Password reset failed";
+          throw new Error(detail);
+        }
+
+        renderPasswordModal(userName, userEmail, payload.temporary_password);
+        if (typeof showSuccess === "function") {
+          showSuccess("Temporary password generated successfully.");
+        }
+      } catch (err) {
+        const message =
+          err && err.message ? err.message : "Password reset failed";
+        if (typeof showError === "function") {
+          showError(message);
+        }
+      } finally {
+        button.disabled = false;
+        button.textContent = originalText;
+      }
+    }
+
+    document.addEventListener("click", function (event) {
+      const resetButton = event.target.closest(".js-admin-reset-password");
+      if (!resetButton) {
+        return;
+      }
+      handleResetPassword(resetButton);
+    });
+  })();
+</script>
 {% endblock %}

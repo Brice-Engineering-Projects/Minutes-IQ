@@ -50,6 +50,7 @@ def test_db_connection(test_db_file):
             username TEXT NOT NULL UNIQUE,
             email TEXT NOT NULL UNIQUE,
             role_id INTEGER NOT NULL,
+            force_password_change INTEGER NOT NULL DEFAULT 0,
             FOREIGN KEY (role_id) REFERENCES roles(role_id)
         );
     """)

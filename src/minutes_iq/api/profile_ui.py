@@ -199,43 +199,39 @@ async def update_password(
         </div>
         """
 
-    # Verify current password
-    # Get current password hash from auth_credentials
-    from minutes_iq.db.client import get_db_connection
-
     user_id = current_user.get("user_id")
     if not user_id:
         raise HTTPException(status_code=401, detail="User ID not found in session")
 
-    with get_db_connection() as conn:
-        cursor = conn.execute(
-            """
-            SELECT hashed_password
-            FROM auth_credentials
-            WHERE user_id = ? AND provider_id = 1
-            """,
-            (user_id,),
-        )
-        row = cursor.fetchone()
+    cursor = user_repo.db.execute(
+        """
+        SELECT hashed_password
+        FROM auth_credentials
+        WHERE user_id = ? AND provider_id = 1 AND is_active = 1
+        """,
+        (user_id,),
+    )
+    row = cursor.fetchone()
+    cursor.close()
 
-        if not row:
-            return """
-            <div class="rounded-md bg-red-50 border border-red-200 p-4">
-                <div class="flex">
-                    <div class="flex-shrink-0">
-                        <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                        </svg>
-                    </div>
-                    <div class="ml-3">
-                        <h3 class="text-sm font-medium text-red-800">Error</h3>
-                        <p class="mt-1 text-sm text-red-700">No password credentials found for this account.</p>
-                    </div>
+    if not row:
+        return """
+        <div class="rounded-md bg-red-50 border border-red-200 p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-red-800">Error</h3>
+                    <p class="mt-1 text-sm text-red-700">No password credentials found for this account.</p>
                 </div>
             </div>
-            """
+        </div>
+        """
 
-        current_hash = row[0]
+    current_hash = row[0]
 
     # Verify current password
     if not verify_password(current_password, current_hash):
@@ -258,6 +254,16 @@ async def update_password(
     # Update password
     try:
         user_repo.update_password(user_id, new_password)
+        clear_flag_cursor = user_repo.db.execute(
+            """
+            UPDATE users
+            SET force_password_change = 0
+            WHERE user_id = ?;
+            """,
+            (user_id,),
+        )
+        clear_flag_cursor.close()
+        user_repo.db.commit()
 
         return """
         <div class="rounded-md bg-green-50 border border-green-200 p-4">

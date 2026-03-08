@@ -2,7 +2,7 @@
 src/minutes_iq/api/users.py
 ------------------------------------------
 
-API endpoints for user management in the JEA Meeting Web Scraper application.
+API endpoints for user management in the Minutes IQ application.
 """
 
 from typing import Annotated, Any

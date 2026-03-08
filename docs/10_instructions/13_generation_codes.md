@@ -1,6 +1,8 @@
-User: Currently, when I enter the Admin panel and click on the generate codes the program yields a json without any codes.  We need to create instructions and a checklist so codes are generated and can be authorized for a specific amount of time 
+# Generation Codes Workflow Instructions
 
-GitHub Copilot: I'll help you create a plan to fix the authorization code generation issue and establish a proper workflow. Let me research the codebase first to understand the current implementation. 
+User: Currently, when I enter the Admin panel and click on the generate codes the program yields a json without any codes.  We need to create instructions and a checklist so codes are generated and can be authorized for a specific amount of time.  We also need to create instructions for the admin user to understand how to generate codes and set expiration times.  The instructions should be comprehensive and include technical details for the implementation as well as a user guide for the admin.  We also need to include verification steps to ensure the fix is working and the codes are generated correctly with expiration times.
+
+GitHub Copilot: I'll help you create a plan to fix the authorization code generation issue and establish a proper workflow. Let me research the codebase first to understand the current implementation.
 
 Research authorization code generation
 

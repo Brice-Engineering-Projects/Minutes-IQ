@@ -1,9 +1,11 @@
 # 📘 Rationale: Turso + Authorization Code Access Model
 
 ## Purpose
+
 This document explains the architectural and cost rationale behind using **Turso** as the database and an **authorization-code–gated registration model** for the JEA / Municipal Meeting Intelligence Dashboard.
 
 This rationale is intended for:
+
 - Future maintainers
 - Management review
 - Justifying technical decisions if the project scales
@@ -13,7 +15,9 @@ This rationale is intended for:
 ## Why Turso?
 
 ### 1. Usage Profile
+
 This application is:
+
 - Used by a **small, trusted internal group**
 - Read/write light
 - Not latency-critical
@@ -22,6 +26,7 @@ This application is:
 Turso (distributed SQLite) is well-matched to this profile.
 
 ### 2. Cost Control
+
 - Near-zero cost at small scale
 - No always-on database server
 - No minimum monthly spend
@@ -29,14 +34,19 @@ Turso (distributed SQLite) is well-matched to this profile.
 
 > Scaling happens **only if business value is proven**.
 
-### 3. Operational Simplicity
+### 3. Operational
+
+Simplicity
+
 - SQLite-compatible
 - Easy local ↔ production parity
 - Minimal DevOps burden
 - Simple backups and migrations
 
 ### 4. Upgrade Path
+
 If adoption grows:
+
 - Migrate schema to Postgres
 - Swap DB client at service layer
 - No rewrite of business logic
@@ -46,24 +56,29 @@ If adoption grows:
 ## Why Authorization-Code–Gated Registration?
 
 ### Problem Being Solved
+
 - Prevent unauthorized access
 - Avoid manual account creation
 - Maintain owner control
 - Reduce admin overhead
 
 ### Solution
+
 Users may:
+
 - Create their **own account**
 - Choose their **own password**
 - Only if they possess a valid **authorization code**
 
 ### Benefits
+
 - Lightweight access control
 - No invite system complexity
 - No external identity provider
 - Easy to rotate or revoke
 
 ### How It Works (High Level)
+
 1. Owner generates authorization code
 2. Code shared manually with approved users
 3. User enters code during registration
@@ -75,7 +90,7 @@ Users may:
 ## Why This Is the Right Tradeoff (Now)
 
 | Concern | Decision |
-|------|---------|
+| ------ | --------- |
 | Cost | Minimized |
 | Security | Sufficient for internal use |
 | Complexity | Intentionally low |
@@ -85,6 +100,7 @@ Users may:
 ---
 
 ## Future Alternatives (If Needed)
+
 - Invite-token system
 - Email-domain allowlisting
 - SSO (Azure AD / Google Workspace)
