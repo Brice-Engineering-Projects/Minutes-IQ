@@ -6,6 +6,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
 
+from minutes_iq.auth.dependencies import get_current_user
 from minutes_iq.db.client_repository import ClientRepository
 from minutes_iq.db.client_url_repository import ClientUrlRepository
 from minutes_iq.db.dependencies import (
@@ -19,14 +20,27 @@ from minutes_iq.templates_config import templates
 router = APIRouter(prefix="/scraper/jobs", tags=["Scraper Job UI"])
 
 
+def _can_access_job(current_user: dict, job: dict) -> bool:
+    """Allow access for job owner or admins."""
+    return (
+        job["created_by"] == current_user["user_id"] or current_user.get("role_id") == 1
+    )
+
+
 @router.get("", response_class=HTMLResponse)
-async def jobs_list(request: Request):
+async def jobs_list(
+    request: Request,
+    current_user: Annotated[dict, Depends(get_current_user)],
+):
     """Render scraper jobs list page."""
     return templates.TemplateResponse("scraper/jobs_list.html", {"request": request})
 
 
 @router.get("/new", response_class=HTMLResponse)
-async def job_create(request: Request):
+async def job_create(
+    request: Request,
+    current_user: Annotated[dict, Depends(get_current_user)],
+):
     """Render scrape job creation form."""
     return templates.TemplateResponse("scraper/job_create.html", {"request": request})
 
@@ -38,11 +52,15 @@ async def job_detail(
     scraper_repo: Annotated[ScraperRepository, Depends(get_scraper_repository)],
     client_repo: Annotated[ClientRepository, Depends(get_client_repository)],
     client_url_repo: Annotated[ClientUrlRepository, Depends(get_client_url_repository)],
+    current_user: Annotated[dict, Depends(get_current_user)],
 ):
     """Render scrape job detail page."""
     job = scraper_repo.get_job(job_id)
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
+
+    if not _can_access_job(current_user, job):
+        raise HTTPException(status_code=403, detail="Access denied")
 
     config = scraper_repo.get_job_config(job_id)
 

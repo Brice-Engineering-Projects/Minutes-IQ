@@ -161,8 +161,12 @@ def list_scrape_jobs(
         # Convert client_id from string to int, treating empty string as None
         client_id_int = int(client_id) if client_id and client_id.strip() else None
 
+        # Admins can see all jobs; regular users only see their own.
+        user_scope = (
+            None if current_user.get("role_id") == 1 else current_user["user_id"]
+        )
         jobs = service.repository.list_jobs(
-            user_id=current_user["user_id"],
+            user_id=user_scope,
             client_id=client_id_int,
             status=status_filter,
             limit=limit,
@@ -208,7 +212,7 @@ def get_job_details(
             )
 
         # Verify ownership
-        if job["created_by"] != current_user["user_id"]:
+        if not _can_access_job(current_user, job):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You do not have access to this job",
@@ -274,7 +278,7 @@ def cancel_scrape_job(
             )
 
         # Verify ownership
-        if job["created_by"] != current_user["user_id"]:
+        if not _can_access_job(current_user, job):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You do not have access to this job",
@@ -322,7 +326,7 @@ def get_job_status(
             )
 
         # Verify ownership
-        if job["created_by"] != current_user["user_id"]:
+        if not _can_access_job(current_user, job):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You do not have access to this job",
@@ -378,7 +382,7 @@ def list_job_results(
                 detail=f"Job {job_id} not found",
             )
 
-        if job["created_by"] != current_user["user_id"]:
+        if not _can_access_job(current_user, job):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You do not have access to this job",
@@ -433,7 +437,7 @@ def get_results_summary(
                 detail=f"Job {job_id} not found",
             )
 
-        if job["created_by"] != current_user["user_id"]:
+        if not _can_access_job(current_user, job):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You do not have access to this job",
@@ -473,7 +477,7 @@ def export_results_csv(
                 detail=f"Job {job_id} not found",
             )
 
-        if job["created_by"] != current_user["user_id"]:
+        if not _can_access_job(current_user, job):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You do not have access to this job",
@@ -600,7 +604,7 @@ def create_job_artifact(
                 detail=f"Job {job_id} not found",
             )
 
-        if job["created_by"] != current_user["user_id"]:
+        if not _can_access_job(current_user, job):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You do not have access to this job",

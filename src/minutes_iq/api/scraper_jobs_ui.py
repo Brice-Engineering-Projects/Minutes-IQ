@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse, Response
 from pydantic import BaseModel
 
+from minutes_iq.auth.dependencies import get_current_user
 from minutes_iq.db.client_repository import ClientRepository
 from minutes_iq.db.client_url_repository import ClientUrlRepository
 from minutes_iq.db.dependencies import (
@@ -21,6 +22,27 @@ from minutes_iq.db.keyword_repository import KeywordRepository
 from minutes_iq.db.scraper_repository import ScraperRepository
 
 router = APIRouter(prefix="/api/scraper/jobs", tags=["Scraper Jobs UI API"])
+
+
+def _can_access_job(current_user: dict, job: dict) -> bool:
+    """Allow access for job owner or admins."""
+    return (
+        job["created_by"] == current_user["user_id"] or current_user.get("role_id") == 1
+    )
+
+
+def _get_job_for_user(
+    scraper_repo: ScraperRepository, job_id: int, current_user: dict
+) -> dict:
+    """Return job if accessible by user, otherwise raise HTTP errors."""
+    job = scraper_repo.get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    if not _can_access_job(current_user, job):
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    return job
 
 
 class JobCreate(BaseModel):
@@ -39,13 +61,17 @@ async def get_jobs_list(
     request: Request,
     scraper_repo: Annotated[ScraperRepository, Depends(get_scraper_repository)],
     client_repo: Annotated[ClientRepository, Depends(get_client_repository)],
+    current_user: Annotated[dict, Depends(get_current_user)],
     page: int = 1,
     status: str = "",
     client_id: int = 0,
 ):
     """Return paginated jobs table HTML."""
-    # Get all jobs
-    jobs = scraper_repo.list_jobs()
+    # Scope jobs to the current user unless admin.
+    if current_user.get("role_id") == 1:
+        jobs = scraper_repo.list_jobs()
+    else:
+        jobs = scraper_repo.list_jobs(user_id=current_user["user_id"])
 
     # Filter by status
     if status:
@@ -300,6 +326,7 @@ async def create_job(
     request: Request,
     scraper_repo: Annotated[ScraperRepository, Depends(get_scraper_repository)],
     client_url_repo: Annotated[ClientUrlRepository, Depends(get_client_url_repository)],
+    current_user: Annotated[dict, Depends(get_current_user)],
 ):
     """Create a new scrape job and start background execution."""
     from minutes_iq.db.scraper_service import ScraperService
@@ -309,8 +336,7 @@ async def create_job(
     # Parse form data
     form_data = await request.form()
 
-    # TODO: Get created_by from current_user when auth is integrated
-    created_by = 1  # Temporary: use admin user ID
+    created_by = current_user["user_id"]
 
     # Extract form fields with proper type handling
     from starlette.datastructures import UploadFile
@@ -448,11 +474,10 @@ async def get_job_status(
     scraper_repo: Annotated[ScraperRepository, Depends(get_scraper_repository)],
     client_repo: Annotated[ClientRepository, Depends(get_client_repository)],
     client_url_repo: Annotated[ClientUrlRepository, Depends(get_client_url_repository)],
+    current_user: Annotated[dict, Depends(get_current_user)],
 ):
     """Return job status card HTML (for polling)."""
-    job = scraper_repo.get_job(job_id)
-    if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
+    job = _get_job_for_user(scraper_repo, job_id, current_user)
 
     # Get client name from client_url
     client_url = client_url_repo.get_url(job["client_url_id"])
@@ -585,11 +610,10 @@ async def get_job_status(
 async def get_job_progress(
     job_id: int,
     scraper_repo: Annotated[ScraperRepository, Depends(get_scraper_repository)],
+    current_user: Annotated[dict, Depends(get_current_user)],
 ):
     """Return job progress HTML (defensive - only show data that exists)."""
-    job = scraper_repo.get_job(job_id)
-    if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
+    _get_job_for_user(scraper_repo, job_id, current_user)
 
     # Get results count
     result_count = scraper_repo.get_result_count(job_id)
@@ -650,6 +674,7 @@ def highlight_snippet(snippet: str, keyword: str) -> str:
 async def get_job_results(
     job_id: int,
     scraper_repo: Annotated[ScraperRepository, Depends(get_scraper_repository)],
+    current_user: Annotated[dict, Depends(get_current_user)],
     page: int = 1,
     keyword_filter: str = "",
     page_number_filter: str = "",
@@ -657,6 +682,7 @@ async def get_job_results(
     sort_order: str = "asc",
 ):
     """Return paginated results table HTML with filtering, sorting, and highlighting."""
+    _get_job_for_user(scraper_repo, job_id, current_user)
     results = scraper_repo.get_job_results(job_id)
 
     if not results:
@@ -894,8 +920,10 @@ async def get_job_results(
 async def get_job_summary(
     job_id: int,
     scraper_repo: Annotated[ScraperRepository, Depends(get_scraper_repository)],
+    current_user: Annotated[dict, Depends(get_current_user)],
 ):
     """Return job summary HTML."""
+    _get_job_for_user(scraper_repo, job_id, current_user)
     result_count = scraper_repo.get_result_count(job_id)
     keyword_stats = scraper_repo.get_keyword_statistics(job_id)
 
@@ -951,11 +979,10 @@ async def get_job_summary(
 async def cancel_job(
     job_id: int,
     scraper_repo: Annotated[ScraperRepository, Depends(get_scraper_repository)],
+    current_user: Annotated[dict, Depends(get_current_user)],
 ):
     """Cancel a running job."""
-    job = scraper_repo.get_job(job_id)
-    if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
+    job = _get_job_for_user(scraper_repo, job_id, current_user)
 
     if job["status"] not in ["pending", "running"]:
         raise HTTPException(status_code=400, detail="Job cannot be cancelled")
@@ -975,11 +1002,10 @@ async def cancel_job(
 async def delete_job(
     job_id: int,
     scraper_repo: Annotated[ScraperRepository, Depends(get_scraper_repository)],
+    current_user: Annotated[dict, Depends(get_current_user)],
 ):
     """Delete a job (placeholder - actual deletion not implemented in repository)."""
-    job = scraper_repo.get_job(job_id)
-    if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
+    job = _get_job_for_user(scraper_repo, job_id, current_user)
 
     if job["status"] in ["pending", "running"]:
         raise HTTPException(
@@ -997,11 +1023,10 @@ async def delete_job(
 async def generate_artifact(
     job_id: int,
     scraper_repo: Annotated[ScraperRepository, Depends(get_scraper_repository)],
+    current_user: Annotated[dict, Depends(get_current_user)],
 ):
     """Redirect to the synchronous ZIP download endpoint for completed jobs."""
-    job = scraper_repo.get_job(job_id)
-    if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
+    _get_job_for_user(scraper_repo, job_id, current_user)
 
     response = Response(status_code=200)
     response.headers["HX-Redirect"] = f"/download-results/{job_id}"
@@ -1012,11 +1037,10 @@ async def generate_artifact(
 async def export_csv(
     job_id: int,
     scraper_repo: Annotated[ScraperRepository, Depends(get_scraper_repository)],
+    current_user: Annotated[dict, Depends(get_current_user)],
 ):
     """Export job results as CSV (synchronous download)."""
-    job = scraper_repo.get_job(job_id)
-    if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
+    _get_job_for_user(scraper_repo, job_id, current_user)
 
     results = scraper_repo.get_job_results(job_id)
 

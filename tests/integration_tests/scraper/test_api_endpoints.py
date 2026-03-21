@@ -194,6 +194,80 @@ class TestJobListingEndpoint:
         response = client.get("/scraper/jobs")
         assert response.status_code == 401
 
+    def test_list_jobs_scoped_to_current_user(
+        self,
+        client: TestClient,
+        admin_token,
+        user_token,
+        sample_scraper_client,
+    ):
+        """Regular users should only see jobs they created."""
+        admin_job_response = client.post(
+            "/scraper/jobs",
+            headers={"Authorization": f"Bearer {admin_token}"},
+            json={
+                "client_id": sample_scraper_client["client_id"],
+                "source_urls": ["https://example.com/admin"],
+            },
+        )
+        admin_job_id = admin_job_response.json()["job_id"]
+
+        user_job_response = client.post(
+            "/scraper/jobs",
+            headers={"Authorization": f"Bearer {user_token}"},
+            json={
+                "client_id": sample_scraper_client["client_id"],
+                "source_urls": ["https://example.com/user"],
+            },
+        )
+        user_job_id = user_job_response.json()["job_id"]
+
+        response = client.get(
+            "/api/scraper/jobs/list",
+            headers={"Authorization": f"Bearer {user_token}"},
+        )
+
+        assert response.status_code == 200
+        assert f"/scraper/jobs/{user_job_id}" in response.text
+        assert f"/scraper/jobs/{admin_job_id}" not in response.text
+
+    def test_admin_can_list_all_jobs(
+        self,
+        client: TestClient,
+        admin_token,
+        user_token,
+        sample_scraper_client,
+    ):
+        """Admins should see both their own and other users' jobs."""
+        admin_job_response = client.post(
+            "/scraper/jobs",
+            headers={"Authorization": f"Bearer {admin_token}"},
+            json={
+                "client_id": sample_scraper_client["client_id"],
+                "source_urls": ["https://example.com/admin"],
+            },
+        )
+        admin_job_id = admin_job_response.json()["job_id"]
+
+        user_job_response = client.post(
+            "/scraper/jobs",
+            headers={"Authorization": f"Bearer {user_token}"},
+            json={
+                "client_id": sample_scraper_client["client_id"],
+                "source_urls": ["https://example.com/user"],
+            },
+        )
+        user_job_id = user_job_response.json()["job_id"]
+
+        response = client.get(
+            "/api/scraper/jobs/list",
+            headers={"Authorization": f"Bearer {admin_token}"},
+        )
+
+        assert response.status_code == 200
+        assert f"/scraper/jobs/{admin_job_id}" in response.text
+        assert f"/scraper/jobs/{user_job_id}" in response.text
+
 
 class TestJobDetailsEndpoint:
     """Test GET /scraper/jobs/{job_id} endpoint."""
@@ -238,6 +312,54 @@ class TestJobDetailsEndpoint:
         """Test getting job details without authentication."""
         response = client.get("/scraper/jobs/1")
         assert response.status_code == 401
+
+    def test_get_job_details_forbidden_for_non_owner(
+        self,
+        client: TestClient,
+        admin_token,
+        user_token,
+        sample_scraper_client,
+    ):
+        """Regular users should not access other users' job details."""
+        create_response = client.post(
+            "/scraper/jobs",
+            headers={"Authorization": f"Bearer {admin_token}"},
+            json={
+                "client_id": sample_scraper_client["client_id"],
+                "source_urls": ["https://example.com"],
+            },
+        )
+        job_id = create_response.json()["job_id"]
+
+        response = client.get(
+            f"/scraper/jobs/{job_id}",
+            headers={"Authorization": f"Bearer {user_token}"},
+        )
+        assert response.status_code == 403
+
+    def test_admin_can_access_other_users_job_details(
+        self,
+        client: TestClient,
+        admin_token,
+        user_token,
+        sample_scraper_client,
+    ):
+        """Admins should be able to access job details for any user."""
+        create_response = client.post(
+            "/scraper/jobs",
+            headers={"Authorization": f"Bearer {user_token}"},
+            json={
+                "client_id": sample_scraper_client["client_id"],
+                "source_urls": ["https://example.com"],
+            },
+        )
+        job_id = create_response.json()["job_id"]
+
+        response = client.get(
+            f"/scraper/jobs/{job_id}",
+            headers={"Authorization": f"Bearer {admin_token}"},
+        )
+        assert response.status_code == 200
 
 
 class TestJobCancellationEndpoint:
@@ -754,5 +876,61 @@ class TestDownloadResultsEndpoint:
                 headers={"Authorization": f"Bearer {admin_token}"},
             )
             assert allowed_response.status_code == 200
+        finally:
+            app.dependency_overrides.pop(get_storage_manager, None)
+
+    def test_download_results_zip_allows_owner(
+        self,
+        client: TestClient,
+        user_token,
+        sample_scraper_client,
+        db_connection,
+        tmp_path,
+    ):
+        """Users can download ZIP artifacts for their own jobs."""
+        from minutes_iq.main import app
+        from minutes_iq.scraper.routes import get_storage_manager
+
+        app.dependency_overrides[get_storage_manager] = lambda: StorageManager(
+            base_dir=tmp_path
+        )
+
+        try:
+            create_response = client.post(
+                "/scraper/jobs",
+                headers={"Authorization": f"Bearer {user_token}"},
+                json={
+                    "client_id": sample_scraper_client["client_id"],
+                    "source_urls": ["https://example.com"],
+                },
+            )
+            job_id = create_response.json()["job_id"]
+
+            raw_pdf_path = tmp_path / "raw_pdfs" / str(job_id) / "owned.pdf"
+            self._create_test_pdf(raw_pdf_path, "Owner-controlled content.")
+
+            timestamp = int(time.time())
+            db_connection.execute(
+                """
+                INSERT INTO scrape_results
+                (job_id, pdf_filename, page_number, keyword_id, snippet, created_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    job_id,
+                    "owned.pdf",
+                    1,
+                    sample_scraper_client["keyword_id"],
+                    "Owner-controlled",
+                    timestamp,
+                ),
+            )
+            db_connection.commit()
+
+            response = client.get(
+                f"/download-results/{job_id}",
+                headers={"Authorization": f"Bearer {user_token}"},
+            )
+            assert response.status_code == 200
         finally:
             app.dependency_overrides.pop(get_storage_manager, None)
