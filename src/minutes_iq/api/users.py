@@ -103,4 +103,14 @@ async def delete_user(
     user = user_repo.get_user_by_id(user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return user_repo.delete_user(user_id)  # type: ignore[attr-defined]
+
+    # Use soft deactivation to avoid foreign key failures from hard deletes.
+    if not user_repo.deactivate_user(user_id):
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return User(
+        id=user["user_id"],
+        username=user["username"],
+        email=user["email"],
+        is_active=False,
+    )

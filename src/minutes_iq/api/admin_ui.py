@@ -288,8 +288,8 @@ async def get_users_list(
                 >
                     Reset Password
                 </button>
-                {"" if user.get("is_active", True) else '<button class="text-green-600 hover:text-green-900" hx-post="/api/admin/users/' + str(user["user_id"]) + '/activate" hx-target="closest tr" hx-swap="outerHTML">Activate</button>'}
-                {"" if not user.get("is_active", True) else '<button class="text-gray-600 hover:text-gray-900" hx-post="/api/admin/users/' + str(user["user_id"]) + '/deactivate" hx-target="closest tr" hx-swap="outerHTML">Deactivate</button>'}
+                {"" if user.get("is_active", True) else '<button class="text-green-600 hover:text-green-900" title="Re-enable this user\'s login credentials" hx-post="/api/admin/users/' + str(user["user_id"]) + '/activate" hx-target="closest tr" hx-swap="outerHTML">Activate Login</button>'}
+                {"" if not user.get("is_active", True) else '<button class="text-gray-600 hover:text-gray-900" title="Disable this user\'s login credentials (account record is retained)" hx-confirm="Disable login for this user? This does not delete user data." hx-post="/api/admin/users/' + str(user["user_id"]) + '/deactivate" hx-target="closest tr" hx-swap="outerHTML">Deactivate Login</button>'}
             </td>
         </tr>
         """
