@@ -998,20 +998,14 @@ async def generate_artifact(
     job_id: int,
     scraper_repo: Annotated[ScraperRepository, Depends(get_scraper_repository)],
 ):
-    """Trigger async artifact generation."""
+    """Redirect to the synchronous ZIP download endpoint for completed jobs."""
     job = scraper_repo.get_job(job_id)
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
 
-    # TODO: Implement actual artifact generation
-    # For now, return a message
-    return """
-    <div class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-        <p class="text-sm text-yellow-800">
-            Artifact generation is not yet implemented. This will create a ZIP file with all matched PDFs.
-        </p>
-    </div>
-    """
+    response = Response(status_code=200)
+    response.headers["HX-Redirect"] = f"/download-results/{job_id}"
+    return response
 
 
 @router.get("/{job_id}/export/csv", response_class=HTMLResponse)

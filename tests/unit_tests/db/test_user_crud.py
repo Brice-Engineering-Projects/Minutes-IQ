@@ -190,6 +190,48 @@ class TestUserDelete:
         assert result is False
 
 
+class TestUserActivationStatus:
+    """Test user activation/deactivation operations."""
+
+    def test_deactivate_user(self, db_connection, test_user):
+        """Test deactivating a user disables credentials without deleting user."""
+        repo = UserRepository(db_connection)
+
+        result = repo.deactivate_user(test_user["user_id"])
+
+        assert result is True
+        assert repo.get_user_by_id(test_user["user_id"]) is not None
+
+        users = repo.list_users(limit=100, offset=0)
+        matching = [u for u in users if u["user_id"] == test_user["user_id"]]
+        assert len(matching) == 1
+        assert matching[0]["is_active"] is False
+
+    def test_activate_user(self, db_connection, test_user):
+        """Test reactivating a user enables credentials."""
+        repo = UserRepository(db_connection)
+
+        assert repo.deactivate_user(test_user["user_id"]) is True
+        assert repo.activate_user(test_user["user_id"]) is True
+
+        users = repo.list_users(limit=100, offset=0)
+        matching = [u for u in users if u["user_id"] == test_user["user_id"]]
+        assert len(matching) == 1
+        assert matching[0]["is_active"] is True
+
+    def test_deactivate_nonexistent_user(self, db_connection):
+        """Test deactivating non-existent user returns False."""
+        repo = UserRepository(db_connection)
+
+        assert repo.deactivate_user(99999) is False
+
+    def test_activate_nonexistent_user(self, db_connection):
+        """Test activating non-existent user returns False."""
+        repo = UserRepository(db_connection)
+
+        assert repo.activate_user(99999) is False
+
+
 class TestUserList:
     """Test user listing operations."""
 

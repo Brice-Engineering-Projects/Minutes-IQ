@@ -222,6 +222,60 @@ class UserRepository:
 
         return True
 
+    def deactivate_user(self, user_id: int) -> bool:
+        """
+        Deactivate a user by disabling all auth credentials.
+
+        This avoids hard-deleting from ``users`` (which can fail due to
+        foreign-key references from other tables like auth codes, clients,
+        keywords, and usage logs).
+
+        Args:
+            user_id: ID of the user to deactivate
+
+        Returns:
+            True if user exists and was processed, False if user doesn't exist
+        """
+        if not self.get_user_by_id(user_id):
+            return False
+
+        cursor = self.db.execute(
+            """
+            UPDATE auth_credentials
+            SET is_active = 0
+            WHERE user_id = ?;
+            """,
+            (user_id,),
+        )
+        cursor.close()
+        self.db.commit()
+        return True
+
+    def activate_user(self, user_id: int) -> bool:
+        """
+        Activate a user by enabling all auth credentials.
+
+        Args:
+            user_id: ID of the user to activate
+
+        Returns:
+            True if user exists and was processed, False if user doesn't exist
+        """
+        if not self.get_user_by_id(user_id):
+            return False
+
+        cursor = self.db.execute(
+            """
+            UPDATE auth_credentials
+            SET is_active = 1
+            WHERE user_id = ?;
+            """,
+            (user_id,),
+        )
+        cursor.close()
+        self.db.commit()
+        return True
+
     def update_password(self, user_id: int, new_password: str) -> bool:
         """
         Update a user's password in the auth_credentials table.
@@ -281,9 +335,16 @@ class UserRepository:
             List of user dictionaries
         """
         query = """
-            SELECT user_id, username, email, role_id
-            FROM users
-            ORDER BY user_id
+            SELECT
+                u.user_id,
+                u.username,
+                u.email,
+                u.role_id,
+                COALESCE(MAX(ac.is_active), 0) AS is_active
+            FROM users u
+            LEFT JOIN auth_credentials ac ON ac.user_id = u.user_id
+            GROUP BY u.user_id, u.username, u.email, u.role_id
+            ORDER BY u.user_id
             LIMIT ? OFFSET ?;
         """
         cursor = self.db.execute(query, (limit, offset))
@@ -296,6 +357,7 @@ class UserRepository:
                 "username": row[1],
                 "email": row[2],
                 "role_id": row[3],
+                "is_active": bool(row[4]),
             }
             for row in rows
         ]
