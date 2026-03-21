@@ -206,12 +206,10 @@ async def get_users_list(
         except ValueError:
             pass
 
-    # Filter by status
-    # Note: is_active column doesn't exist in users table yet
-    # TODO: Add is_active column support
-    # For now, status filter does nothing
-    if status_filter:
-        pass  # Placeholder until is_active column is added
+    # Filter by derived credential status (active auth credentials => active user)
+    if status_filter in {"active", "inactive"}:
+        wanted_active = status_filter == "active"
+        users = [u for u in users if bool(u.get("is_active", False)) == wanted_active]
 
     # Pagination
     per_page = 20
@@ -242,9 +240,12 @@ async def get_users_list(
             else '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">User</span>'
         )
 
-        # Status badge - currently all users are considered active since is_active column doesn't exist
-        # TODO: Add is_active column support
-        status_badge = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Active</span>'
+        is_active = bool(user.get("is_active", False))
+        status_badge = (
+            '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Active</span>'
+            if is_active
+            else '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">Inactive</span>'
+        )
 
         created_at = (
             datetime.fromtimestamp(user["created_at"]).strftime("%Y-%m-%d")
@@ -495,7 +496,7 @@ async def deactivate_user(
     current_user: Annotated[dict, Depends(get_current_user)],
     user_repo: Annotated[UserRepository, Depends(get_user_repository)],
 ):
-    """Deactivate a user (delete from database)."""
+    """Deactivate a user by disabling credentials."""
     if not current_user or current_user.get("role_id") != 1:
         raise HTTPException(status_code=403, detail="Admin access required")
 
@@ -505,9 +506,8 @@ async def deactivate_user(
             status_code=400, detail="Cannot deactivate your own account"
         )
 
-    # Note: Currently deletes user since there's no is_active column
-    # TODO: Add is_active column to users table for soft deletes
-    user_repo.delete_user(user_id)
+    if not user_repo.deactivate_user(user_id):
+        raise HTTPException(status_code=404, detail="User not found")
 
     # Refresh users list
     from fastapi.responses import Response
@@ -523,14 +523,12 @@ async def activate_user(
     current_user: Annotated[dict, Depends(get_current_user)],
     user_repo: Annotated[UserRepository, Depends(get_user_repository)],
 ):
-    """Activate a user."""
+    """Activate a user by enabling credentials."""
     if not current_user or current_user.get("role_id") != 1:
         raise HTTPException(status_code=403, detail="Admin access required")
 
-    # Note: This functionality requires is_active column which doesn't exist yet
-    # TODO: Add is_active column support
-    # For now, return error
-    raise HTTPException(status_code=501, detail="User activation not yet implemented")
+    if not user_repo.activate_user(user_id):
+        raise HTTPException(status_code=404, detail="User not found")
 
     # Refresh users list
     from fastapi.responses import Response
