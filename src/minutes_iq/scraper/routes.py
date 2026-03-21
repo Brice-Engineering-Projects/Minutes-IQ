@@ -3,6 +3,7 @@ API endpoints for scraper job management.
 """
 
 import logging
+from pathlib import Path
 from typing import Annotated
 
 from fastapi import (
@@ -13,7 +14,7 @@ from fastapi import (
     Query,
     status,
 )
-from fastapi.responses import Response
+from fastapi.responses import FileResponse, Response
 
 from minutes_iq.auth.dependencies import get_current_user
 from minutes_iq.db.dependencies import get_scraper_repository
@@ -40,10 +41,12 @@ from minutes_iq.scraper.schemas import (
     StorageStatsResponse,
 )
 from minutes_iq.scraper.storage import StorageManager
+from minutes_iq.services.pdf_service import generate_highlighted_pages_zip
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/scraper", tags=["scraper"])
+download_router = APIRouter(tags=["scraper"])
 
 
 # === Dependency Injection ===
@@ -74,6 +77,13 @@ def get_storage_manager() -> StorageManager:
     """Get StorageManager instance."""
     # TODO: Load configuration from settings
     return StorageManager(base_dir="data")
+
+
+def _can_access_job(current_user: dict, job: dict) -> bool:
+    """Allow access for job owner or admins."""
+    return (
+        job["created_by"] == current_user["user_id"] or current_user.get("role_id") == 1
+    )
 
 
 # === Job Management Endpoints ===
@@ -494,6 +504,70 @@ def export_results_csv(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to export results: {str(e)}",
+        ) from e
+
+
+@download_router.get("/download-results/{job_id}")
+def download_results_zip(
+    job_id: int,
+    current_user: Annotated[dict, Depends(get_current_user)],
+    service: Annotated[ScraperService, Depends(get_scraper_service)],
+    storage: Annotated[StorageManager, Depends(get_storage_manager)],
+) -> FileResponse:
+    """Generate and return a ZIP of highlighted, relevant PDF pages for a job."""
+    try:
+        job = service.repository.get_job(job_id)
+        if not job:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Job {job_id} not found",
+            )
+
+        if not _can_access_job(current_user, job):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You do not have access to this job",
+            )
+
+        matches = service.repository.get_job_results(job_id)
+        if not matches:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No results found for job {job_id}",
+            )
+
+        raw_pdf_dir = storage.get_raw_pdf_dir(job_id)
+        zip_path = generate_highlighted_pages_zip(
+            job_id=job_id,
+            matches=matches,
+            raw_pdf_base_dir=Path(raw_pdf_dir),
+        )
+
+        return FileResponse(
+            path=zip_path,
+            filename="minutes_iq_results.zip",
+            media_type="application/zip",
+        )
+
+    except HTTPException:
+        raise
+    except FileNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e),
+        ) from e
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        ) from e
+    except Exception as e:
+        logger.error(
+            f"Failed to generate download ZIP for job {job_id}: {e}", exc_info=True
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to generate ZIP artifact",
         ) from e
 
 

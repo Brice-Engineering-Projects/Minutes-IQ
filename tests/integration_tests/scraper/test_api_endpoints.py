@@ -4,9 +4,13 @@ Tests authentication, authorization, and full request/response cycles.
 """
 
 import time
+import zipfile
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
+
+from minutes_iq.scraper.storage import StorageManager
 
 
 @pytest.fixture
@@ -21,13 +25,25 @@ def sample_scraper_client(db_connection, admin_token):
     timestamp = int(time.time())
     cursor = db_connection.execute(
         """
-        INSERT INTO clients (name, description, is_active, created_at, created_by)
+        INSERT INTO client (name, description, is_active, created_at, created_by)
         VALUES (?, ?, ?, ?, ?)
         RETURNING client_id
         """,
         ("Scraper Test Client", "Test", 1, timestamp, admin_id),
     )
     client_id = cursor.fetchone()[0]
+    cursor.close()
+
+    # Create client URL record; current API uses this ID when creating jobs.
+    cursor = db_connection.execute(
+        """
+        INSERT INTO client_urls (client_id, alias, url, is_active, created_at)
+        VALUES (?, ?, ?, ?, ?)
+        RETURNING id
+        """,
+        (client_id, "primary", "https://example.com/meetings", 1, timestamp),
+    )
+    client_url_id = cursor.fetchone()[0]
     cursor.close()
 
     # Create keyword
@@ -54,7 +70,8 @@ def sample_scraper_client(db_connection, admin_token):
     db_connection.commit()
 
     return {
-        "client_id": client_id,
+        "client_id": client_url_id,
+        "raw_client_id": client_id,
         "keyword_id": keyword_id,
         "admin_id": admin_id,
     }
@@ -512,3 +529,230 @@ class TestArtifactEndpoints:
         )
 
         assert response.status_code == 501  # Not implemented
+
+
+class TestDownloadResultsEndpoint:
+    """Test GET /download-results/{job_id} endpoint."""
+
+    def _create_test_pdf(self, file_path: Path, text: str) -> None:
+        import fitz
+
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        doc = fitz.open()
+        page = doc.new_page()
+        page.insert_text((72, 72), text)
+        doc.save(file_path)
+        doc.close()
+
+    def test_download_results_zip_success_and_grouped_by_page(
+        self,
+        client: TestClient,
+        admin_token,
+        sample_scraper_client,
+        db_connection,
+        tmp_path,
+    ):
+        """Returns ZIP and produces one output page per (pdf, page)."""
+        # Route uses StorageManager(base_dir="data") by default; override to isolated tmp storage.
+        from minutes_iq.main import app
+        from minutes_iq.scraper.routes import get_storage_manager
+
+        app.dependency_overrides[get_storage_manager] = lambda: StorageManager(
+            base_dir=tmp_path
+        )
+
+        try:
+            create_response = client.post(
+                "/scraper/jobs",
+                headers={"Authorization": f"Bearer {admin_token}"},
+                json={
+                    "client_id": sample_scraper_client["client_id"],
+                    "source_urls": ["https://example.com"],
+                },
+            )
+            job_id = create_response.json()["job_id"]
+
+            raw_pdf_path = tmp_path / "raw_pdfs" / str(job_id) / "meeting.pdf"
+            self._create_test_pdf(
+                raw_pdf_path,
+                "Stormwater improvements and lift station upgrade discussion.",
+            )
+
+            timestamp = int(time.time())
+            # Two matches on same page should produce a single output PDF page.
+            db_connection.execute(
+                """
+                INSERT INTO scrape_results
+                (job_id, pdf_filename, page_number, keyword_id, snippet, created_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    job_id,
+                    "meeting.pdf",
+                    1,
+                    sample_scraper_client["keyword_id"],
+                    "Stormwater improvements",
+                    timestamp,
+                ),
+            )
+            db_connection.execute(
+                """
+                INSERT INTO scrape_results
+                (job_id, pdf_filename, page_number, keyword_id, snippet, created_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    job_id,
+                    "meeting.pdf",
+                    1,
+                    sample_scraper_client["keyword_id"],
+                    "lift station upgrade",
+                    timestamp + 1,
+                ),
+            )
+            db_connection.commit()
+
+            response = client.get(
+                f"/download-results/{job_id}",
+                headers={"Authorization": f"Bearer {admin_token}"},
+            )
+
+            assert response.status_code == 200
+            assert response.headers["content-type"] == "application/zip"
+
+            zip_out = tmp_path / "result.zip"
+            zip_out.write_bytes(response.content)
+            with zipfile.ZipFile(zip_out, "r") as archive:
+                names = archive.namelist()
+                assert len(names) == 1
+                assert names[0].startswith("meeting_page_1_")
+                assert names[0].endswith(".pdf")
+        finally:
+            app.dependency_overrides.pop(get_storage_manager, None)
+
+    def test_download_results_zip_includes_page_when_no_highlight_match(
+        self,
+        client: TestClient,
+        admin_token,
+        sample_scraper_client,
+        db_connection,
+        tmp_path,
+    ):
+        """Includes the relevant page even when snippet and keyword search both fail."""
+        from minutes_iq.main import app
+        from minutes_iq.scraper.routes import get_storage_manager
+
+        app.dependency_overrides[get_storage_manager] = lambda: StorageManager(
+            base_dir=tmp_path
+        )
+
+        try:
+            create_response = client.post(
+                "/scraper/jobs",
+                headers={"Authorization": f"Bearer {admin_token}"},
+                json={
+                    "client_id": sample_scraper_client["client_id"],
+                    "source_urls": ["https://example.com"],
+                },
+            )
+            job_id = create_response.json()["job_id"]
+
+            raw_pdf_path = tmp_path / "raw_pdfs" / str(job_id) / "notes.pdf"
+            self._create_test_pdf(raw_pdf_path, "Completely unrelated text content.")
+
+            timestamp = int(time.time())
+            db_connection.execute(
+                """
+                INSERT INTO scrape_results
+                (job_id, pdf_filename, page_number, keyword_id, snippet, created_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    job_id,
+                    "notes.pdf",
+                    1,
+                    sample_scraper_client["keyword_id"],
+                    "this snippet is not present",
+                    timestamp,
+                ),
+            )
+            db_connection.commit()
+
+            response = client.get(
+                f"/download-results/{job_id}",
+                headers={"Authorization": f"Bearer {admin_token}"},
+            )
+
+            assert response.status_code == 200
+
+            zip_out = tmp_path / "result_no_highlight.zip"
+            zip_out.write_bytes(response.content)
+            with zipfile.ZipFile(zip_out, "r") as archive:
+                names = archive.namelist()
+                assert len(names) == 1
+                assert names[0].startswith("notes_page_1_")
+        finally:
+            app.dependency_overrides.pop(get_storage_manager, None)
+
+    def test_download_results_zip_forbidden_for_non_owner(
+        self,
+        client: TestClient,
+        admin_token,
+        user_token,
+        sample_scraper_client,
+        db_connection,
+        tmp_path,
+    ):
+        """Regular users cannot download artifacts for jobs they do not own."""
+        from minutes_iq.main import app
+        from minutes_iq.scraper.routes import get_storage_manager
+
+        app.dependency_overrides[get_storage_manager] = lambda: StorageManager(
+            base_dir=tmp_path
+        )
+
+        try:
+            create_response = client.post(
+                "/scraper/jobs",
+                headers={"Authorization": f"Bearer {admin_token}"},
+                json={
+                    "client_id": sample_scraper_client["client_id"],
+                    "source_urls": ["https://example.com"],
+                },
+            )
+            job_id = create_response.json()["job_id"]
+
+            raw_pdf_path = tmp_path / "raw_pdfs" / str(job_id) / "secured.pdf"
+            self._create_test_pdf(raw_pdf_path, "Protected content.")
+
+            timestamp = int(time.time())
+            db_connection.execute(
+                """
+                INSERT INTO scrape_results
+                (job_id, pdf_filename, page_number, keyword_id, snippet, created_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    job_id,
+                    "secured.pdf",
+                    1,
+                    sample_scraper_client["keyword_id"],
+                    "Protected",
+                    timestamp,
+                ),
+            )
+            db_connection.commit()
+
+            forbidden_response = client.get(
+                f"/download-results/{job_id}",
+                headers={"Authorization": f"Bearer {user_token}"},
+            )
+            assert forbidden_response.status_code == 403
+
+            allowed_response = client.get(
+                f"/download-results/{job_id}",
+                headers={"Authorization": f"Bearer {admin_token}"},
+            )
+            assert allowed_response.status_code == 200
+        finally:
+            app.dependency_overrides.pop(get_storage_manager, None)
