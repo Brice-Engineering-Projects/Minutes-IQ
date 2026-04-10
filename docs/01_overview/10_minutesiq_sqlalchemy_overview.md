@@ -40,8 +40,14 @@ This document outlines the planned refactor of the MinutesIQ database layer from
 
 ## 5. Database Strategy
 
-### Production
-- Turso (libsql) using a stable client/driver
+### Production Strategy
+- Turso connection will be used as database client
+- SQLAlchemy will be used as ORM layer
+- Underlying driver MUST use HTTP-based transport
+- Hrana/WebSocket transport is explicitly avoided
+- If no stable SQLAlchemy-compatible HTTP driver exists:
+    - Continue using libsql_experimental under repository layer
+    - Or migrate to PostgreSQL
 
 ### Development & Testing
 - SQLite via SQLAlchemy
