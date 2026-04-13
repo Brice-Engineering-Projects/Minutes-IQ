@@ -27,6 +27,16 @@ uv run python scripts/migrations/run_client_urls_migration.py
 - `run_client_keyword_migration.py` - Initial client/keyword management setup
 - `run_client_urls_migration.py` - Refactor to multi-URL client architecture
 - `run_force_password_change_migration.py` - Add `users.force_password_change` for admin reset flow
+- `migrations/postgres/create_postgres_db.py` - Create PostgreSQL schema via SQLAlchemy Core
+- `migrations/postgres/migrate_sqlite_to_postgres.py` - Copy data from SQLite/libSQL export to PostgreSQL
+
+### PostgreSQL Bootstrap (SQLAlchemy)
+
+```bash
+uv run python scripts/migrations/postgres/create_postgres_db.py
+```
+
+See `scripts/migrations/postgres/README.md` for flags and environment variables.
 
 ## Admin Scripts
 
