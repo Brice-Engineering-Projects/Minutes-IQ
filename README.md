@@ -130,6 +130,10 @@ or
 
 `uv sync`
 
+When you run Python from the repository root, the project-local `sitecustomize.py`
+automatically adds `src/` to `sys.path`, so imports like `from minutes_iq.models
+import Base` work without setting `PYTHONPATH` manually.
+
 ### Run the Application
 
 `uv run uvicorn src.minutes_iq.main:app --reload`
