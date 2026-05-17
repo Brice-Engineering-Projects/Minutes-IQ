@@ -134,6 +134,51 @@ When you run Python from the repository root, the project-local `sitecustomize.p
 automatically adds `src/` to `sys.path`, so imports like `from minutes_iq.models
 import Base` work without setting `PYTHONPATH` manually.
 
+### Setup the Database
+
+Minutes IQ uses libSQL/SQLite by default and can also target Turso.
+
+1. Create a `.env` file in the repository root (or export variables in your shell):
+
+```bash
+TURSO_DATABASE_URL=file:test.db
+TURSO_AUTH_TOKEN=
+```
+
+Use your hosted Turso values instead when connecting to Turso:
+
+```bash
+TURSO_DATABASE_URL=libsql://<your-db>.turso.io
+TURSO_AUTH_TOKEN=<your_turso_token>
+```
+
+2. Initialize schema objects and seed baseline data:
+
+```bash
+uv run python src/minutes_iq/db/setup_database.py
+```
+
+3. (Optional) Verify tables were created for local SQLite:
+
+```bash
+sqlite3 test.db ".tables"
+```
+
+Canonical schema files applied by the setup script:
+
+* `src/minutes_iq/db/schema/001_create_tables.sql`
+* `src/minutes_iq/db/schema/002_add_indexes.sql`
+* `src/minutes_iq/db/schema/003_seed_auth_providers.sql`
+
+### Optional: PostgreSQL Schema Bootstrap
+
+If you are targeting PostgreSQL instead of Turso/libSQL:
+
+```bash
+export MINUTESIQ_POSTGRES_URL="postgresql+psycopg://user:password@host:5432/minutesiq"
+uv run python scripts/migrations/postgres/create_postgres_db.py
+```
+
 ### Run the Application
 
 `uv run uvicorn src.minutes_iq.main:app --reload`
